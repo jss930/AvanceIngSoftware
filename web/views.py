@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, HttpResponse
 
 # Create your views here.
 
@@ -7,3 +7,6 @@ def home(request):
 
 def register(request):
     return render(request, 'register.html')
+
+def login(request):
+    return HttpResponse("login sin crear...")
