@@ -10,11 +10,17 @@
 <link
   rel="stylesheet"
   href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+{% load static %}
 
 <div class="container-fluid m-0 row bg-primary" style="min-height: 100%">
-  <main class="form-signin col-md-6 py-4 m-auto bg-white rounded">
-    <div class="container-fluid bg-secondary">
-      <h4 class="text-center mb-3">Bienvenido, crea tu cuenta</h4>
+  <main class="form-signin row col-md-6 py-4 m-auto bg-white rounded">
+    <div class="container-fluid col col-md-6">
+      <img
+        src="{% static 'images/user-icon.webp' %}"
+        class="img-fluid w-100 mx-auto d-block mb-4"
+        style="max-width: 200px"
+        alt="user-icon" />
+      <h4 class="text-center mb-4 text-muted">Bienvenido, crea tu cuenta</h4>
     </div>
     <form action="" method="post" id="registro-form" novalidate>
       <div class="form-floating mb-3">
@@ -38,29 +44,8 @@
         <label for="email">Correo electronico</label>
         <div class="invalid-feedback">Ingresa un correo válido.</div>
       </div>
-
-      {% comment %}
-      <div class="form-floating mb-3 position-relative">
-        <input
-          type="password"
-          class="form-control password-input"
-          id="password1"
-          placeholder="Contraseña"
-          required />
-        <label for="password1">Password</label>
-        <button
-          type="button"
-          class="position-absolute end-0 top-0 m-3 me-4 btn btn-outline-secondary btn-sm toggle-password">
-          <i class="bi bi-eye toggle-icon"></i>
-        </button>
-        <div class="invalid-feedback">
-          Ingresa una contraseña válido (tamaño >5).
-        </div>
-      </div>
-      {% endcomment %}
-
-      <div class="position-relative d-flex w-100">
-        <div class="form-floating mb-3 position-relative col-11">
+      <div class="position-relative mb-3">
+        <div class="form-floating position-relative col-11 d-flex w-100">
           <input
             type="password"
             class="form-control password-input"
@@ -68,19 +53,19 @@
             placeholder="Contraseña"
             required />
           <label for="password1">Contraseña</label>
-          <div class="invalid-feedback position-absolute">
-            Ingresa una contraseña válido (tamaño >5).
-          </div>
+          <button
+            type="button"
+            class="btn btn-outline-secondary btn-sm toggle-password col-1 border-secondary-subtle">
+            <i class="bi bi-eye toggle-icon"></i>
+          </button>
         </div>
-        <button
-          type="button"
-          class="btn btn-outline-secondary btn-sm toggle-password mb-3 col-1">
-          <i class="bi bi-eye toggle-icon"></i>
-        </button>
+        <div class="invalid-feedback">
+          Ingresa una contraseña válido (tamaño >5).
+        </div>
       </div>
 
-      <div class="position-relative d-flex w-100">
-        <div class="form-floating mb-3 position-relative col-11">
+      <div class="position-relative mb-3">
+        <div class="form-floating position-relative col-11 d-flex w-100">
           <input
             type="password"
             class="form-control password-input"
@@ -88,37 +73,22 @@
             placeholder="Confirmar contraseña"
             required />
           <label for="password2">Confirmar Contraseña</label>
-          <div class="invalid-feedback position-absolute">
-            Las contraseñas no coinciden.
-          </div>
+          <button
+            type="button"
+            class="btn btn-outline-secondary btn-sm toggle-password col-1 border-secondary-subtle">
+            <i class="bi bi-eye toggle-icon"></i>
+          </button>
         </div>
-        <button
-          type="button"
-          class="btn btn-outline-secondary btn-sm toggle-password mb-3 col-1">
-          <i class="bi bi-eye toggle-icon"></i>
-        </button>
-      </div>
-
-      {% comment %}
-      <div class="form-floating mb-3 position-relative">
-        <input
-          type="password"
-          class="form-control password-input"
-          id="password2"
-          placeholder="Confirmar contraseña"
-          required />
-        <label for="password2">Confirmar Contraseña</label>
-        <button
-          type="button"
-          class="position-absolute end-0 top-0 m-3 btn btn-outline-secondary btn-sm toggle-password">
-          <i class="bi bi-eye toggle-icon"></i>
-        </button>
         <div class="invalid-feedback">Las contraseñas no coinciden.</div>
       </div>
-      {% endcomment %}
-      <p class="text-muted text-end pe-4" style="font-size: 0.75rem">
+
+      <p class="text-muted text-end pe-4" style="font-size: 0.8em">
         ¿Ya tienes una cuenta?
-        <a href="{%url 'login'%}" class="">Iniciar Sesión</a>
+        <a
+          href="{%url 'login'%}"
+          class="link-offset-1-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover"
+          >Iniciar Sesión</a
+        >
       </p>
       <div class="d-flex justify-content-end pe-4">
         <button type="submit" class="btn btn-secondary">Crear cuenta</button>
@@ -176,13 +146,13 @@
 
     // Validar contraseña no vacía y longitud mínima
     if (password1.value.length < 6) {
-      password1.classList.add("is-invalid");
+      password1.parentElement.classList.add("is-invalid");
       valid = false;
     }
 
     // Validar que las contraseñas coincidan
     if (password1.value !== password2.value) {
-      password2.classList.add("is-invalid");
+      password2.parentElement.classList.add("is-invalid");
       valid = false;
     }
 
@@ -192,45 +162,3 @@
     }
   });
 </script>
-
-{% comment %}
-<div class="row m-auto justify-content-center pt-5" style="min-height: 100vh">
-  <div class="container col-sm-10 col-lg-6 p-5">
-    <form action="php/verificar_contra.php" method="POST">
-      <input type="hidden" name="email" value="<?php echo $email; ?>" />
-      <div class="mb-3 position-relative">
-        <input
-          class="form-control p-3"
-          type="password"
-          name="password"
-          id="password-input"
-          placeholder="Dirrec"
-          required />
-      </div>
-      <div class="mb-3 position-relative">
-        <input
-          class="form-control p-3"
-          type="password"
-          name="password"
-          id="password-input"
-          placeholder="*Contraseña"
-          required />
-        <button
-          type="button"
-          id="toggle-password"
-          class="position-absolute end-0 top-0 m-3 btn btn-outline-secondary btn-sm">
-          <i id="toggle-icon" class="bi bi-eye"></i>
-        </button>
-      </div>
-      <div>
-        <a href="" class="text-secondary">¿Olvidaste tu contraseña?</a>
-      </div>
-      <div class="d-flex justify-content-end">
-        <button type="submit" class="btn btn-dark mt-3 py-3 px-5 rounded-5">
-          <strong>Iniciar sesión</strong>
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
-{% endcomment %}
