@@ -87,12 +87,12 @@ Distribución de los módulos del sistema:
 
 | Integrante        | Rol                   | Contacto              |
 |-------------------|------------------------|------------------------|
-| Afaro Buiza, Jesus Alberto   | Coordinador / Dev Full | ccarpiop@unsa.edu.pe     |
+| Afaro Buiza, Jesus Alberto   | Coordinador / Dev Full | jalfarob@unsa.edu.pe     |
 | Carpio Paiva Cesar Gonzalo  | Frontend Developer   | ccarpiop@unsa.edu.pe                      |
 | Colque Flores, Gerardo Javier   | Backend Developer      |               @unsa.edu.pe        |
 | Ccolque Quispe, Anthony Criz   | Backend Developer          |              @unsa.edu.pe         |
 | Cornejo Alvarez, Mauricio Andres   | Arquitecto de proyecto   |           @unsa.edu.pe            |
-| Espinoza Barrios, DAvid Alejandro   | Director del proyecto    |            @unsa.edu.pe           |
+| Espinoza Barrios, DAvid Alejandro   | Director del proyecto / Dev Full   |            despinozab@unsa.edu.pe           |
 | Yavar Guillen, Roberto Gustavo  | Documentación          |                @unsa.edu.pe       |
 
 
