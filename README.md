@@ -17,29 +17,33 @@ El propósito de este software es brindar una **plataforma online** donde los us
 
 ## 🚀 Funcionalidades
 
-### Diagrama de casos de uso
-Se presenta nuestro modelo de casos de uso, modelando las necesidades de nuestros usuarios y como interactuan en un entorno real.
-
-![Casos de Uso](src/rm/casosDeUso.jpeg)
-
 ### 🔹 Funcionalidades de Alto Nivel
-
 A continuación, se presenta el **Diagrama de Casos de Uso UML** que representa las principales interacciones del usuario con el sistema:
 
-📎 _[Incluir aquí una imagen o enlace al diagrama]_  
-`Ejemplo: docs/casos_de_uso.png`
 
+![Casos de Uso](scr/rm/casosDeUso.jpeg)
+
+**Usuario**
 - Ver y navegar el mapa
-- Marcar ubicaciones
-- Comentar o etiquetar zonas
-- Interactuar con otros usuarios
+- Iniciar sesion
+- Reportar estado del trafico
+- Consultar mapa de trafico
+- Actualizar perfil
+- Filtrar reportes por zona
+- Recibir notificaciones de trafico
+**Administrador**
+- Gestionar usuarios
+- Moderar reportes
+- Generar estadisticas
+- Configurar zonas de la ciudad
+- Eliminar reportes inapropiados
 
 ### 🔸 Prototipo / GUI
 
 Visual de la interfaz de usuario o boceto inicial del sistema:
 
-📎 _[Incluir capturas del prototipo o mockup]_  
-`Ejemplo: docs/prototipo_gui.png`
+![Prototipo](scr/rm/prototipo.png)
+
 
 ---
 
@@ -49,7 +53,7 @@ Visual de la interfaz de usuario o boceto inicial del sistema:
 
 Representación de las principales entidades y sus relaciones dentro del sistema:
 
-![UML](src/rm/uml.jpg)
+![UML](scr/rm/uml.jpg)
 
 ### 📦 Módulos
 
@@ -67,14 +71,14 @@ Representación de las principales entidades y sus relaciones dentro del sistema
 
 Distribución de los módulos del sistema:
 
-📎 _[Incluir diagrama de paquetes]_  
-`Ejemplo: docs/diagrama_paquetes.png`
+(hacer un diagrama del UML pero simplifcado)
+
 
 ### 🔧 Clases Principales
 
-- `MapaController`: lógica de control del mapa.
-- `UsuarioService`: gestión de usuarios.
-- `ChatManager`: controlador de mensajes en vivo.
+- `HeatMapController`: lógica de control del mapa.
+- `UserService`: gestión de usuarios.
+- `ReportManager`: controlador de mensajes en vivo.
 - `MapRenderer`: renderizado visual del mapa.
 
 ---
@@ -86,25 +90,24 @@ Distribución de los módulos del sistema:
 | Afaro Buiza, Jesus Alberto   | Coordinador / Dev Full | ccarpiop@unsa.edu.pe     |
 | Carpio Paiva Cesar Gonzalo  | Frontend Developer   | ccarpiop@unsa.edu.pe                      |
 | Colque Flores, Gerardo Javier   | Backend Developer      |               @unsa.edu.pe        |
-| Ccolque Quispe, Anthony Criz   | Documentación          |              @unsa.edu.pe         |
-| Cornejo Alvarez, Mauricio Andres   | Documentación          |           @unsa.edu.pe            |
-| Espinoza Barrios, DAvid Alejandro   | Documentación          |            @unsa.edu.pe           |
+| Ccolque Quispe, Anthony Criz   | Backend Developer          |              @unsa.edu.pe         |
+| Cornejo Alvarez, Mauricio Andres   | Arquitecto de proyecto   |           @unsa.edu.pe            |
+| Espinoza Barrios, DAvid Alejandro   | Director del proyecto    |            @unsa.edu.pe           |
 | Yavar Guillen, Roberto Gustavo  | Documentación          |                @unsa.edu.pe       |
-
 
 
 ---
 
 ## 📄 Licencia
 
-Este proyecto está bajo la licencia MIT.  
+Este proyecto está bajo la licencia (creo q borramos esto (?)).  
 Consulta el archivo `LICENSE` para más información.
 
 ---
 
 ## 🛠️ Tecnologías Utilizadas
 
-- Lenguaje: `JavaScript`, `Python`, `Java` (ajustar según el caso)
-- Framework: `React`, `Node.js`, `Django` (ajustar)
-- Base de Datos: `PostgreSQL`, `MongoDB` (ajustar)
-- APIs: `Leaflet`, `OpenStreetMap`, etc.
+- Lenguajes de programacion: `Python`
+- Framework: `Bootstrap`
+- Base de Datos: `PostgreSQL`
+- APIs: `Leaflet`
