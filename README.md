@@ -17,6 +17,11 @@ El propósito de este software es brindar una **plataforma online** donde los us
 
 ## 🚀 Funcionalidades
 
+### Diagrama de casos de uso
+Se presenta nuestro modelo de casos de uso, modelando las necesidades de nuestros usuarios y como interactuan en un entorno real.
+
+![Casos de Uso](src/rm/casosDeUso.jpeg)
+
 ### 🔹 Funcionalidades de Alto Nivel
 
 A continuación, se presenta el **Diagrama de Casos de Uso UML** que representa las principales interacciones del usuario con el sistema:
@@ -44,8 +49,7 @@ Visual de la interfaz de usuario o boceto inicial del sistema:
 
 Representación de las principales entidades y sus relaciones dentro del sistema:
 
-📎 _[Incluir aquí el diagrama de clases UML]_  
-`Ejemplo: docs/diagrama_clases.png`
+![UML](src/rm/uml.jpg)
 
 ### 📦 Módulos
 
