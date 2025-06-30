@@ -1,17 +1,17 @@
 
 # 🌐 Mapa Interactivo Colaborativo
 
-Un proyecto grupal que permite conectar personas mediante un **mapa interactivo en línea**, fomentando la exploración, interacción y colaboración en tiempo real.
+El presente protecto tiene como objetivo aprender sobre el desarrollo de software con tecnologias moderdas explorando arquitecturas de software, frameworks, DDD, Herramientas de desarrollo agil y demas que estan detalladas en el presente. El proyecto es grupal y su objetivo es conectar personas mediante un **mapa de calor en línea** y **Sistema de reportes**, permitiendo la interacción y colaboración en tiempo real.
 
 ---
 
 ## 📌 Propósito
 
 El propósito de este software es brindar una **plataforma online** donde los usuarios puedan:
-- Navegar e interactuar con un mapa visualmente dinámico.
-- Compartir ubicaciones, comentarios o información georreferenciada.
+- Analizar un mapa de calor para poder evitar ciertas zonas de alto transito.
+- Compartir ubicaciones, comentarios o información sobre posibles incidencias que perjudiquen el trafico.
 - Colaborar en tiempo real con otros usuarios conectados.
-- Potenciar actividades como turismo, educación geográfica o planificación de eventos.
+- Potenciar actividades sociales como el ciclismo o la exploracion de rutas alternativas.
 
 ---
 
@@ -79,10 +79,15 @@ Distribución de los módulos del sistema:
 
 | Integrante        | Rol                   | Contacto              |
 |-------------------|------------------------|------------------------|
-| Nombre Apellido   | Coordinador / Dev Full | email@ejemplo.com     |
-| Nombre Apellido   | Frontend Developer     |                       |
-| Nombre Apellido   | Backend Developer      |                       |
-| Nombre Apellido   | Documentación          |                       |
+| Afaro Buiza, Jesus Alberto   | Coordinador / Dev Full | ccarpiop@unsa.edu.pe     |
+| Carpio Paiva Cesar Gonzalo  | Frontend Developer   | ccarpiop@unsa.edu.pe                      |
+| Colque Flores, Gerardo Javier   | Backend Developer      |               @unsa.edu.pe        |
+| Ccolque Quispe, Anthony Criz   | Documentación          |              @unsa.edu.pe         |
+| Cornejo Alvarez, Mauricio Andres   | Documentación          |           @unsa.edu.pe            |
+| Espinoza Barrios, DAvid Alejandro   | Documentación          |            @unsa.edu.pe           |
+| Yavar Guillen, Roberto Gustavo  | Documentación          |                @unsa.edu.pe       |
+
+
 
 ---
 
