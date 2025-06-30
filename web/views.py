@@ -12,7 +12,7 @@ from .forms import RegistroUsuarioForm, LoginForm
 class RegistroUsuarioView(FormView):
     template_name = 'register.html'
     form_class = RegistroUsuarioForm
-    success_url = reverse_lazy('test')
+    success_url = reverse_lazy('dashboard')
     
     def form_valid(self, form):
         user = form.save()
@@ -24,7 +24,7 @@ class RegistroUsuarioView(FormView):
 class LoginView(FormView):
     template_name = 'login.html'
     form_class = LoginForm
-    success_url = reverse_lazy('test')  # Cambiar esto por 'dashboard' luego
+    success_url = reverse_lazy('dashboard')  
     
     def dispatch(self, request, *args, **kwargs):
         # Redirige si ya está autenticado
