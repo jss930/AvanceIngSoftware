@@ -22,36 +22,29 @@
         alt="user-icon" />
       <h4 class="text-center mb-4 text-muted">Bienvenido, crea tu cuenta</h4>
     </div>
-    <form action="" method="post" id="registro-form" novalidate>
+    <form method="post" id="registro-form" novalidate>
+      {% csrf_token %}
+
       <div class="form-floating mb-3">
-        <input
-          type="text"
-          class="form-control"
-          id="username"
-          placeholder="Usuario"
-          required />
+        {{ form.username }}
         <label for="username">Usuario</label>
-        <div class="invalid-feedback">Ingresa un usuario válido.</div>
+        {% if form.username.errors %}
+        <div class="invalid-feedback d-block">{{ form.username.errors.0 }}</div>
+        {% endif %}
       </div>
 
       <div class="form-floating mb-3">
-        <input
-          type="email"
-          class="form-control"
-          id="email"
-          placeholder="name@example.com"
-          required />
-        <label for="email">Correo electronico</label>
-        <div class="invalid-feedback">Ingresa un correo válido.</div>
+        {{ form.email }}
+        <label for="email">Correo electrónico</label>
+        {% if form.email.errors %}
+        <div class="invalid-feedback d-block">{{ form.email.errors.0 }}</div>
+        {% endif %}
       </div>
+
+      <!-- Contraseña 1 -->
       <div class="position-relative mb-3">
         <div class="form-floating position-relative col-11 d-flex w-100">
-          <input
-            type="password"
-            class="form-control password-input"
-            id="password1"
-            placeholder="Contraseña"
-            required />
+          {{ form.password1 }}
           <label for="password1">Contraseña</label>
           <button
             type="button"
@@ -59,19 +52,17 @@
             <i class="bi bi-eye toggle-icon"></i>
           </button>
         </div>
-        <div class="invalid-feedback">
-          Ingresa una contraseña válido (tamaño >5).
+        {% if form.password1.errors %}
+        <div class="invalid-feedback d-block">
+          {{ form.password1.errors.0 }}
         </div>
+        {% endif %}
       </div>
 
+      <!-- Contraseña 2 -->
       <div class="position-relative mb-3">
         <div class="form-floating position-relative col-11 d-flex w-100">
-          <input
-            type="password"
-            class="form-control password-input"
-            id="password2"
-            placeholder="Confirmar contraseña"
-            required />
+          {{ form.password2 }}
           <label for="password2">Confirmar Contraseña</label>
           <button
             type="button"
@@ -79,17 +70,20 @@
             <i class="bi bi-eye toggle-icon"></i>
           </button>
         </div>
-        <div class="invalid-feedback">Las contraseñas no coinciden.</div>
+        {% if form.password2.errors %}
+        <div class="invalid-feedback d-block">
+          {{ form.password2.errors.0 }}
+        </div>
+        {% endif %}
       </div>
 
       <p class="text-muted text-end pe-4" style="font-size: 0.8em">
         ¿Ya tienes una cuenta?
-        <a
-          href="{%url 'login'%}"
-          class="link-offset-1-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover"
+        <a href="{% url 'login' %}" class="link-offset-1-hover"
           >Iniciar Sesión</a
         >
       </p>
+
       <div class="d-flex justify-content-end pe-4">
         <button type="submit" class="btn btn-secondary">Crear cuenta</button>
       </div>
