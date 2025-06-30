@@ -111,3 +111,8 @@ Consulta el archivo `LICENSE` para más información.
 - Framework: `Bootstrap`
 - Base de Datos: `PostgreSQL`
 - APIs: `Leaflet`
+
+### Enlace a tablero TRELLO
+Enlace para visualizar como distribuimos el trabajo mediante tecnologias agiles:
+
+visita nuestro [Trello](https://trello.com/b/VHHYqcFk/is-sistema-de-reportes-de-trafico-arequipa).
