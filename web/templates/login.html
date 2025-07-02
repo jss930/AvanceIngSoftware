@@ -20,16 +20,16 @@
         alt="user-icon" />
       <h4 class="text-center mb-4 text-muted">Bienvenido de vuelta</h4>
     </div>
-    
+
     <!-- Mensajes de Django -->
-    {% if messages %}
-      {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-          {{ message }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-      {% endfor %}
-    {% endif %}
+    {% if messages %} {% for message in messages %}
+    <div
+      class="alert alert-{{ message.tags }} alert-dismissible fade show"
+      role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %} {% endif %}
 
     <form method="post" id="login-form" novalidate>
       {% csrf_token %}
@@ -54,19 +54,17 @@
           </button>
         </div>
         {% if form.password.errors %}
-        <div class="invalid-feedback d-block">
-          {{ form.password.errors.0 }}
-        </div>
+        <div class="invalid-feedback d-block">{{ form.password.errors.0 }}</div>
         {% endif %}
       </div>
 
       <!-- Mostrar errores generales del formulario -->
       {% if form.non_field_errors %}
-        <div class="alert alert-danger">
-          {% for error in form.non_field_errors %}
-            <div>{{ error }}</div>
-          {% endfor %}
-        </div>
+      <div class="alert alert-danger">
+        {% for error in form.non_field_errors %}
+        <div>{{ error }}</div>
+        {% endfor %}
+      </div>
       {% endif %}
 
       <p class="text-muted text-end pe-4" style="font-size: 0.8em">
@@ -93,7 +91,8 @@
   // Mostrar/ocultar contraseña
   if (toggleButton) {
     toggleButton.addEventListener("click", () => {
-      const type = password.getAttribute("type") === "password" ? "text" : "password";
+      const type =
+        password.getAttribute("type") === "password" ? "text" : "password";
       password.setAttribute("type", type);
       toggleIcon.classList.toggle("bi-eye");
       toggleIcon.classList.toggle("bi-eye-slash");
