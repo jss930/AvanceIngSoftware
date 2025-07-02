@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TRAFFIC PULSE</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr"
+      crossorigin="anonymous" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+    {% load static %}
+  </head>
+  <body class="bg-light">
+    <header class="bg-success text-white text-center py-3">
+      <h1>TRAFFIC PULSE</h1>
+    </header>
+
+    <div class="container text-center py-5">
+      <img
+        src="{% static 'images/logo.png' %}"
+        alt="Ícono de la aplicación"
+        class="img-fluid mb-4"
+        style="width: 700px; height: 350px" />
+
+      <p class="fs-4 mb-4">
+        ¡Bienvenido a TRAFFIC PULSE! <br />
+        Visualiza mapas de calor actualizados para evitar congestionamientos y
+        llegar a tu destino más rápido. <br />
+        ¡Planifica tus rutas de manera inteligente!
+      </p>
+
+      <a href="{% url 'register' %}" class="btn btn-success btn-lg me-3"
+        >Crear Cuenta</a
+      >
+      <a href="{%url 'login'%}" class="btn btn-primary btn-lg">
+        <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+      </a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
