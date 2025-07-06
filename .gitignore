@@ -23,3 +23,5 @@ db.sqlite3
 
 # Archivos de configuración secreta
 .env
+
+.idea/
