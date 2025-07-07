@@ -20,9 +20,9 @@ from web import views
 
 urlpatterns = [
 
-    path('admin/', admin.site.urls),
+    path('admin/', admin.site.urls), #admin django
     path('loginadmin/', views.custom_login, name='custom_login'),  # Login admin
-    path('panel/', views.panel_personalizado, name='panel_personalizado'),  # Nuevo panel
+    path('panel/', views.panel_personalizado, name='panel_personalizado'),  # Nuevo panel admin
     path('logout/', views.logout_view, name='logout'),  # Logout
     path('', include('web.urls')),  # Enlazamiento
 ]
