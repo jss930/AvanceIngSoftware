@@ -16,8 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from web import views
 
 urlpatterns = [
+
     path('admin/', admin.site.urls),
+    path('loginadmin/', views.custom_login, name='custom_login'),  # Login admin
+    path('panel/', views.panel_personalizado, name='panel_personalizado'),  # Nuevo panel
+    path('logout/', views.logout_view, name='logout'),  # Logout
     path('', include('web.urls')),  # Enlazamiento
 ]
