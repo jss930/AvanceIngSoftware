@@ -1,9 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+from app.repositorio.reporte.reporteColaborativoRepositoryImpl import ReporteColaborativoRepositoryImpl
 
 class ReporteColaborativoApplicationService:
     def __init__(self):
-        self.reporte_repository = None
+        self.reporte_repository = ReporteColaborativoRepositoryImpl()
         self.usuario_repository = None
         self.reporte_factory = None
         self.servicio_validacion = None
@@ -29,3 +30,6 @@ class ReporteColaborativoApplicationService:
 
     def obtener_reportes_usuario(self, usuario_id):
         pass
+
+    def listar_repotes(self):
+        return self.reporte_repository.obtener_todos()

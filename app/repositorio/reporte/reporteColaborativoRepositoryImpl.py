@@ -1,8 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from dominio.reporte.Interface1 import Interface1
+from app.dominio.reporte.interface1 import Interface1
+from web.models import ReporteColaborativo
+from app.dominio.reporte.iReporteColaborativoRepository import IReporteColaborativoRepository
 
 
-class ReporteColaborativoRepositoryImpl(Interface1):
-    pass
+
+class ReporteColaborativoRepositoryImpl(IReporteColaborativoRepository):
+    def obtener_todos(self):
+        return ReporteColaborativo.objects.all()

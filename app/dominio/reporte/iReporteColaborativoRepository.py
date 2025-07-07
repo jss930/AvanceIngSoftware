@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+from abc import ABC, abstractmethod
 
 class IReporteColaborativoRepository:
     def __init__(self):
@@ -11,6 +12,7 @@ class IReporteColaborativoRepository:
     def buscar_por_id(self, reporte_id):
         pass
 
+    @abstractmethod
     def obtener_todos(self, ):
         pass
 
