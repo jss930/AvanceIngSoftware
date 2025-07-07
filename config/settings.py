@@ -80,6 +80,13 @@ DATABASES = {
     }
 }
 
+# Redirige al usuario a /panel/ después de iniciar sesión
+LOGIN_URL = '/loginadmin/'
+LOGIN_REDIRECT_URL = '/panel/'
+LOGOUT_REDIRECT_URL = '/loginadmin/'
+SESSION_COOKIE_AGE = 86400  #
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
