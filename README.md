@@ -22,6 +22,16 @@ El presente proyecto tiene como objetivo aprender sobre el desarrollo de softwar
 
 ---
 
+## Rerporte de Sonarqube
+
+#### alert_method_empty
+
+![alert_method_empty.jpeg](src/imgs/alert_method_empty.jpeg)
+
+#### alert_string_duplicated
+
+![alert_string_duplicated.jpeg](src/imgs/alert_string_duplicated.jpeg)
+
 ## 📌 Propósito
 
 El propósito de este software es brindar una **plataforma online** donde los usuarios puedan:
