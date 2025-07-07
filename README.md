@@ -26,11 +26,11 @@ El presente proyecto tiene como objetivo aprender sobre el desarrollo de softwar
 
 #### alert_method_empty
 
-![alert_method_empty.jpeg](src/imgs/alert_method_empty.jpeg)
+![Method Empty](scr/imgs/alert_method_empty.jpeg)
 
 #### alert_string_duplicated
 
-![alert_string_duplicated.jpeg](src/imgs/alert_string_duplicated.jpeg)
+![String Duplicate](scr/imgs/alert_string_duplicated.jpeg)
 
 ## 📌 Propósito
 
