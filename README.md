@@ -19,7 +19,8 @@ El presente proyecto tiene como objetivo aprender sobre el desarrollo de softwar
 - Cargar clave secreta desde '.env'
 - Usar 'reverse_lazy()' en URLs y redirreciones
 - Incluir requerements.txt
-- ***
+
+---
 
 ## 📌 Propósito
 
