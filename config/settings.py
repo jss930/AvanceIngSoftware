@@ -21,6 +21,8 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # Load secret key
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+# SECRET_KEY = 'django-insecure-(g%m03g7w61ae3%vl%^(k&^ku^d!--jec#9u0+a6m!m(jai86_'
+
 DEBUG=True
 
 # Quick-start development settings - unsuitable for production
