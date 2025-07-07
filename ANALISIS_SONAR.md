@@ -58,9 +58,7 @@
 
 - Resultado: **Limpio**
 - Comentario: Se usa correctamente el patrón Repository para desacoplar la lógica de acceso a datos.
-
-			  El método obtener_todos tiene una única responsabilidad.
-
+              El método obtener_todos tiene una única responsabilidad.
               Código limpio, directo y sin redundancias..
 
 ---
