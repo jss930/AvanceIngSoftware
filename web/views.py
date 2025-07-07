@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from .forms import RegistroUsuarioForm, LoginForm
+from django.views.generic import TemplateView
 
 # Registro existente (mantenida)
 class RegistroUsuarioView(FormView):
@@ -76,3 +77,14 @@ def register(request):
 
 def test(request):
     return render(request, 'test.html')
+
+# class button conectet
+
+class PlanRouteView(TemplateView):
+    template_name = 'plan_route.html'
+
+class ReportIncidentView(TemplateView):
+    template_name = 'report_incident.html'
+
+class SeeStateView(TemplateView):
+    template_name = 'see_state.html'
