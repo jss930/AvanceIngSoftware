@@ -1,31 +1,49 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
+from datetime import datetime
+from enum import Enum
 
-class Notification:
+class TipoNotificacion(Enum):
+    GENERAL = "general"
+    ALERTA_TRAFICO = "alerta_trafico"
+    ALERTA_EMERGENCIA = "alerta_emergencia"
+    ALERTA_UBICACION = "alerta_ubicacion"
+    SISTEMA = "sistema"
+
+class Notificacion:
     def __init__(self):
         self.notificacion_id = None
-        self.usuario_destinatario_id = None
+        self.usuario_id = None
         self.titulo = None
         self.mensaje = None
+        self.tipo_notificacion = None
         self.fecha_envio = None
         self.fecha_lectura = None
-        self.tipo_notificacion = None
-        self.es_leida = None
-        self.prioridad = None
-        self.datos_adicionales = None
-        self.referencia_reporte_id = None
+        self.es_leida = False
+        self.prioridad = 1
+        self.datos_adicionales = {}
 
-    def marcar_como_leida(self, ):
-        pass
+    def crear_notificacion(self, usuario_id, mensaje, tipo_notificacion="general", titulo=None):
+        self.usuario_id = usuario_id
+        self.mensaje = mensaje
+        self.tipo_notificacion = tipo_notificacion
+        self.titulo = titulo or "Notificación"
+        self.fecha_envio = datetime.now()
+        self.es_leida = False
+        self.calcular_prioridad()
 
-    def es_notificacion_urgente(self, ):
-        pass
+    def calcular_prioridad(self):
+        """Calcular prioridad basada en tipo de notificación"""
+        prioridades = {
+            "alerta_emergencia": 5,
+            "alerta_trafico": 4,
+            "alerta_ubicacion": 3,
+            "sistema": 2,
+            "general": 1
+        }
+        self.prioridad = prioridades.get(self.tipo_notificacion, 1)
 
-    def tiempo_desde_envio(self, ):
-        pass
+    def marcar_como_leida(self):
+        self.es_leida = True
+        self.fecha_lectura = datetime.now()
 
-    def generar_contenido_personalizado(self, usuario):
-        pass
-
-    def calcular_prioridad(self, ):
-        pass
+    def agregar_datos_adicionales(self, key, value):
+        self.datos_adicionales[key] = value
