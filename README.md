@@ -77,7 +77,11 @@ Visual de la interfaz de usuario o boceto inicial del sistema:
 
 ## 🧠 Modelo de Dominio
 
-### 🧩 Diagrama de Clases UML
+Representación abstracta de las clases conceptuales y objetos extraídos del área en cuestión
+
+![Dominio](scr/rm/dominio.png)
+
+### 🧩 Arquitectura de Capas
 
 Representación de las principales entidades y sus relaciones dentro del sistema:
 
