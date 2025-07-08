@@ -3,6 +3,8 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 
+PASSWORD_INPUT_CLASS = 'form-control password-input' # 
+
 class RegistroUsuarioForm(UserCreationForm):
     email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={
         'class': 'form-control',
@@ -17,13 +19,13 @@ class RegistroUsuarioForm(UserCreationForm):
     }))
     
     password1 = forms.CharField(widget=forms.PasswordInput(attrs={
-        'class': 'form-control password-input',
+        'class': PASSWORD_INPUT_CLASS,
         'placeholder': 'Contraseña',
         'id': 'password1',
     }))
    
     password2 = forms.CharField(widget=forms.PasswordInput(attrs={
-        'class': 'form-control password-input',
+        'class': PASSWORD_INPUT_CLASS,
         'placeholder': 'Confirmar contraseña',
         'id': 'password2',
     }))

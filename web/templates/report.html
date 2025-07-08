@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>Reportar Incidente</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h2>Reportar Incidente de Tráfico</h2>
+        
+        <!-- Mostrar mensajes de error/éxito -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        <form method="post" enctype="multipart/form-data" id="reportForm">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.title.id_for_label }}">Título *</label>
+                {{ form.title }}
+                <div class="error-message" id="title-error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.description.id_for_label }}">Descripción *</label>
+                {{ form.description }}
+                <div class="error-message" id="description-error"></div>
+                <small class="form-text text-muted">Mínimo 10 caracteres</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.incident_type.id_for_label }}">Tipo de Incidente *</label>
+                {{ form.incident_type }}
+                <div class="error-message" id="incident_type-error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.photo.id_for_label }}">Foto (opcional)</label>
+                {{ form.photo }}
+                <div class="error-message" id="photo-error"></div>
+                <small class="form-text text-muted">
+                    Formatos permitidos: JPG, PNG, GIF. Máximo 5MB
+                </small>
+                <div id="photo-preview"></div>
+            </div>
+            
+            <!-- Campos ocultos para coordenadas -->
+            {{ form.latitude }}
+            {{ form.longitude }}
+            
+            <div id="map" style="height: 300px; margin: 20px 0;"></div>
+            
+            <button type="submit" class="btn btn-primary">Crear Reporte</button>
+        </form>
+    </div>
+
+    <script>
+        // Validación en tiempo real
+        $(document).ready(function() {
+            // Validar descripción
+            $('#id_description').on('input', function() {
+                const description = $(this).val().trim();
+                const errorDiv = $('#description-error');
+                
+                if (description.length < 10) {
+                    errorDiv.text('La descripción debe tener al menos 10 caracteres');
+                    errorDiv.show();
+                } else {
+                    errorDiv.hide();
+                }
+            });
+            
+            // Validar foto
+            $('#id_photo').on('change', function() {
+                const file = this.files[0];
+                const errorDiv = $('#photo-error');
+                const previewDiv = $('#photo-preview');
+                
+                if (file) {
+                    // Validar tamaño
+                    if (file.size > 5 * 1024 * 1024) {
+                        errorDiv.text('La imagen no puede ser mayor a 5MB');
+                        errorDiv.show();
+                        return;
+                    }
+                    
+                    // Validar tipo
+                    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                    if (!allowedTypes.includes(file.type)) {
+                        errorDiv.text('Formato no válido. Use JPG, PNG o GIF');
+                        errorDiv.show();
+                        return;
+                    }
+                    
+                    // Mostrar vista previa
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewDiv.html(`
+                            <img src="${e.target.result}" alt="Preview" 
+                                 style="max-width: 200px; max-height: 200px; margin-top: 10px;">
+                        `);
+                    };
+                    reader.readAsDataURL(file);
+                    
+                    errorDiv.hide();
+                }
+            });
+            
+            // Validar formulario antes de enviar
+            $('#reportForm').on('submit', function(e) {
+                let isValid = true;
+                
+                // Validar campos requeridos
+                if (!$('#id_title').val().trim()) {
+                    $('#title-error').text('El título es requerido').show();
+                    isValid = false;
+                }
+                
+                if (!$('#id_description').val().trim() || $('#id_description').val().trim().length < 10) {
+                    $('#description-error').text('La descripción debe tener al menos 10 caracteres').show();
+                    isValid = false;
+                }
+                
+                if (!$('#id_incident_type').val()) {
+                    $('#incident_type-error').text('Debe seleccionar un tipo de incidente').show();
+                    isValid = false;
+                }
+                
+                if (!$('#id_latitude').val() || !$('#id_longitude').val()) {
+                    alert('Debe seleccionar una ubicación en el mapa');
+                    isValid = false;
+                }
+                
+                if (!isValid) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
