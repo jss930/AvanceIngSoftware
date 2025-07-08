@@ -1,5 +1,9 @@
+<<<<<<< Updated upstream
 # views.py
 from django.shortcuts import render, HttpResponse, redirect
+=======
+from django.shortcuts import render, HttpResponse
+>>>>>>> Stashed changes
 from django.views.generic import FormView
 from django.urls import reverse_lazy
 from django.contrib.auth import authenticate, login, logout
@@ -59,7 +63,10 @@ class LoginView(FormView):
         username = form.cleaned_data.get('username')
         password = form.cleaned_data.get('password')
         
+<<<<<<< Updated upstream
         user = authenticate(username=username, password=password)
+=======
+>>>>>>> Stashed changes
         if user is not None:
             login(self.request, user)
             messages.success(self.request, f'¡Bienvenido, {user.username}!')
@@ -73,6 +80,7 @@ class LoginView(FormView):
             form.add_error(None, 'Usuario o contraseña incorrectos.')
             return self.form_invalid(form)
 
+<<<<<<< Updated upstream
 # Vista de logout (function-based es más simple para logout)
 def logout_view(request):
     """Vista para logout de usuarios"""
@@ -89,6 +97,13 @@ class DashboardView(LoginRequiredMixin, FormView):
         return render(request, self.template_name, {
             'user': request.user
         })
+=======
+
+
+
+
+
+>>>>>>> Stashed changes
 
 # Tus vistas existentes (mantenidas)
 def home(request):
