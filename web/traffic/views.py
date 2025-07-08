@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from .forms import TrafficIncidentForm
+from django.views.generic import TemplateView
 
 def create_report(request):
     if request.method != 'POST':
@@ -42,3 +43,15 @@ def handle_validation_errors(request, exception):
     for field, errors in exception.message_dict.items():
         for error in errors:
             messages.error(request, f'{field}: {error}')
+
+#  Clases conectar botones
+
+
+class PlanRouteView(TemplateView):
+    template_name = 'plan_route.html'
+
+class ReportIncidentView(TemplateView):
+    template_name = 'report_incident.html'
+
+class SeeStateView(TemplateView):
+    template_name = 'see_state.html'

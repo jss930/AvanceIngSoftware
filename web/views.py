@@ -1,6 +1,6 @@
 # views.py
 from django.shortcuts import render, HttpResponse, redirect
-from django.views.generic import FormView
+from django.views.generic import FormView, TemplateView
 from django.urls import reverse_lazy
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -29,7 +29,6 @@ def panel_personalizado(request):
 def logout_admin(request):
     logout(request)
     return redirect('custom_login')
-
 
 # Registro existente (mantenida)
 class RegistroUsuarioView(FormView):
@@ -141,3 +140,13 @@ def admin_reportes(request):
         "fecha_actual": fecha,
         "ubicacion_actual": ubicacion
     })
+
+# class button conectet
+class PlanRouteView(TemplateView):
+    template_name = 'plan_route.html'
+
+class ReportIncidentView(TemplateView):
+    template_name = 'report_incident.html'
+
+class SeeStateView(TemplateView):
+    template_name = 'see_state.html'
