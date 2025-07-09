@@ -2,6 +2,8 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
+from .models import ReporteColaborativo
+
 
 FORM_CONTROL = 'form-control'
 FORM_CONTROL_PASSWORD_INPUT = 'form-control password-input'
@@ -48,3 +50,10 @@ class LoginForm(AuthenticationForm):
         'placeholder': 'Contraseña',
         'id': 'password',
     }))
+
+## Registro de reportes
+
+class ReporteColaborativoForm(forms.ModelForm):
+    class Meta:
+        model = ReporteColaborativo
+        fields = ['titulo', 'descripcion', 'ubicacion', 'tipo_incidente']

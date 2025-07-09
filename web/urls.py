@@ -16,4 +16,8 @@ urlpatterns = [
     path('plan_route/', views.PlanRouteView.as_view(), name='plan_route'),
     path('report_incident/', views.ReportIncidentView.as_view(), name='report_incident'),
     path('see_state/', views.SeeStateView.as_view(), name='see_state'),
+    ##test report post
+    path('reportes/', views.lista_reportes, name='lista_reportes'),
+    path('reportes/agregar/', views.agregar_reporte, name='agregar_reporte'),
+    path('reportes/eliminar/<int:id>/', views.eliminar_reporte, name='eliminar_reporte'),
 ]
