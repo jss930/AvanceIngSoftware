@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crear Alerta | Traffic Pulse</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .form-section {
+      max-width: 950px;
+      margin: auto;
+      margin-top: 60px;
+    }
+    .card-custom {
+      border-radius: 1rem;
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.05);
+    }
+    select[multiple] {
+      height: 250px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container form-section">
+  <div class="card card-custom">
+    <div class="card-header bg-danger text-white d-flex align-items-center">
+      <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+      <h4 class="mb-0">Crear Alerta</h4>
+    </div>
+    <div class="card-body">
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+
+      <form method="post" id="form-alerta">
+        {% csrf_token %}
+
+        <div class="mb-3">
+          <label class="form-label">Título</label>
+          {{ form.titulo }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Mensaje</label>
+          {{ form.mensaje }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Ubicación (opcional)</label>
+          {{ form.ubicacion }}
+        </div>
+
+        <!-- Checkbox enviar a todos -->
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="enviar_a_todos" name="enviar_a_todos">
+          <label class="form-check-label" for="enviar_a_todos">
+            Enviar a todos los usuarios
+          </label>
+        </div>
+
+        <!-- Dual Listbox -->
+        <div id="dualbox_container">
+          <label class="form-label">Seleccionar destinatarios:</label>
+          <div class="row">
+            <div class="col-md-5">
+              <label class="form-label">Todos los usuarios</label>
+              <select id="usuarios-disponibles" class="form-control" multiple>
+                {% for usuario in form.fields.destinatarios.queryset %}
+                  <option value="{{ usuario.id }}">{{ usuario.username }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-2 d-flex flex-column justify-content-center align-items-center">
+              <button type="button" class="btn btn-outline-secondary mb-2" onclick="mover('usuarios-disponibles', 'destinatarios')">
+                <i class="bi bi-arrow-right"></i>
+              </button>
+              <button type="button" class="btn btn-outline-secondary" onclick="mover('destinatarios', 'usuarios-disponibles')">
+                <i class="bi bi-arrow-left"></i>
+              </button>
+            </div>
+
+            <div class="col-md-5">
+              <label class="form-label">Usuarios seleccionados</label>
+              <select id="destinatarios" name="destinatarios" class="form-control" multiple></select>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-end mt-4">
+          <button type="submit" class="btn btn-danger px-4">
+            <i class="bi bi-broadcast-pin me-1"></i>Enviar Alerta
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<!-- JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Mover usuarios entre listas
+  function mover(origenId, destinoId) {
+    const origen = document.getElementById(origenId);
+    const destino = document.getElementById(destinoId);
+
+    Array.from(origen.selectedOptions).forEach(op => {
+      origen.remove(op.index);
+      destino.add(op);
+    });
+  }
+
+  // Desactivar dualbox si se marca "enviar a todos"
+  document.getElementById('enviar_a_todos').addEventListener('change', function () {
+    const dualbox = document.getElementById('dualbox_container');
+    dualbox.style.display = this.checked ? 'none' : 'block';
+
+    // Si se marca enviar a todos, limpia el select de destinatarios
+    if (this.checked) {
+      document.getElementById('destinatarios').innerHTML = '';
+    }
+  });
+
+  // Enviar opciones seleccionadas correctamente
+  document.getElementById('form-alerta').addEventListener('submit', function () {
+    const select = document.getElementById('destinatarios');
+    for (let i = 0; i < select.options.length; i++) {
+      select.options[i].selected = true;
+    }
+  });
+</script>
+
+</body>
+</html>

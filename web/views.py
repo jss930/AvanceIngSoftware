@@ -1,19 +1,44 @@
 # views.py
 from django.shortcuts import render, HttpResponse, redirect
-from django.views.generic import FormView
+from django.views.generic import FormView, TemplateView
 from django.urls import reverse_lazy
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
+from django.contrib.admin.views.decorators import staff_member_required
+from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.cache import never_cache
+from django.contrib.auth.models import User
 from .forms import RegistroUsuarioForm, LoginForm
+from app.presentation.controladores.reporteColaborativoController import ReporteColaborativoController
+from .models import Alerta
+from .forms import AlertaForm
+
+# admin
+def is_superuser(user):
+    return user.is_authenticated and user.is_superuser
+
+@login_required(login_url='/loginadmin/')
+@user_passes_test(is_superuser, login_url='/loginadmin/')
+@never_cache
+def panel_personalizado(request):
+    context = {
+        'titulo': 'Panel Administrativo',
+    }
+    return render(request, 'panel/personalizado.html', context)
+
+# Logout del admin
+def logout_admin(request):
+    logout(request)
+    return redirect('custom_login')
 
 # Registro existente (mantenida)
 class RegistroUsuarioView(FormView):
     template_name = 'register.html'
     form_class = RegistroUsuarioForm
     success_url = reverse_lazy('dashboard')
-    
+
     def form_valid(self, form):
         user = form.save()
         login(self.request, user)
@@ -24,24 +49,22 @@ class RegistroUsuarioView(FormView):
 class LoginView(FormView):
     template_name = 'login.html'
     form_class = LoginForm
-    success_url = reverse_lazy('dashboard')  
-    
+    success_url = reverse_lazy('dashboard')
+
     def dispatch(self, request, *args, **kwargs):
-        # Redirige si ya está autenticado
         if request.user.is_authenticated:
             return redirect(self.success_url)
         return super().dispatch(request, *args, **kwargs)
-    
+
     def form_valid(self, form):
         username = form.cleaned_data.get('username')
         password = form.cleaned_data.get('password')
-        
+
         user = authenticate(username=username, password=password)
         if user is not None:
             login(self.request, user)
             messages.success(self.request, f'¡Bienvenido, {user.username}!')
-            
-            # Redirige a la página solicitada o al dashboard
+
             next_page = self.request.GET.get('next')
             if next_page:
                 return redirect(next_page)
@@ -52,7 +75,6 @@ class LoginView(FormView):
 
 # Vista de logout (function-based es más simple para logout)
 def logout_view(request):
-    """Vista para logout de usuarios"""
     logout(request)
     messages.info(request, 'Has cerrado sesión exitosamente.')
     return redirect('login')
@@ -60,8 +82,8 @@ def logout_view(request):
 # Dashboard como Class-Based View
 class DashboardView(LoginRequiredMixin, FormView):
     template_name = 'dashboard.html'
-    login_url = 'login'  # Redirige aquí si no está autenticado
-    
+    login_url = 'login'
+
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name, {
             'user': request.user
@@ -76,3 +98,78 @@ def register(request):
 
 def test(request):
     return render(request, 'test.html')
+
+#login admin / django
+@csrf_protect
+def custom_login(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None and user.is_superuser:
+            login(request, user)
+            response = redirect('/panel/')
+            return response
+        else:
+            messages.error(request, 'Credenciales inválidas o no eres superusuario.')
+    return render(request, 'login_admin.html')
+
+@login_required(login_url='/loginadmin/')
+@user_passes_test(is_superuser, login_url='/loginadmin/')
+@never_cache
+def admin_reportes(request):
+    controlador = ReporteColaborativoController()
+
+    estado = request.GET.get("estado", "")
+    fecha = request.GET.get("fecha", "")
+    ubicacion = request.GET.get("ubicacion", "")
+
+    reportes = controlador.obtener_todos()
+
+    if estado:
+        reportes = [r for r in reportes if r.estado_reporte == estado]
+    if fecha:
+        reportes = [r for r in reportes if r.fecha_creacion == fecha]
+    if ubicacion:
+        reportes = [r for r in reportes if r.ubicacion == ubicacion]
+
+    return render(request, 'partials/admin_reportes.html', {
+        "titulo": "Control de Reportes",
+        "reportes": reportes,
+        "estado_actual": estado,
+        "fecha_actual": fecha,
+        "ubicacion_actual": ubicacion
+    })
+
+@login_required(login_url='/loginadmin/')
+@user_passes_test(is_superuser, login_url='/loginadmin/')
+def crear_alerta(request):
+    if request.method == 'POST':
+        form = AlertaForm(request.POST)
+        if form.is_valid():
+            alerta = form.save(commit=False)
+            alerta.enviado_por = request.user
+            alerta.save()
+
+            if request.POST.get("enviar_a_todos"):
+                destinatarios = User.objects.filter(is_active=True)
+            else:
+                destinatarios_ids = request.POST.getlist("destinatarios")
+                destinatarios = User.objects.filter(id__in=destinatarios_ids)
+
+            alerta.destinatarios.set(destinatarios)
+            messages.success(request, 'Alerta enviada con éxito.')
+            return redirect('crear_alerta')
+    else:
+        form = AlertaForm()
+    return render(request, 'panel/crear_alerta.html', {'form': form, 'titulo': 'Crear Alerta'})
+
+# class button conectet
+class PlanRouteView(TemplateView):
+    template_name = 'plan_route.html'
+
+class ReportIncidentView(TemplateView):
+    template_name = 'report_incident.html'
+
+class SeeStateView(TemplateView):
+    template_name = 'see_state.html'

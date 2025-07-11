@@ -10,20 +10,28 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
+from dotenv import load_dotenv
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load .env file
+load_dotenv(os.path.join(BASE_DIR, '.env'))
+print("DEBUG ENV SECRET_KEY:", os.getenv("DJANGO_SECRET_KEY"))
+
+# Load secret key
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "clave_temporal_insegura")
+DEBUG=True
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-(g%m03g7w61ae3%vl%^(k&^ku^d!--jec#9u0+a6m!m(jai86_'
+# remmovimos SECRET_KEY de este archivo por seguridad :D
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG = True
 
 ALLOWED_HOSTS = []
 
@@ -80,6 +88,13 @@ DATABASES = {
     }
 }
 
+# Redirige al usuario a /panel/ después de iniciar sesión
+LOGIN_URL = '/loginadmin/'
+LOGIN_REDIRECT_URL = '/panel/'
+LOGOUT_REDIRECT_URL = '/loginadmin/'
+SESSION_COOKIE_AGE = 86400  #
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -103,9 +118,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es-ES'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Lima'
 
 USE_I18N = True
 

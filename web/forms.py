@@ -2,30 +2,32 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
+from .models import Alerta
 
-PASSWORD_INPUT_CLASS = 'form-control password-input' # 
+FORM_CONTROL = 'form-control'
+FORM_CONTROL_PASSWORD_INPUT = 'form-control password-input'
 
 class RegistroUsuarioForm(UserCreationForm):
     email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={
-        'class': 'form-control',
+        'class': FORM_CONTROL,
         'placeholder': 'Correo electrónico',
         'id': 'email',
     }))
    
     username = forms.CharField(widget=forms.TextInput(attrs={
-        'class': 'form-control',
+        'class': FORM_CONTROL,
         'placeholder': 'Usuario',
         'id': 'username',
     }))
     
     password1 = forms.CharField(widget=forms.PasswordInput(attrs={
-        'class': PASSWORD_INPUT_CLASS,
+        'class': FORM_CONTROL_PASSWORD_INPUT,
         'placeholder': 'Contraseña',
         'id': 'password1',
     }))
    
     password2 = forms.CharField(widget=forms.PasswordInput(attrs={
-        'class': PASSWORD_INPUT_CLASS,
+        'class': FORM_CONTROL_PASSWORD_INPUT,
         'placeholder': 'Confirmar contraseña',
         'id': 'password2',
     }))
@@ -37,13 +39,32 @@ class RegistroUsuarioForm(UserCreationForm):
 # Nuevo formulario de login
 class LoginForm(AuthenticationForm):
     username = forms.CharField(widget=forms.TextInput(attrs={
-        'class': 'form-control',
+        'class': FORM_CONTROL,
         'placeholder': 'Usuario o correo electrónico',
         'id': 'username',
     }))
     
     password = forms.CharField(widget=forms.PasswordInput(attrs={
-        'class': 'form-control password-input',
+        'class': FORM_CONTROL_PASSWORD_INPUT,
         'placeholder': 'Contraseña',
         'id': 'password',
     }))
+
+class AlertaForm(forms.ModelForm):
+    destinatarios = forms.ModelMultipleChoiceField(
+        queryset=User.objects.all(),
+        widget=forms.SelectMultiple(attrs={
+            'class': 'form-control select2',
+            'id': 'destinatarios',
+        }),
+        required=False,
+    )
+
+    class Meta:
+        model = Alerta
+        fields = ['titulo', 'mensaje', 'destinatarios', 'ubicacion']
+        widgets = {
+            'titulo': forms.TextInput(attrs={'class': FORM_CONTROL}),
+            'mensaje': forms.Textarea(attrs={'class': FORM_CONTROL}),
+            'ubicacion': forms.TextInput(attrs={'class': FORM_CONTROL}),
+        }
