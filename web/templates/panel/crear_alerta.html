@@ -44,21 +44,21 @@
         {% csrf_token %}
 
         <div class="mb-3">
-          <label class="form-label">Título</label>
+          <label class="form-label" for="id_titulo">Título</label>
           {{ form.titulo }}
         </div>
 
         <div class="mb-3">
-          <label class="form-label">Mensaje</label>
+          <label class="form-label" for="id_mensaje">Mensaje</label>
           {{ form.mensaje }}
         </div>
 
         <div class="mb-3">
-          <label class="form-label">Ubicación (opcional)</label>
+          <label class="form-label" for="id_ubicacion">Ubicación (opcional)</label>
           {{ form.ubicacion }}
         </div>
 
-        <!-- Checkbox enviar a todos -->
+        <!-- Checkbox enviar a los usuarios -->
         <div class="form-check mb-3">
           <input class="form-check-input" type="checkbox" id="enviar_a_todos" name="enviar_a_todos">
           <label class="form-check-label" for="enviar_a_todos">
@@ -68,31 +68,33 @@
 
         <!-- Dual Listbox -->
         <div id="dualbox_container">
-          <label class="form-label">Seleccionar destinatarios:</label>
-          <div class="row">
-            <div class="col-md-5">
-              <label class="form-label">Todos los usuarios</label>
-              <select id="usuarios-disponibles" class="form-control" multiple>
-                {% for usuario in form.fields.destinatarios.queryset %}
-                  <option value="{{ usuario.id }}">{{ usuario.username }}</option>
-                {% endfor %}
-              </select>
-            </div>
+          <fieldset aria-labelledby="destinatarios-label">
+            <legend id="destinatarios-label" class="form-label">Seleccionar destinatarios:</legend>
+            <div class="row">
+              <div class="col-md-5">
+                <label class="form-label" for="usuarios-disponibles">Todos los usuarios</label>
+                <select id="usuarios-disponibles" class="form-control" multiple>
+                  {% for usuario in form.fields.destinatarios.queryset %}
+                    <option value="{{ usuario.id }}">{{ usuario.username }}</option>
+                  {% endfor %}
+                </select>
+              </div>
 
-            <div class="col-md-2 d-flex flex-column justify-content-center align-items-center">
-              <button type="button" class="btn btn-outline-secondary mb-2" onclick="mover('usuarios-disponibles', 'destinatarios')">
-                <i class="bi bi-arrow-right"></i>
-              </button>
-              <button type="button" class="btn btn-outline-secondary" onclick="mover('destinatarios', 'usuarios-disponibles')">
-                <i class="bi bi-arrow-left"></i>
-              </button>
-            </div>
+              <div class="col-md-2 d-flex flex-column justify-content-center align-items-center">
+                <button type="button" class="btn btn-outline-secondary mb-2" onclick="mover('usuarios-disponibles', 'destinatarios')">
+                  <i class="bi bi-arrow-right"></i>
+                </button>
+                <button type="button" class="btn btn-outline-secondary" onclick="mover('destinatarios', 'usuarios-disponibles')">
+                  <i class="bi bi-arrow-left"></i>
+                </button>
+              </div>
 
-            <div class="col-md-5">
-              <label class="form-label">Usuarios seleccionados</label>
-              <select id="destinatarios" name="destinatarios" class="form-control" multiple></select>
+              <div class="col-md-5">
+                <label class="form-label" for="destinatarios">Usuarios seleccionados</label>
+                <select id="destinatarios" name="destinatarios" class="form-control" multiple></select>
+              </div>
             </div>
-          </div>
+          </fieldset>
         </div>
 
         <div class="text-end mt-4">
@@ -114,10 +116,10 @@
     const origen = document.getElementById(origenId);
     const destino = document.getElementById(destinoId);
 
-    Array.from(origen.selectedOptions).forEach(op => {
-      origen.remove(op.index);
-      destino.add(op);
-    });
+    for (const opcion of Array.from(origen.selectedOptions)) {
+      origen.remove(opcion.index);
+      destino.add(opcion);
+    }
   }
 
   // Desactivar dualbox si se marca "enviar a todos"
@@ -125,17 +127,17 @@
     const dualbox = document.getElementById('dualbox_container');
     dualbox.style.display = this.checked ? 'none' : 'block';
 
-    // Si se marca enviar a todos, limpia el select de destinatarios
+    // Limpiar destinatarios si está marcado
     if (this.checked) {
       document.getElementById('destinatarios').innerHTML = '';
     }
   });
 
-  // Enviar opciones seleccionadas correctamente
+  // Asegurarse que los destinatarios estén seleccionados al enviar
   document.getElementById('form-alerta').addEventListener('submit', function () {
     const select = document.getElementById('destinatarios');
-    for (let i = 0; i < select.options.length; i++) {
-      select.options[i].selected = true;
+    for (const option of select.options) {
+      option.selected = true;
     }
   });
 </script>
