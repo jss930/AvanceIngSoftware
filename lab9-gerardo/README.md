@@ -272,11 +272,11 @@ document.getElementById('enviar_a_todos').addEventListener('change', function ()
    - **❌ Problema**: Falta de validación en parámetros GET
    - **✅ Solución**: Implementación de validaciones adicionales
 
-### 🔍 Análisis de código antes de usar SonarQube, mostrando errores**
+### 🔍 Análisis de código antes de usar SonarQube, mostrando errores
 ![SonarLint Analysis](img/analisis_antes.png)
 
 
-### 🔍 Análisis de código con SonarQube mostrando mejoras implementadas**
+### 🔍 Análisis de código con SonarQube mostrando mejoras implementadas
 ![SonarLint Analysis](img/analisis_despues.png)
 
 
