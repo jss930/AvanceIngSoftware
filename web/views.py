@@ -144,6 +144,49 @@ def admin_reportes(request):
         "ubicacion_actual": ubicacion
     })
 
+@login_required(login_url='/loginadmin/')
+@user_passes_test(is_superuser, login_url='/loginadmin/')
+@never_cache
+def editar_reporte(request):
+    controlador = ReporteColaborativoController()
+    reporte_id = request.GET.get('id')
+    reporte = None
+
+    if reporte_id:
+        try:
+            reporte_id = int(reporte_id)
+            reporte = controlador.obtener_reporte(reporte_id)
+        except (ValueError, TypeError):
+            messages.error(request, "ID inválido.")
+
+    if request.method == "POST" and reporte:
+        titulo = request.POST.get("titulo", "").strip()
+        descripcion = request.POST.get("descripcion", "").strip()
+        ubicacion = request.POST.get("ubicacion", "").strip()
+        tipo_incidente = request.POST.get("tipo_incidente", "").strip()
+        estado_reporte = request.POST.get("estado_reporte", "").strip()
+
+        # Validación básica
+        if not titulo or not descripcion or not ubicacion or not tipo_incidente or not estado_reporte:
+            messages.error(request, "Todos los campos son obligatorios.")
+        else:
+            # Actualiza atributos
+            reporte.titulo = titulo
+            reporte.descripcion = descripcion
+            reporte.ubicacion = ubicacion
+            reporte.tipo_incidente = tipo_incidente
+            reporte.estado_reporte = estado_reporte
+
+            # Guarda cambios usando el nuevo método
+            controlador.actualizar_reporte_completo(reporte_id, reporte)
+            messages.success(request, "Reporte actualizado correctamente.")
+            return redirect("admin_reportes")  # Reemplaza con el nombre real de tu URL
+
+    return render(request, "partials/editar_reporte.html", {
+        "reporte": reporte
+    })
+
+
 # class button conectet
 class PlanRouteView(TemplateView):
     template_name = 'plan_route.html'

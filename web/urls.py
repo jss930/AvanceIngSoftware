@@ -1,7 +1,7 @@
 # urls.py
 from django.urls import path
 from . import views
-from .views import admin_reportes, LoginView, custom_login
+from .views import admin_reportes, LoginView, custom_login, editar_reporte
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -11,6 +11,7 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),  #logout user
     path('logout_admin/', views.logout_admin, name='logout_admin'),  #logout admin
     path('panel/reportes/', admin_reportes, name='admin_reportes'),  #control reportes
+    path('panel/editar/', editar_reporte, name='editar_reporte'),  #editar reportes
     path('dashboard/', views.DashboardView.as_view(), name='dashboard'),  # Nueva ruta
     path('test/', views.test, name='test'),  # Tu vista de prueba existente
     path('plan_route/', views.PlanRouteView.as_view(), name='plan_route'),

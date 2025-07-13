@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Editar Reporte | Traffic Pulse</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container py-5">
+    <div class="card shadow-sm border-0 rounded-4">
+      <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Editar Reporte</h5>
+      </div>
+
+      <div class="card-body">
+        <!-- Formulario para buscar por ID -->
+        <form method="get" class="mb-4">
+          <div class="mb-3">
+            <label class="form-label">ID del Reporte a Editar</label>
+            <div class="input-group">
+              <input type="number" name="id" class="form-control" placeholder="Ingrese ID del reporte" value="{{ request.GET.id }}">
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search me-1"></i>Buscar
+              </button>
+            </div>
+          </div>
+        </form>
+
+        {% if reporte %}
+        <!-- Formulario de edición -->
+        <form method="post">
+          {% csrf_token %}
+          
+          <div class="mb-3">
+            <label class="form-label">Título</label>
+            <input type="text" name="titulo" value="{{ reporte.titulo }}" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <textarea name="descripcion" class="form-control" rows="4" required>{{ reporte.descripcion }}</textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Ubicación</label>
+            <input type="text" name="ubicacion" value="{{ reporte.ubicacion }}" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Tipo de Incidente</label>
+            <input type="text" name="tipo_incidente" value="{{ reporte.tipo_incidente }}" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Estado del Reporte</label>
+            <select name="estado_reporte" class="form-select" required>
+              <option value="pendiente" {% if reporte.estado_reporte == "pendiente" %}selected{% endif %}>Pendiente</option>
+              <option value="en_proceso" {% if reporte.estado_reporte == "en_proceso" %}selected{% endif %}>En Proceso</option>
+              <option value="resuelto" {% if reporte.estado_reporte == "resuelto" %}selected{% endif %}>Resuelto</option>
+            </select>
+          </div>
+
+          <div class="d-flex justify-content-between">
+            <a href="{% url 'admin_reportes' %}" class="btn btn-secondary">
+              <i class="bi bi-arrow-left me-1"></i>Cancelar
+            </a>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-save me-1"></i>Guardar Cambios
+            </button>
+          </div>
+        </form>
+        {% else %}
+          <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            Por favor, ingrese un ID de reporte válido para comenzar la edición.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</body>
+</html>
