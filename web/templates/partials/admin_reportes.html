@@ -33,7 +33,7 @@
             <select name="estado" class="form-select">
               <option value="">-- Todos --</option>
               <option value="pendiente" {% if estado_actual == 'pendiente' %}selected{% endif %}>Pendiente</option>
-              <option value="resuelto" {% if estado_actual == 'resuelto' %}selected{% endif %}>Resuelto</option>
+              <option value="resuelto" {% if estado_actual == 'aprobado' %}selected{% endif %}>Resuelto</option>
               <option value="en_proceso" {% if estado_actual == 'en_proceso' %}selected{% endif %}>En proceso</option>
             </select>
           </div>
