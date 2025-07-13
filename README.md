@@ -77,7 +77,11 @@ Visual de la interfaz de usuario o boceto inicial del sistema:
 
 ## 🧠 Modelo de Dominio
 
-### 🧩 Diagrama de Clases UML
+Representación abstracta de las clases conceptuales y objetos extraídos del área en cuestión
+
+![Dominio](scr/rm/dominio.png)
+
+### 🧩 Arquitectura de Capas
 
 Representación de las principales entidades y sus relaciones dentro del sistema:
 
@@ -118,7 +122,7 @@ Distribución de los módulos del sistema:
 | Carpio Paiva Cesar Gonzalo        | Frontend Developer               | ccarpiop@unsa.edu.pe   |
 | Colque Flores, Gerardo Javier     | Backend Developer                | @unsa.edu.pe           |
 | Ccolque Quispe, Anthony Criz      | Backend Developer                | @unsa.edu.pe           |
-| Cornejo Alvarez, Mauricio Andres  | Arquitecto de proyecto           | @unsa.edu.pe           |
+| Cornejo Alvarez, Mauricio Andres  | Arquitecto de proyecto           | mcornejoalv@unsa.edu.pe|
 | Espinoza Barrios, DAvid Alejandro | Director del proyecto / Dev Full | despinozab@unsa.edu.pe |
 | Yavar Guillen, Roberto Gustavo    | Documentación                    | @unsa.edu.pe           |
 

@@ -86,11 +86,11 @@
                     </div>
                     <h5 class="card-title text-dark mb-2">Planificar Ruta</h5>
                     <p class="card-text text-muted mb-3">
-                      Encuentra la mejor ruta evitando congestión y bloqueos.
+                     Encuentra la mejor ruta evitando congestión y bloqueos.
                     </p>
-                    <button class="btn btn-success btn-sm px-4 rounded-pill">
-                      <i class="bi bi-arrow-right me-2"></i>Comenzar
-                    </button>
+			<a href="{% url 'plan_route' %}" class="btn btn-success btn-sm px-4 rounded-pill">
+			  <i class="bi bi-arrow-right me-2"></i>Comenzar
+			</a>
                   </div>
                 </div>
               </div>
@@ -105,9 +105,9 @@
                     <p class="card-text text-muted mb-3">
                       Informa sobre accidentes, bloqueos o construcciones.
                     </p>
-                    <button class="btn btn-warning btn-sm px-4 rounded-pill">
-                      <i class="bi bi-plus-circle me-2"></i>Reportar
-                    </button>
+			<a href="{% url 'report_incident' %}" class="btn btn-warning btn-sm px-4 rounded-pill">
+			  <i class="bi bi-plus-circle me-2"></i>Reportar
+			</a>
                   </div>
                 </div>
               </div>
@@ -122,9 +122,9 @@
                     <p class="card-text text-muted mb-3">
                       Monitorea el tráfico en tiempo real en toda la ciudad.
                     </p>
-                    <button class="btn btn-primary btn-sm px-4 rounded-pill">
-                      <i class="bi bi-eye me-2"></i>Ver Estado
-                    </button>
+			<a href="{% url 'see_state' %}" class="btn btn-primary btn-sm px-4 rounded-pill">
+			  <i class="bi bi-eye me-2"></i>Ver Estado
+			</a>
                   </div>
                 </div>
               </div>
