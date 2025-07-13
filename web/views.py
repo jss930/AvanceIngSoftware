@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.cache import never_cache
+from django.utils.decorators import method_decorator
 from .forms import RegistroUsuarioForm, LoginForm
 from app.presentation.controladores.reporteColaborativoController import ReporteColaborativoController
 
@@ -80,6 +81,8 @@ def logout_view(request):
     return redirect('login')
 
 # Dashboard como Class-Based View
+@method_decorator(login_required(login_url='/login/'), name='dispatch')
+@method_decorator(never_cache, name='dispatch')
 class DashboardView(LoginRequiredMixin, FormView):
     template_name = 'dashboard.html'
     login_url = 'login'  # Redirige aquí si no está autenticado
