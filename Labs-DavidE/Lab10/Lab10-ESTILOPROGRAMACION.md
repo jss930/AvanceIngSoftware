@@ -26,20 +26,20 @@ El estilo pipeline se aplica al organizar el flujo de una función como una secu
 
 **Fragmento utilizado:**
 
-![Things](img/captura3.png)
+![Things](img/captura2.png)
 
 ### 3. Exception Handling
 
-**Descripción:** Uso explícito del manejo de errores para evitar interrupciones por entradas inválidas.
+**Descripción:** Este estilo se aplica al gestionar errores potenciales mediante bloques try-except, evitando que la aplicación se detenga abruptamente. En este caso, si el ID ingresado por el usuario no es válido, el sistema captura la excepción, muestra un mensaje y continúa funcionando correctamente. Esto mejora la experiencia de usuario y la estabilidad del sistema.
 
-**Fragmento:**
+**Fragmento utilizado:**
 
 ![Exception](img/captura3.png)
 
 ### 4. Persistent-Tables Style
 
-**Descripción:** Uso del ORM de Django para mapear objetos a tablas persistentes.
+**Descripción:** Se utiliza un repositorio para actualizar los datos persistentes en una base de datos mediante el ORM de Django. Esta lógica abstrae el almacenamiento, permitiendo modificar registros sin acoplar directamente la lógica de negocio con el modelo de datos. Esta separación favorece la reutilización de código y el cumplimiento de principios SOLID.
 
-**Fragmento:**
+**Fragmento utilizado:**
 
 ![Pesistent](img/captura4.png)
