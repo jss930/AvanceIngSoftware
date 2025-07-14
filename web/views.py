@@ -1,6 +1,7 @@
 # views.py
 from django.shortcuts import render, HttpResponse, redirect
 from django.views.generic import FormView, TemplateView
+from django.views.generic.edit import CreateView
 from django.urls import reverse_lazy
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -9,8 +10,10 @@ from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.cache import never_cache
-from .forms import RegistroUsuarioForm, LoginForm
+from .forms import RegistroUsuarioForm, LoginForm, ReporteColaborativoForm
 from app.presentation.controladores.reporteColaborativoController import ReporteColaborativoController
+from .models import ReporteColaborativo
+
 
 # admin
 def is_superuser(user):
@@ -145,8 +148,15 @@ def admin_reportes(request):
 class PlanRouteView(TemplateView):
     template_name = 'plan_route.html'
 
-class ReportIncidentView(TemplateView):
+class ReporteIncidentView(CreateView):
+    model = ReporteColaborativo
+    form_class = ReporteColaborativoForm
     template_name = 'report_incident.html'
+    success_url = reverse_lazy('dashboard')  # Cambia esto según tu vista destino
+
+    def form_valid(self, form):
+        form.instance.usuario_reportador = self.request.user
+        return super().form_valid(form)
 
 class SeeStateView(TemplateView):
     template_name = 'see_state.html'

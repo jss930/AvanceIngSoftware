@@ -19,9 +19,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Load .env file
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
+#config para repositorio de reporte
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+
 # Load secret key
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
-# SECRET_KEY = 'django-insecure-(g%m03g7w61ae3%vl%^(k&^ku^d!--jec#9u0+a6m!m(jai86_'
 
 DEBUG=True
 
