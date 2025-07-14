@@ -12,6 +12,7 @@ from django.views.decorators.cache import never_cache
 from .forms import RegistroUsuarioForm, LoginForm
 from app.presentation.controladores.reporteColaborativoController import ReporteColaborativoController
 from app.dominio.mapa_calor.generador_mapa import generar_mapa_calor
+import os
 # admin
 def is_superuser(user):
     return user.is_authenticated and user.is_superuser
@@ -90,14 +91,30 @@ class DashboardView(LoginRequiredMixin, FormView):
         })
 # Mapa de calor funcion
 def vista_mapa(request):
+    print("✅ Entrando a vista_mapa...")
+
     reportes = [
         {"latitud": -16.4091, "longitud": -71.5375, "estado": "congestionado"},
         {"latitud": -16.4100, "longitud": -71.5360, "estado": "fluido"},
         {"latitud": -16.4080, "longitud": -71.5380, "estado": "congestionado"}
     ]
+
     mapa = generar_mapa_calor(reportes)
-    mapa.save("web/templates/mapa_calor.html")  # <--- GUÁRDALO AQUÍ
-    return render(request, "mapa_calor.html")
+
+    ruta_mapa = os.path.abspath("web/templates/mapa_embebido.html")
+    mapa.save(ruta_mapa)
+    print("✅ Mapa guardado en:", ruta_mapa)
+
+    try:
+        with open(ruta_mapa, "r", encoding="utf-8") as f:
+            mapa_html = f.read()
+        print("✅ HTML del mapa leído correctamente")
+    except Exception as e:
+        print("❌ ERROR leyendo mapa:", e)
+        mapa_html = "<p>Error al cargar el mapa</p>"
+
+    return render(request, "see_state.html", {"mapa_html": mapa_html})
+
 
 # Tus vistas existentes (mantenidas)
 def home(request):
