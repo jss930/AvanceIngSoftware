@@ -279,4 +279,8 @@ document.getElementById('enviar_a_todos').addEventListener('change', function ()
 ### 🔍 Análisis de código con SonarQube mostrando mejoras implementadas
 ![SonarLint Analysis](img/analisis_despues.png)
 
+## 📌 Gestión de Tareas - Trello
+
+🔗 [Tablero de Trello - Traffic Pulse](https://trello.com/c/DFO7FGWQ/21-gestionar-alertas-y-comunicaci%C3%B3n-con-usuarios)
+
 

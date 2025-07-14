@@ -1,21 +1,34 @@
-# Traffic Pulse - Sistema de Alertas de Tráfico
+# 🚦 Traffic Pulse - Sistema de Alertas de Tráfico
 
-## Descripción del Proyecto
+💡 Traffic Pulse es una plataforma colaborativa para gestionar alertas de tráfico, optimizando la comunicación entre ciudadanos y administradores.
+
+## 📋 Descripción del Proyecto
 
 Traffic Pulse es un sistema web desarrollado en Django que permite la gestión de alertas de tráfico y reportes colaborativos. El sistema incluye funcionalidades para usuarios regulares y administradores, con un enfoque en la comunicación efectiva sobre incidentes de tráfico.
 
-## Características Principales
+## 🚀 Características Principales
 
-- **Sistema de Autenticación**: Registro y login para usuarios y administradores
-- **Dashboard de Usuario**: Visualización de alertas personalizadas
-- **Sistema de Alertas**: Creación y envío de alertas a usuarios específicos o todos los usuarios
-- **Reportes Colaborativos**: Gestión de reportes de incidentes de tráfico
-- **Panel Administrativo**: Control y gestión de reportes y alertas
+- **🔐 Autenticación de Usuarios y Admins**: Registro y login para usuarios y administradores
+- **📊 Dashboard Personalizado**: Visualización de alertas personalizadas
+- **🚨 Sistema de Alertas en Tiempo Real**: Creación y envío de alertas a usuarios específicos o todos los usuarios
+- **🧑‍🤝‍🧑 Reportes Colaborativos**: Gestión de reportes de incidentes de tráfico
+- **🛠️ Panel de Administración**: Control y gestión de reportes y alertas
 
+## 🔍 Reporte de Análisis SonarQube
 
-## Estilos de Programación Implementados
+### ✅ Estado Final del Análisis con SonarQube
 
-### 1. **Repository Pattern (Persistent-Tables)**
+A continuación, se muestra la captura del estado final luego de corregir todos los problemas detectados por SonarLint:
+
+![Estado final SonarQube](img/imagen.png)
+
+![Estado Final SonarQube](img/no-problemas.png)
+
+> Como se observa, no se reportan errores ni advertencias en los archivos analizados.
+
+## 🧠 Estilos de Programación Implementados
+
+### 📁 1. **Repository Pattern (Persistent-Tables)**
 
 Este estilo separa la lógica de acceso a datos de la lógica de negocio, proporcionando una abstracción sobre la capa de persistencia.
 
@@ -50,7 +63,7 @@ class AlertaRepositoryImpl(IAlertaRepository):
 - Facilita el testing mediante mocking
 - Flexibilidad para cambiar el mecanismo de persistencia
 
-### 2. **Dependency Injection (Things)**
+### 🧩 2. **Dependency Injection (Things)**
 
 Permite inyectar dependencias en lugar de crearlas dentro de las clases, mejorando la testabilidad y el acoplamiento.
 
@@ -77,7 +90,7 @@ alerta_service = AlertaApplicationService(AlertaRepositoryImpl())
 - Facilita las pruebas unitarias
 - Mejora la mantenibilidad del código
 
-### 3. **MVC Architecture (Pipeline)**
+### 🧭 3. **MVC Architecture (Pipeline)**
 
 Implementación del patrón Modelo-Vista-Controlador que separa la lógica de presentación, negocio y datos.
 
@@ -117,7 +130,7 @@ class Alerta(models.Model):
 - Facilita el mantenimiento y extensión del código
 - Mejora la organización del proyecto
 
-### 4. **Form Validation (Error/Exception Handling)**
+### ✅ 4. **Form Validation (Error/Exception Handling)**
 
 Implementación robusta de validación de formularios y manejo de errores.
 
@@ -164,7 +177,7 @@ def form_valid(self, form):
 - Manejo elegante de errores
 - Mejora la experiencia del usuario
 
-### 5. **Decorator Pattern (Cookbook)**
+### 🧰 5. **Decorator Pattern (Cookbook)**
 
 Uso de decoradores para funcionalidades transversales como autenticación y autorización.
 
@@ -191,7 +204,7 @@ class DashboardView(LoginRequiredMixin, FormView):
 - Código más limpio y mantenible
 - Separación clara de concerns
 
-### 6. **Service Layer (Trinity)**
+### ⚙️ 6. **Service Layer (Trinity)**
 
 Implementación de una capa de servicios que encapsula la lógica de negocio.
 
@@ -219,40 +232,35 @@ class AlertaApplicationService:
 - Reutilización de operaciones complejas
 - Facilita las pruebas y el mantenimiento
 
-## Instalación y Configuración
+## 🛠️ Instalación y Configuración
 
-### Requisitos Previos
+### 📦 Requisitos Previos
 
 - Python 3.8+
 - Django 4.0+
 - Base de datos (SQLite por defecto)
 
-### Instalación
+### 🧪 Instalación
 
 1. Clona el repositorio:
 ```bash
-git clone https://github.com/tu-usuario/traffic-pulse.git
-cd traffic-pulse
+git clone https://github.com/jss930/AvanceIngSoftware.git
+cd AvanceIngSoftware
+git checkout gerardo
 ```
 
-2. Crea un entorno virtual:
-```bash
-python -m venv venv
-source venv/bin/activate  # En Windows: venv\Scripts\activate
-```
-
-3. Instala las dependencias:
+2. Instala las dependencias:
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Ejecuta las migraciones:
+3. Ejecuta las migraciones:
 ```bash
 python manage.py makemigrations
 python manage.py migrate
 ```
 
-5. Crea un superusuario:
+4. Crea un superusuario:
 ```bash
 python manage.py createsuperuser
 ```
@@ -262,46 +270,59 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-## Uso del Sistema
+## 👥 Uso del Sistema
 
-### Para Usuarios Regulares
+### 🔓 Para Usuarios Regulares
 
 1. **Registro**: Accede a `/register/` para crear una cuenta
 2. **Login**: Inicia sesión en `/login/`
-3. **Dashboard**: Visualiza tus alertas en `/dashboard/`
+3. **Dashboard**: Visualiza tus alertas y entre otras cosas en `/dashboard/`
 
-### Para Administradores
+### 🛡️ Para Administradores
 
 1. **Login Admin**: Accede a `/loginadmin/`
 2. **Crear Alertas**: Utiliza `/panel/crear_alerta/` para enviar alertas
 3. **Gestionar Reportes**: Controla reportes en `/panel/reportes/`
 
-## Contribución
+## 🖼️ Templates (HTML) Implementados
 
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
+A continuación se listan las plantillas desarrolladas para las vistas del sistema. Estas se encuentran en el directorio `web/templates/` y están conectadas a través del sistema de vistas en Django.
 
-## Tecnologías Utilizadas
+---
 
-- **Backend**: Django 4.0+
-- **Frontend**: HTML, CSS, JavaScript, Bootstrap 5
-- **Base de Datos**: SQLite (configurable)
-- **Autenticación**: Django Auth System
-- **Estilos**: Bootstrap Icons
+### `dashboard.html`
 
-## Licencia
+Plantilla del panel principal para usuarios. Muestra las alertas recientes, un resumen general y funcionalidades relevantes según el perfil del usuario.
 
-Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.
+![Dashboard](img/dashboard.png)
 
-## Contacto
+---
 
-- **Desarrollador**: [Tu Nombre]
-- **Email**: [tu-email@ejemplo.com]
-- **GitHub**: [https://github.com/tu-usuario](https://github.com/tu-usuario)
+### `crear_alerta.html`
+
+Formulario que permite al administrador emitir nuevas alertas. Incluye campos para título, mensaje, ubicación y destinatarios.
+
+![Crear Alerta](img/crear_alerta.png)
+
+---
+
+## 📌 Gestión de Tareas - Trello
+
+El avance de las tareas bajo mi responsabilidad puede verse en el siguiente enlace:
+
+🔗 [Tablero de Trello - Traffic Pulse](https://trello.com/c/DFO7FGWQ/21-gestionar-alertas-y-comunicaci%C3%B3n-con-usuarios)
+
+### Tareas: Crear módulo de alertas (mensaje + ubicación opcional)
+
+**Implementación:**
+
+- Endpoint para crear alerta  
+- Servicio para emitir notificación a usuarios  
+- Obtener lista de usuarios y poder mandar la notificación  
+
+![Tarea](img/tarea.png)
 
 ---
 
 *Traffic Pulse - Sistema de Alertas de Tráfico para una mejor comunicación ciudadana.*
+
