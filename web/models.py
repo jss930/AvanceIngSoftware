@@ -23,3 +23,4 @@ class Alerta(models.Model):
 
     def __str__(self):
         return f"{self.titulo} - {self.fecha_envio.strftime('%Y-%m-%d %H:%M')}"
+

@@ -1,4 +1,3 @@
-# views.py
 from django.shortcuts import render, HttpResponse, redirect
 from django.views.generic import FormView, TemplateView
 from django.urls import reverse_lazy
@@ -9,11 +8,11 @@ from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.cache import never_cache
+from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
-from .forms import RegistroUsuarioForm, LoginForm
-from app.presentation.controladores.reporteColaborativoController import ReporteColaborativoController
+from .forms import RegistroUsuarioForm, LoginForm, AlertaForm
 from .models import Alerta
-from .forms import AlertaForm
+from app.presentation.controladores.reporteColaborativoController import ReporteColaborativoController
 
 # admin
 def is_superuser(user):
@@ -80,6 +79,8 @@ def logout_view(request):
     return redirect('login')
 
 # Dashboard como Class-Based View
+@method_decorator(login_required(login_url='/login/'), name='dispatch')
+@method_decorator(never_cache, name='dispatch')
 class DashboardView(LoginRequiredMixin, FormView):
     template_name = 'dashboard.html'
     login_url = 'login'
@@ -99,7 +100,7 @@ def register(request):
 def test(request):
     return render(request, 'test.html')
 
-#login admin / django
+# login admin / django
 @csrf_protect
 def custom_login(request):
     if request.method == 'POST':
@@ -164,7 +165,7 @@ def crear_alerta(request):
         form = AlertaForm()
     return render(request, 'panel/crear_alerta.html', {'form': form, 'titulo': 'Crear Alerta'})
 
-# class button conectet
+# Vistas para botones del home
 class PlanRouteView(TemplateView):
     template_name = 'plan_route.html'
 
@@ -173,3 +174,4 @@ class ReportIncidentView(TemplateView):
 
 class SeeStateView(TemplateView):
     template_name = 'see_state.html'
+

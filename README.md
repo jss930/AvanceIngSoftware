@@ -122,7 +122,7 @@ Distribución de los módulos del sistema:
 | Carpio Paiva Cesar Gonzalo        | Frontend Developer               | ccarpiop@unsa.edu.pe   |
 | Colque Flores, Gerardo Javier     | Backend Developer                | @unsa.edu.pe           |
 | Ccolque Quispe, Anthony Criz      | Backend Developer                | @unsa.edu.pe           |
-| Cornejo Alvarez, Mauricio Andres  | Arquitecto de proyecto           | @unsa.edu.pe           |
+| Cornejo Alvarez, Mauricio Andres  | Arquitecto de proyecto           | mcornejoalv@unsa.edu.pe|
 | Espinoza Barrios, DAvid Alejandro | Director del proyecto / Dev Full | despinozab@unsa.edu.pe |
 | Yavar Guillen, Roberto Gustavo    | Documentación                    | @unsa.edu.pe           |
 

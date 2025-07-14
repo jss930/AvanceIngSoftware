@@ -18,10 +18,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load .env file
 load_dotenv(os.path.join(BASE_DIR, '.env'))
+
 print("DEBUG ENV SECRET_KEY:", os.getenv("DJANGO_SECRET_KEY"))
 
 # Load secret key
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "clave_temporal_insegura")
+
 DEBUG=True
 
 # Quick-start development settings - unsuitable for production
