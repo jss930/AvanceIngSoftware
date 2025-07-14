@@ -13,6 +13,7 @@ from django.contrib.auth.models import User
 from .forms import RegistroUsuarioForm, LoginForm, AlertaForm
 from .models import Alerta
 from app.presentation.controladores.reporteColaborativoController import ReporteColaborativoController
+from app.presentation.controladores.alertaController import obtener_alertas_usuario
 
 # admin
 def is_superuser(user):
@@ -86,8 +87,10 @@ class DashboardView(LoginRequiredMixin, FormView):
     login_url = 'login'
 
     def get(self, request, *args, **kwargs):
+        alertas = obtener_alertas_usuario(request.user.id)  
         return render(request, self.template_name, {
-            'user': request.user
+            'user': request.user,
+            'alertas': alertas
         })
 
 # Tus vistas existentes (mantenidas)
@@ -148,9 +151,9 @@ def crear_alerta(request):
     if request.method == 'POST':
         form = AlertaForm(request.POST)
         if form.is_valid():
-            alerta = form.save(commit=False)
-            alerta.enviado_por = request.user
-            alerta.save()
+            titulo = form.cleaned_data['titulo']
+            mensaje = form.cleaned_data['mensaje']
+            ubicacion = form.cleaned_data['ubicacion']
 
             if request.POST.get("enviar_a_todos"):
                 destinatarios = User.objects.filter(is_active=True)
@@ -158,11 +161,14 @@ def crear_alerta(request):
                 destinatarios_ids = request.POST.getlist("destinatarios")
                 destinatarios = User.objects.filter(id__in=destinatarios_ids)
 
-            alerta.destinatarios.set(destinatarios)
+            from app.presentation.controladores.alertaController import emitir_alerta
+            emitir_alerta(titulo, mensaje, request.user, destinatarios, ubicacion)
+
             messages.success(request, 'Alerta enviada con éxito.')
             return redirect('crear_alerta')
     else:
         form = AlertaForm()
+
     return render(request, 'panel/crear_alerta.html', {'form': form, 'titulo': 'Crear Alerta'})
 
 # Vistas para botones del home
