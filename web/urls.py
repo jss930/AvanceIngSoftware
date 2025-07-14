@@ -17,5 +17,5 @@ urlpatterns = [
     path('plan_route/', views.PlanRouteView.as_view(), name='plan_route'),
     path('report_incident/', views.ReportIncidentView.as_view(), name='report_incident'),
     path('see_state/', views.SeeStateView.as_view(), name='see_state'),
-    path("see_state/", vista_mapa, name="mapa_calor"),
+    path('ver-mapa/', vista_mapa, name='mapa_calor'),
 ]
