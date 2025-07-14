@@ -12,26 +12,6 @@ Traffic Pulse es un sistema web desarrollado en Django que permite la gestión d
 - **Reportes Colaborativos**: Gestión de reportes de incidentes de tráfico
 - **Panel Administrativo**: Control y gestión de reportes y alertas
 
-## Estructura del Proyecto
-
-```
-traffic_pulse/
-├── app/
-│   ├── dominio/
-│   │   └── alerta/
-│   ├── repositorio/
-│   │   └── alerta/
-│   ├── servicios/
-│   └── presentation/
-│       └── controladores/
-├── web/
-│   ├── models.py
-│   ├── views.py
-│   ├── forms.py
-│   └── urls.py
-└── templates/
-    └── panel/
-```
 
 ## Estilos de Programación Implementados
 
