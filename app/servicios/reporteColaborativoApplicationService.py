@@ -53,3 +53,5 @@ class ReporteColaborativoApplicationService:
             existente.tipo_incidente = nuevo_reporte.tipo_incidente
             existente.estado_reporte = nuevo_reporte.estado_reporte
             self.reporte_repository.actualizar(existente)
+
+
