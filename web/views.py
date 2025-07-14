@@ -155,8 +155,14 @@ class ReporteIncidentView(CreateView):
     success_url = reverse_lazy('dashboard')  # Cambia esto según tu vista destino
 
     def form_valid(self, form):
-        form.instance.usuario_reportador = self.request.user
+        if self.request.user.is_authenticated:
+            form.instance.usuario_reportador = self.request.user
+        else:
+            # defensa ante un mal uso 
+            form.add_error(None, "Debes iniciar sesión para enviar un reporte.")
+            return self.form_invalid(form)
         return super().form_valid(form)
+
 
 class SeeStateView(TemplateView):
     template_name = 'see_state.html'
