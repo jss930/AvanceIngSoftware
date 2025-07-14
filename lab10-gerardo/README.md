@@ -1,10 +1,12 @@
+# 🚀 Lab10 - Estilos de Programación
+
+## 🎯 Objetivo 
+
+Aplicar estilos de programación consistentes en el módulo de alertas del proyecto **Traffic Pulse**, asegurando buena calidad de código y documentación. Se incorporaron 6 estilos de programación, se eliminaron errores con SonarLint, y se documentó todo en este archivo.
+
 # 🚦 Traffic Pulse - Sistema de Alertas de Tráfico
 
-💡 Traffic Pulse es una plataforma colaborativa para gestionar alertas de tráfico, optimizando la comunicación entre ciudadanos y administradores.
-
-## 📋 Descripción del Proyecto
-
-Traffic Pulse es un sistema web desarrollado en Django que permite la gestión de alertas de tráfico y reportes colaborativos. El sistema incluye funcionalidades para usuarios regulares y administradores, con un enfoque en la comunicación efectiva sobre incidentes de tráfico.
+💡 Traffic Pulse es un sistema web desarrollado en Django que permite la gestión de alertas de tráfico y reportes colaborativos. El sistema incluye funcionalidades para usuarios regulares y administradores, con un enfoque en la comunicación efectiva sobre incidentes de tráfico.
 
 ## 🚀 Características Principales
 
