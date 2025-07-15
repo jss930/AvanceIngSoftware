@@ -1,6 +1,7 @@
 # views.py
 from django.shortcuts import render, HttpResponse, redirect
 from django.views.generic import FormView, TemplateView
+from django.views.generic.edit import CreateView
 from django.urls import reverse_lazy
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -10,8 +11,10 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.cache import never_cache
 from django.utils.decorators import method_decorator
-from .forms import RegistroUsuarioForm, LoginForm
+from .forms import RegistroUsuarioForm, LoginForm, ReporteColaborativoForm
 from app.presentation.controladores.reporteColaborativoController import ReporteColaborativoController
+from .models import ReporteColaborativo
+
 
 # admin
 def is_superuser(user):
@@ -191,8 +194,21 @@ def editar_reporte(request):
 class PlanRouteView(TemplateView):
     template_name = 'plan_route.html'
 
-class ReportIncidentView(TemplateView):
+class ReporteIncidentView(CreateView):
+    model = ReporteColaborativo
+    form_class = ReporteColaborativoForm
     template_name = 'report_incident.html'
+    success_url = reverse_lazy('dashboard')  # Cambia esto según tu vista destino
+
+    def form_valid(self, form):
+        if self.request.user.is_authenticated:
+            form.instance.usuario_reportador = self.request.user
+        else:
+            # defensa ante un mal uso 
+            form.add_error(None, "Debes iniciar sesión para enviar un reporte.")
+            return self.form_invalid(form)
+        return super().form_valid(form)
+
 
 class SeeStateView(TemplateView):
     template_name = 'see_state.html'

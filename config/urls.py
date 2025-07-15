@@ -17,6 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from web import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     # admin django
@@ -29,4 +31,4 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     # Enlazamiento
     path('', include('web.urls')),
-]
+]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
