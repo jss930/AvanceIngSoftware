@@ -2,7 +2,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
-from .models import ReporteColaborativo
+from .models import ReporteColaborativo, Alerta
 
 FORM_CONTROL = 'form-control'
 FORM_CONTROL_PASSWORD_INPUT = 'form-control password-input'
@@ -61,4 +61,23 @@ class ReporteColaborativoForm(forms.ModelForm):
             'tipo_incidente': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Robo, incendio...'}),
             'imagen_geolocalizada': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'nivel_peligro': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'max': 5}),
+        }
+
+class AlertaForm(forms.ModelForm):
+    destinatarios = forms.ModelMultipleChoiceField(
+        queryset=User.objects.all(),
+        widget=forms.SelectMultiple(attrs={
+            'class': 'form-control select2',
+            'id': 'destinatarios',
+        }),
+        required=False,
+    )
+
+    class Meta:
+        model = Alerta
+        fields = ['titulo', 'mensaje', 'destinatarios', 'ubicacion']
+        widgets = {
+            'titulo': forms.TextInput(attrs={'class': FORM_CONTROL}),
+            'mensaje': forms.Textarea(attrs={'class': FORM_CONTROL}),
+            'ubicacion': forms.TextInput(attrs={'class': FORM_CONTROL}),
         }

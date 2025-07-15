@@ -1,7 +1,7 @@
 # urls.py
 from django.urls import path
 from . import views
-from .views import admin_reportes, LoginView, custom_login, editar_reporte
+from .views import admin_reportes, LoginView, custom_login, editar_reporte, crear_alerta
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -17,8 +17,10 @@ urlpatterns = [
     path('plan_route/', views.PlanRouteView.as_view(), name='plan_route'),
     path('report_incident/', views.ReporteIncidentView.as_view(), name='report_incident'),
     path('see_state/', views.SeeStateView.as_view(), name='see_state'),
-    ##test report post
+    # Reportes colaborativos
     path('reportes/', views.lista_reportes, name='lista_reportes'),
     path('reportes/agregar/', views.agregar_reporte, name='agregar_reporte'),
     path('reportes/eliminar/<int:id>/', views.eliminar_reporte, name='eliminar_reporte'),
+    # Alertas
+    path('panel/crear_alerta/', crear_alerta, name='crear_alerta'),
 ]

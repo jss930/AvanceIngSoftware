@@ -1,5 +1,4 @@
-# views.py
-from django.shortcuts import render, HttpResponse, redirect
+from django.shortcuts import render, HttpResponse, redirect, get_object_or_404
 from django.views.generic import FormView, TemplateView
 from django.views.generic.edit import CreateView
 from django.urls import reverse_lazy
@@ -11,10 +10,11 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.cache import never_cache
 from django.utils.decorators import method_decorator
-from .forms import RegistroUsuarioForm, LoginForm, ReporteColaborativoForm
+from django.contrib.auth.models import User
+from .forms import RegistroUsuarioForm, LoginForm, ReporteColaborativoForm, AlertaForm
+from .models import ReporteColaborativo, Alerta
 from app.presentation.controladores.reporteColaborativoController import ReporteColaborativoController
-from .models import ReporteColaborativo
-
+from app.presentation.controladores.alertaController import obtener_alertas_usuario
 
 # admin
 def is_superuser(user):
@@ -39,7 +39,7 @@ class RegistroUsuarioView(FormView):
     template_name = 'register.html'
     form_class = RegistroUsuarioForm
     success_url = reverse_lazy('dashboard')
-    
+
     def form_valid(self, form):
         user = form.save()
         login(self.request, user)
@@ -50,24 +50,22 @@ class RegistroUsuarioView(FormView):
 class LoginView(FormView):
     template_name = 'login.html'
     form_class = LoginForm
-    success_url = reverse_lazy('dashboard')  
-    
+    success_url = reverse_lazy('dashboard')
+
     def dispatch(self, request, *args, **kwargs):
-        # Redirige si ya está autenticado
         if request.user.is_authenticated:
             return redirect(self.success_url)
         return super().dispatch(request, *args, **kwargs)
-    
+
     def form_valid(self, form):
         username = form.cleaned_data.get('username')
         password = form.cleaned_data.get('password')
-        
+
         user = authenticate(username=username, password=password)
         if user is not None:
             login(self.request, user)
             messages.success(self.request, f'¡Bienvenido, {user.username}!')
-            
-            # Redirige a la página solicitada o al dashboard
+
             next_page = self.request.GET.get('next')
             if next_page:
                 return redirect(next_page)
@@ -78,7 +76,6 @@ class LoginView(FormView):
 
 # Vista de logout (function-based es más simple para logout)
 def logout_view(request):
-    """Vista para logout de usuarios"""
     logout(request)
     messages.info(request, 'Has cerrado sesión exitosamente.')
     return redirect('login')
@@ -88,11 +85,13 @@ def logout_view(request):
 @method_decorator(never_cache, name='dispatch')
 class DashboardView(LoginRequiredMixin, FormView):
     template_name = 'dashboard.html'
-    login_url = 'login'  # Redirige aquí si no está autenticado
-    
+    login_url = 'login'
+
     def get(self, request, *args, **kwargs):
+        alertas = obtener_alertas_usuario(request.user.id)  
         return render(request, self.template_name, {
-            'user': request.user
+            'user': request.user,
+            'alertas': alertas
         })
 
 # Tus vistas existentes (mantenidas)
@@ -105,7 +104,7 @@ def register(request):
 def test(request):
     return render(request, 'test.html')
 
-#login admin / django
+# login admin / django
 @csrf_protect
 def custom_login(request):
     if request.method == 'POST':
@@ -189,8 +188,33 @@ def editar_reporte(request):
         "reporte": reporte
     })
 
+@login_required(login_url='/loginadmin/')
+@user_passes_test(is_superuser, login_url='/loginadmin/')
+def crear_alerta(request):
+    if request.method == 'POST':
+        form = AlertaForm(request.POST)
+        if form.is_valid():
+            titulo = form.cleaned_data['titulo']
+            mensaje = form.cleaned_data['mensaje']
+            ubicacion = form.cleaned_data['ubicacion']
 
-# class button conectet
+            if request.POST.get("enviar_a_todos"):
+                destinatarios = User.objects.filter(is_active=True)
+            else:
+                destinatarios_ids = request.POST.getlist("destinatarios")
+                destinatarios = User.objects.filter(id__in=destinatarios_ids)
+
+            from app.presentation.controladores.alertaController import emitir_alerta
+            emitir_alerta(titulo, mensaje, request.user, destinatarios, ubicacion)
+
+            messages.success(request, 'Alerta enviada con éxito.')
+            return redirect('crear_alerta')
+    else:
+        form = AlertaForm()
+
+    return render(request, 'panel/crear_alerta.html', {'form': form, 'titulo': 'Crear Alerta'})
+
+# Vistas para botones del home
 class PlanRouteView(TemplateView):
     template_name = 'plan_route.html'
 
@@ -209,12 +233,10 @@ class ReporteIncidentView(CreateView):
             return self.form_invalid(form)
         return super().form_valid(form)
 
-
 class SeeStateView(TemplateView):
     template_name = 'see_state.html'
 
-
-##implementacion en vista de el reporte colaborativo.
+# Implementación en vista de el reporte colaborativo.
 @login_required
 def lista_reportes(request):
     reportes = ReporteColaborativo.objects.order_by('-fecha_creacion')[:4]
