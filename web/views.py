@@ -9,7 +9,11 @@ from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.cache import never_cache
-from .forms import RegistroUsuarioForm, LoginForm
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+import json
+from .forms import RegistroUsuarioForm, LoginForm, TrafficIncidentForm
+from .models import TrafficIncident
 from app.presentation.controladores.reporteColaborativoController import ReporteColaborativoController
 
 # admin
@@ -71,6 +75,7 @@ class LoginView(FormView):
         else:
             form.add_error(None, 'Usuario o contraseña incorrectos.')
             return self.form_invalid(form)
+        
 
 # Vista de logout (function-based es más simple para logout)
 def logout_view(request):
@@ -145,8 +150,80 @@ def admin_reportes(request):
 class PlanRouteView(TemplateView):
     template_name = 'plan_route.html'
 
-class ReportIncidentView(TemplateView):
+# NUEVA VISTA PARA REPORTAR INCIDENTES - CORREGIDA
+class ReportIncidentView(LoginRequiredMixin, FormView):
     template_name = 'report_incident.html'
+    form_class = TrafficIncidentForm
+    success_url = reverse_lazy('dashboard')
+    login_url = 'login'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user'] = self.request.user
+        return context
+    
+    def form_valid(self, form):
+        # Asignar el usuario actual al incidente
+        incident = form.save(commit=False)
+        incident.user = self.request.user
+        incident.save()
+        
+        messages.success(
+            self.request, 
+            f'¡Incidente "{incident.title}" reportado exitosamente!'
+        )
+        print("✅ Formulario recibido en el backend")
+        return super().form_valid(form)
+    
+    def form_invalid(self, form):
+        print("❌ Errores en el formulario:")
+        print(form.errors.as_json())  
+        messages.error(
+            self.request, 
+            'Hubo errores en el formulario. Por favor, corrígelos.'
+        )
+        return super().form_invalid(form)
+
+# VISTA ADICIONAL PARA AJAX (opcional - para mejor experiencia de usuario)
+@login_required
+@require_http_methods(["POST"])
+def report_incident_ajax(request):
+    """Vista para manejar reportes via AJAX"""
+    try:
+        form = TrafficIncidentForm(request.POST, request.FILES)
+        if form.is_valid():
+            incident = form.save(commit=False)
+            incident.user = request.user
+            incident.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Incidente reportado exitosamente',
+                'incident_id': incident.id
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'errors': form.errors,
+                'message': 'Errores en el formulario'
+            })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error del servidor: {str(e)}'
+        })
 
 class SeeStateView(TemplateView):
     template_name = 'see_state.html'
+
+# VISTA PARA LISTAR INCIDENTES (adicional)
+class IncidentListView(LoginRequiredMixin, TemplateView):
+    template_name = 'incident_list.html'
+    login_url = 'login'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['incidents'] = TrafficIncident.objects.filter(
+            is_active=True
+        ).select_related('user').order_by('-created_at')[:50]
+        return context

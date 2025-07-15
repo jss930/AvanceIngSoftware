@@ -18,11 +18,11 @@
                 <form method="post">
                     {% csrf_token %}
                     <div class="mb-3">
-                        <label class="form-label">Usuario</label>
+                        <label for="username" class="form-label">Usuario</label>
                         <input type="text" name="username" class="form-control" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Contraseña</label>
+                        <label for="password" class="form-label">Contraseña</label>
                         <input type="password" name="password" class="form-control" required>
                     </div>
                     <button type="submit" class="btn btn-dark w-100">Iniciar sesión</button>

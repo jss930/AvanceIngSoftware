@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'web',
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [
@@ -63,7 +64,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [],
-        'APP_DIRS': True,
+         'APP_DIRS': True,  # ← ¡esto es obligatorio si usas templates en las apps!
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
@@ -138,3 +139,29 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'web/static')]
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+
+
+# Configuración para reportes de tráfico U.u
+#  :) # Configuración para reportes de tráfico
+MAX_REPORTS_PER_DAY = 10
+GOOGLE_MAPS_API_KEY = 'tu_api_key_aqui'  # Opcional
+
+# Logging
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Crear media/ si no existe
+if not os.path.exists(MEDIA_ROOT):
+    os.makedirs(MEDIA_ROOT)
+
+
+##
+# Media files (fotos subidas por usuarios)
+
+
+# Configuración para el manejo de archivos
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880   # 5MB

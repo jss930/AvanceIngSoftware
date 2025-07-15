@@ -1,27 +1,30 @@
 # Python
-__pycache__/
-*.py[cod]
-*.so
+__pycache__/            # Ignora carpetas de caché de Python
+*.py[cod]               # Ignora archivos compilados .pyc, .pyo, .pyd
+*.so                    # Ignora archivos de extensiones compiladas
 
 # Virtual environment
-venv/
-env/
+venv/                   # Ignora el entorno virtual (común en Python)
+env/                    # Otra posible carpeta para entorno virtual
 
 # VSCode
-.vscode/
+.vscode/                # Configuraciones locales de VSCode
 
 # macOS y Linux
-.DS_Store
+.DS_Store               # Archivo oculto creado por macOS en carpetas
 
 # Django stuff
-db.sqlite3
-*.sqlite3
+db.sqlite3              # Base de datos SQLite de desarrollo
+*.sqlite3               # Por si usas otro nombre
 
 # Archivos de migraciones
-*/migrations/__pycache__/
-*.pyc
+**/migrations/__pycache__/  # Caché de migraciones
+**/migrations/*.py[cod]     # Archivos .pyc dentro de migraciones
 
 # Archivos de configuración secreta
-.env
+.env                    # Variables de entorno (contraseñas, tokens, etc.)
 
-.idea/
+.idea/                  # Configuración de PyCharm / JetBrains
+
+# Ignorar archivos subidos por usuarios
+media/                  # Imágenes, documentos u otros archivos subidos
