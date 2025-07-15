@@ -212,3 +212,34 @@ class ReporteIncidentView(CreateView):
 
 class SeeStateView(TemplateView):
     template_name = 'see_state.html'
+
+
+##implementacion en vista de el reporte colaborativo.
+@login_required
+def lista_reportes(request):
+    reportes = ReporteColaborativo.objects.order_by('-fecha_creacion')[:4]
+    return render(request, 'reportes/lista.html', {'reportes': reportes})
+
+@login_required
+def agregar_reporte(request):
+    if request.method == 'POST':
+        form = ReporteColaborativoForm(request.POST)
+        if form.is_valid():
+            reporte = form.save(commit=False)
+            reporte.usuario_reportador = request.user
+            reporte.save()
+            messages.success(request, "Reporte enviado correctamente.")
+            return redirect('lista_reportes')
+    else:
+        form = ReporteColaborativoForm()
+    return render(request, 'reportes/agregar.html', {'form': form})
+
+@login_required
+def eliminar_reporte(request, id):
+    reporte = get_object_or_404(ReporteColaborativo, id=id)
+    if request.user == reporte.usuario_reportador or request.user.is_staff:
+        reporte.delete()
+        messages.success(request, "Reporte eliminado.")
+    else:
+        messages.error(request, "No tienes permiso para eliminar este reporte.")
+    return redirect('lista_reportes')
