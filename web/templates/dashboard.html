@@ -78,7 +78,7 @@
 
             <!-- Módulos principales -->
             <div class="row g-4">
-              <div class="col-md-4">
+              <div class="col-md-6 col-lg-3">
                 <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
                   <div class="card-body text-center p-4">
                     <div class="mb-3">
@@ -95,7 +95,7 @@
                 </div>
               </div>
               
-              <div class="col-md-4">
+              <div class="col-md-6 col-lg-3">
                 <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
                   <div class="card-body text-center p-4">
                     <div class="mb-3">
@@ -112,7 +112,7 @@
                 </div>
               </div>
               
-              <div class="col-md-4">
+              <div class="col-md-6 col-lg-3">
                 <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
                   <div class="card-body text-center p-4">
                     <div class="mb-3">
@@ -124,6 +124,23 @@
                     </p>
                     <a href="{% url 'see_state' %}" class="btn btn-primary btn-sm px-4 rounded-pill">
                       <i class="bi bi-eye me-2"></i>Ver Estado
+                    </a>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-6 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
+                  <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                      <i class="bi bi-thermometer-half display-4 text-danger"></i>
+                    </div>
+                    <h5 class="card-title text-dark mb-2">Mapa de Calor</h5>
+                    <p class="card-text text-muted mb-3">
+                      Visualiza las zonas con mayor densidad de tráfico.
+                    </p>
+                    <a href="{% url 'mapa_calor' %}" class="btn btn-danger btn-sm px-4 rounded-pill">
+                      <i class="bi bi-map me-2"></i>Ver Mapa
                     </a>
                   </div>
                 </div>
