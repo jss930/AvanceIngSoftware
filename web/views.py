@@ -15,7 +15,8 @@ from .forms import RegistroUsuarioForm, LoginForm, ReporteColaborativoForm, Aler
 from .models import ReporteColaborativo, Alerta
 from app.presentation.controladores.reporteColaborativoController import ReporteColaborativoController
 from app.presentation.controladores.alertaController import obtener_alertas_usuario
-
+from app.dominio.mapa_calor.generador_mapa import generar_mapa_calor
+import os
 # admin
 def is_superuser(user):
     return user.is_authenticated and user.is_superuser
@@ -93,6 +94,32 @@ class DashboardView(LoginRequiredMixin, FormView):
             'user': request.user,
             'alertas': alertas
         })
+# Mapa de calor funcion
+def vista_mapa(request):
+    print("✅ Entrando a vista_mapa...")
+
+    reportes = [
+        {"latitud": -16.4091, "longitud": -71.5375, "estado": "congestionado"},
+        {"latitud": -16.4100, "longitud": -71.5360, "estado": "fluido"},
+        {"latitud": -16.4080, "longitud": -71.5380, "estado": "congestionado"}
+    ]
+
+    mapa = generar_mapa_calor(reportes)
+
+    ruta_mapa = os.path.abspath("web/static/mapa_calor.html")
+    mapa.save(ruta_mapa)
+    print("✅ Mapa guardado en:", ruta_mapa)
+
+    try:
+        with open(ruta_mapa, "r", encoding="utf-8") as f:
+            mapa_html = f.read()
+        print("HTML del mapa leído correctamente")
+    except Exception as e:
+        print("ERROR leyendo mapa:", e)
+        mapa_html = "<p>Error al cargar el mapa</p>"
+
+    return render(request, "mapa_calor.html", {"mapa_html": mapa_html})
+
 
 # Tus vistas existentes (mantenidas)
 def home(request):

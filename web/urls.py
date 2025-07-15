@@ -1,7 +1,7 @@
 # urls.py
 from django.urls import path
 from . import views
-from .views import admin_reportes, LoginView, custom_login, editar_reporte, crear_alerta
+from .views import admin_reportes, LoginView, custom_login, editar_reporte, crear_alerta, vista_mapa
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -23,4 +23,6 @@ urlpatterns = [
     path('reportes/eliminar/<int:id>/', views.eliminar_reporte, name='eliminar_reporte'),
     # Alertas
     path('panel/crear_alerta/', crear_alerta, name='crear_alerta'),
+    # Mapa de calor
+    path('ver-mapa/', vista_mapa, name='mapa_calor'),
 ]
