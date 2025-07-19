@@ -78,7 +78,7 @@
 
             <!-- Módulos principales -->
             <div class="row g-4">
-              <div class="col-md-4">
+              <div class="col-md-6 col-lg-3">
                 <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
                   <div class="card-body text-center p-4">
                     <div class="mb-3">
@@ -88,14 +88,14 @@
                     <p class="card-text text-muted mb-3">
                      Encuentra la mejor ruta evitando congestión y bloqueos.
                     </p>
-			<a href="{% url 'plan_route' %}" class="btn btn-success btn-sm px-4 rounded-pill">
-			  <i class="bi bi-arrow-right me-2"></i>Comenzar
-			</a>
+                    <a href="{% url 'plan_route' %}" class="btn btn-success btn-sm px-4 rounded-pill">
+                      <i class="bi bi-arrow-right me-2"></i>Comenzar
+                    </a>
                   </div>
                 </div>
               </div>
               
-              <div class="col-md-4">
+              <div class="col-md-6 col-lg-3">
                 <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
                   <div class="card-body text-center p-4">
                     <div class="mb-3">
@@ -105,14 +105,14 @@
                     <p class="card-text text-muted mb-3">
                       Informa sobre accidentes, bloqueos o construcciones.
                     </p>
-			<a href="{% url 'report_incident' %}" class="btn btn-warning btn-sm px-4 rounded-pill">
-			  <i class="bi bi-plus-circle me-2"></i>Reportar
-			</a>
+                    <a href="{% url 'report_incident' %}" class="btn btn-warning btn-sm px-4 rounded-pill">
+                      <i class="bi bi-plus-circle me-2"></i>Reportar
+                    </a>
                   </div>
                 </div>
               </div>
               
-              <div class="col-md-4">
+              <div class="col-md-6 col-lg-3">
                 <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
                   <div class="card-body text-center p-4">
                     <div class="mb-3">
@@ -122,12 +122,58 @@
                     <p class="card-text text-muted mb-3">
                       Monitorea el tráfico en tiempo real en toda la ciudad.
                     </p>
-			<a href="{% url 'see_state' %}" class="btn btn-primary btn-sm px-4 rounded-pill">
-			  <i class="bi bi-eye me-2"></i>Ver Estado
-			</a>
+                    <a href="{% url 'see_state' %}" class="btn btn-primary btn-sm px-4 rounded-pill">
+                      <i class="bi bi-eye me-2"></i>Ver Estado
+                    </a>
                   </div>
                 </div>
               </div>
+              
+              <div class="col-md-6 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
+                  <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                      <i class="bi bi-thermometer-half display-4 text-danger"></i>
+                    </div>
+                    <h5 class="card-title text-dark mb-2">Mapa de Calor</h5>
+                    <p class="card-text text-muted mb-3">
+                      Visualiza las zonas con mayor densidad de tráfico.
+                    </p>
+                    <a href="{% url 'mapa_calor' %}" class="btn btn-danger btn-sm px-4 rounded-pill">
+                      <i class="bi bi-map me-2"></i>Ver Mapa
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 🔔 Sección de alertas recientes -->
+            <div class="mt-5">
+              <h4 class="text-primary mb-3">
+                <i class="bi bi-bell-fill me-2"></i>Alertas Recientes
+              </h4>
+              {% if alertas %}
+                <div class="row g-3">
+                  {% for alerta in alertas %}
+                    <div class="col-md-6">
+                      <div class="card border-0 shadow-sm rounded-3 h-100">
+                        <div class="card-body">
+                          <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="card-title text-danger mb-0">
+                              <i class="bi bi-exclamation-circle-fill me-2"></i>{{ alerta.titulo }}
+                            </h5>
+                            <small class="text-muted">{{ alerta.fecha_creacion|date:"d/m/Y H:i" }}</small>
+                          </div>
+                          <p class="card-text text-muted mb-1">{{ alerta.mensaje }}</p>
+                          <p class="mb-0"><span class="text-info fw-semibold">Ubicación:</span> {{ alerta.ubicacion }}</p>
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <p class="text-white-50">No hay alertas recientes para ti.</p>
+              {% endif %}
             </div>
 
             <!-- Estadísticas rápidas -->
@@ -167,8 +213,8 @@
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </div> <!-- Fin estadísticas -->
+          </div> <!-- Fin card-body -->
         </div>
       </div>
     </div>

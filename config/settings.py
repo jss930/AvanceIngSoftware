@@ -19,8 +19,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Load .env file
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
+#config para repositorio de reporte
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+
 # Load secret key
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+
 DEBUG=True
 
 # Quick-start development settings - unsuitable for production

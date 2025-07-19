@@ -4,6 +4,48 @@ El presente proyecto tiene como objetivo aprender sobre el desarrollo de softwar
 
 ---
 
+# lab 10
+
+## Estilos de programación
+
+- Programación orientada a objetos
+  - Herencia (CreateView, ModelForm, Model)
+  - Encapsulación de datos (atributos del modelo)
+- Estilo declarativo
+
+  Lo usamos cuando definimos:
+
+  - Modelos (titulo = models.CharField(...))
+  - Formularios (widgets = { 'titulo': forms.TextInput(...) })
+  - Templates ({{ form.as_p }} declara cómo se debe renderizar)
+
+- Programación defensiva
+
+  Lo usamos en:
+
+  if self.request.user.is_authenticated:
+
+  ...
+
+  else
+
+  ...
+
+- Cookbook
+
+  Lo usamos para trabajar con imagenes, declarando:
+
+  - MEDIA_URL, MEDIA_ROOT, enctype para poder guardarlas
+
+- Error / Exception Handling
+
+  Django maneja automaticamente muchos errores y excepciones,
+  las usamos por ejemplo para validar si el usuario esta logeado
+
+---
+
+# lab 9
+
 ## Convenciones y practicas en esta rama
 
 - 4 espacios de tabulación
@@ -116,15 +158,15 @@ Distribución de los módulos del sistema:
 
 ## 👥 Equipo de Desarrollo
 
-| Integrante                        | Rol                              | Contacto               |
-| --------------------------------- | -------------------------------- | ---------------------- |
-| Afaro Buiza, Jesus Alberto        | Coordinador / Dev Full           | jalfarob@unsa.edu.pe   |
-| Carpio Paiva Cesar Gonzalo        | Frontend Developer               | ccarpiop@unsa.edu.pe   |
-| Colque Flores, Gerardo Javier     | Backend Developer                | @unsa.edu.pe           |
-| Ccolque Quispe, Anthony Criz      | Backend Developer                | @unsa.edu.pe           |
-| Cornejo Alvarez, Mauricio Andres  | Arquitecto de proyecto           | mcornejoalv@unsa.edu.pe|
-| Espinoza Barrios, DAvid Alejandro | Director del proyecto / Dev Full | despinozab@unsa.edu.pe |
-| Yavar Guillen, Roberto Gustavo    | Documentación                    | @unsa.edu.pe           |
+| Integrante                        | Rol                              | Contacto                |
+| --------------------------------- | -------------------------------- | ----------------------- |
+| Afaro Buiza, Jesus Alberto        | Coordinador / Dev Full           | jalfarob@unsa.edu.pe    |
+| Carpio Paiva Cesar Gonzalo        | Frontend Developer               | ccarpiop@unsa.edu.pe    |
+| Colque Flores, Gerardo Javier     | Backend Developer                | @unsa.edu.pe            |
+| Ccolque Quispe, Anthony Criz      | Backend Developer                | @unsa.edu.pe            |
+| Cornejo Alvarez, Mauricio Andres  | Arquitecto de proyecto           | mcornejoalv@unsa.edu.pe |
+| Espinoza Barrios, DAvid Alejandro | Director del proyecto / Dev Full | despinozab@unsa.edu.pe  |
+| Yavar Guillen, Roberto Gustavo    | Documentación                    | @unsa.edu.pe            |
 
 ---
 
