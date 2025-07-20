@@ -51,7 +51,16 @@ class LoginForm(AuthenticationForm):
 class ReporteColaborativoForm(forms.ModelForm):
     class Meta:
         model = ReporteColaborativo
-        exclude = ['usuario_reportador', 'fecha_creacion', 'fecha_actualizacion', 'votos_positivos', 'votos_negativos', 'usuarios_votantes', 'es_validado', 'estado_reporte']
+        exclude = [
+            'usuario_reportador',
+            'fecha_creacion',
+            'fecha_actualizacion',
+            'votos_positivos',
+            'votos_negativos',
+            'usuarios_votantes',
+            'es_validado',
+            'estado_reporte',
+        ]
         widgets = {
             'titulo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Título del incidente'}),
             'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Describa lo sucedido'}),
@@ -78,5 +87,4 @@ class AlertaForm(forms.ModelForm):
             'titulo': forms.TextInput(attrs={'class': FORM_CONTROL}),
             'mensaje': forms.Textarea(attrs={'class': FORM_CONTROL}),
             'ubicacion': forms.TextInput(attrs={'class': FORM_CONTROL}),
-            # quitar 'activa' de aquí también
         }

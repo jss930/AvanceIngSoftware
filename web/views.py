@@ -17,6 +17,7 @@ from app.presentation.controladores.reporteColaborativoController import Reporte
 from app.presentation.controladores.alertaController import obtener_alertas_usuario
 from app.dominio.mapa_calor.generador_mapa import generar_mapa_calor
 import os
+
 # admin
 def is_superuser(user):
     return user.is_authenticated and user.is_superuser
@@ -224,6 +225,7 @@ def gestionar_alertas(request):
 @login_required(login_url='/loginadmin/')
 @user_passes_test(is_superuser, login_url='/loginadmin/')
 def crear_alerta(request):
+    """Crea y envía alertas desde el panel administrativo"""
     if request.method == 'POST':
         form = AlertaForm(request.POST)
         if form.is_valid():
