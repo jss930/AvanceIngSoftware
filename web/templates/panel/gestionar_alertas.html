@@ -11,22 +11,25 @@
 
 <div class="container mt-5">
   <div class="card shadow-sm rounded-4">
-    <div class="card-header bg-primary text-white d-flex align-items-center">
+    
+    <!-- Cabecera con ícono -->
+    <div class="card-header bg-danger text-white d-flex align-items-center">
       <i class="bi bi-broadcast-pin fs-4 me-3"></i>
       <h4 class="mb-0">Gestionar Alertas</h4>
     </div>
+
     <div class="card-body">
       
       {% if alertas %}
         <div class="table-responsive">
           <table class="table table-hover align-middle">
-            <thead>
+            <thead class="table-light">
               <tr>
                 <th>Título</th>
                 <th>Mensaje</th>
                 <th>Activa</th>
                 <th>Fecha</th>
-                <th>Acciones</th>
+                <th class="text-center">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -42,11 +45,11 @@
                   {% endif %}
                 </td>
                 <td>{{ alerta.fecha_creacion|date:"d/m/Y H:i" }}</td>
-                <td>
-                  <a href="{% url 'editar_alerta' alerta.id %}" class="btn btn-sm btn-outline-primary me-2">
+                <td class="text-center">
+                  <a href="{% url 'editar_alerta' alerta.id %}" class="btn btn-sm btn-outline-primary me-1" title="Editar">
                     <i class="bi bi-pencil-square"></i>
                   </a>
-                  <a href="{% url 'eliminar_alerta' alerta.id %}" class="btn btn-sm btn-outline-danger">
+                  <a href="{% url 'eliminar_alerta' alerta.id %}" class="btn btn-sm btn-outline-danger" title="Eliminar">
                     <i class="bi bi-trash"></i>
                   </a>
                 </td>
@@ -56,14 +59,17 @@
           </table>
         </div>
       {% else %}
-        <p class="text-muted">No hay alertas registradas aún.</p>
+        <div class="alert alert-info text-center" role="alert">
+          No hay alertas registradas aún.
+        </div>
       {% endif %}
 
+      <!-- Botones abajo -->
       <div class="text-end mt-4">
         <a href="{% url 'crear_alerta' %}" class="btn btn-success">
           <i class="bi bi-plus-circle me-2"></i>Crear Nueva Alerta
         </a>
-        <a href="{% url 'panel_admin' %}" class="btn btn-secondary ms-2">
+        <a href="{% url 'home' %}" class="btn btn-secondary ms-2">
           <i class="bi bi-arrow-left me-2"></i>Volver al Panel
         </a>
       </div>

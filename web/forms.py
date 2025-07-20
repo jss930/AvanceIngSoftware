@@ -73,10 +73,10 @@ class AlertaForm(forms.ModelForm):
 
     class Meta:
         model = Alerta
-        fields = ['titulo', 'mensaje', 'destinatarios', 'ubicacion', 'activa']  # <- agregamos 'activa'
+        fields = ['titulo', 'mensaje', 'destinatarios', 'ubicacion', 'activa']  # <- AQUÍ EL PROBLEMA
         widgets = {
             'titulo': forms.TextInput(attrs={'class': FORM_CONTROL}),
             'mensaje': forms.Textarea(attrs={'class': FORM_CONTROL}),
             'ubicacion': forms.TextInput(attrs={'class': FORM_CONTROL}),
-            'activa': forms.CheckboxInput(attrs={'class': 'form-check-input'}),  # <- nuevo campo activo
+            # quitar 'activa' de aquí también
         }

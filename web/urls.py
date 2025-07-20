@@ -22,10 +22,11 @@ urlpatterns = [
     path('reportes/agregar/', views.agregar_reporte, name='agregar_reporte'),
     path('reportes/eliminar/<int:id>/', views.eliminar_reporte, name='eliminar_reporte'),
     # Alertas
-    path('panel/crear_alerta/', crear_alerta, name='crear_alerta'),
     path('panel/alertas/', views.gestionar_alertas, name='gestionar_alertas'),
+    path('panel/alertas/crear/', views.crear_alerta, name='crear_alerta'),
     path('panel/alertas/editar/<int:alerta_id>/', views.editar_alerta, name='editar_alerta'),
     path('panel/alertas/eliminar/<int:alerta_id>/', views.eliminar_alerta, name='eliminar_alerta'),
+
     # Mapa de calor
     path('ver-mapa/', vista_mapa, name='mapa_calor'),
 ]
