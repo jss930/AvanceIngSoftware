@@ -217,6 +217,12 @@ def editar_reporte(request):
 
 @login_required(login_url='/loginadmin/')
 @user_passes_test(is_superuser, login_url='/loginadmin/')
+def gestionar_alertas(request):
+    alertas = Alerta.objects.all().order_by('-fecha_creacion')
+    return render(request, 'panel/gestionar_alertas.html', {'alertas': alertas})
+
+@login_required(login_url='/loginadmin/')
+@user_passes_test(is_superuser, login_url='/loginadmin/')
 def crear_alerta(request):
     if request.method == 'POST':
         form = AlertaForm(request.POST)
@@ -239,12 +245,10 @@ def crear_alerta(request):
     else:
         form = AlertaForm()
 
-    return render(request, 'panel/alerta.html', {'form': form, 'titulo': 'Crear Alerta'})
+    return render(request, 'panel/crear_alerta.html', {'form': form, 'titulo': 'Crear Alerta'})
 
-def gestionar_alertas(request):
-    alertas = Alerta.objects.all().order_by('-fecha_creacion')
-    return render(request, 'panel/gestionar_alertas.html', {'alertas': alertas})
-
+@login_required(login_url='/loginadmin/')
+@user_passes_test(is_superuser, login_url='/loginadmin/')
 def editar_alerta(request, alerta_id):
     alerta = get_object_or_404(Alerta, pk=alerta_id)
     if request.method == 'POST':
@@ -256,6 +260,8 @@ def editar_alerta(request, alerta_id):
         form = AlertaForm(instance=alerta)
     return render(request, 'panel/editar_alerta.html', {'form': form, 'alerta': alerta})
 
+@login_required(login_url='/loginadmin/')
+@user_passes_test(is_superuser, login_url='/loginadmin/')
 def eliminar_alerta(request, alerta_id):
     alerta = get_object_or_404(Alerta, pk=alerta_id)
     if request.method == 'POST':
