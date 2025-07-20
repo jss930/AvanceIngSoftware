@@ -1,4 +1,3 @@
-# forms.py
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
@@ -36,7 +35,6 @@ class RegistroUsuarioForm(UserCreationForm):
         model = User
         fields = ['username', 'email', 'password1', 'password2']
 
-# Nuevo formulario de login
 class LoginForm(AuthenticationForm):
     username = forms.CharField(widget=forms.TextInput(attrs={
         'class': FORM_CONTROL,
@@ -75,9 +73,10 @@ class AlertaForm(forms.ModelForm):
 
     class Meta:
         model = Alerta
-        fields = ['titulo', 'mensaje', 'destinatarios', 'ubicacion']
+        fields = ['titulo', 'mensaje', 'destinatarios', 'ubicacion', 'activa']  # <- agregamos 'activa'
         widgets = {
             'titulo': forms.TextInput(attrs={'class': FORM_CONTROL}),
             'mensaje': forms.Textarea(attrs={'class': FORM_CONTROL}),
             'ubicacion': forms.TextInput(attrs={'class': FORM_CONTROL}),
+            'activa': forms.CheckboxInput(attrs={'class': 'form-check-input'}),  # <- nuevo campo activo
         }

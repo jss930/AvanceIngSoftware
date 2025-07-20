@@ -239,7 +239,29 @@ def crear_alerta(request):
     else:
         form = AlertaForm()
 
-    return render(request, 'panel/crear_alerta.html', {'form': form, 'titulo': 'Crear Alerta'})
+    return render(request, 'panel/alerta.html', {'form': form, 'titulo': 'Crear Alerta'})
+
+def gestionar_alertas(request):
+    alertas = Alerta.objects.all().order_by('-fecha_creacion')
+    return render(request, 'panel/gestionar_alertas.html', {'alertas': alertas})
+
+def editar_alerta(request, alerta_id):
+    alerta = get_object_or_404(Alerta, pk=alerta_id)
+    if request.method == 'POST':
+        form = AlertaForm(request.POST, instance=alerta)
+        if form.is_valid():
+            form.save()
+            return redirect('gestionar_alertas')
+    else:
+        form = AlertaForm(instance=alerta)
+    return render(request, 'panel/editar_alerta.html', {'form': form, 'alerta': alerta})
+
+def eliminar_alerta(request, alerta_id):
+    alerta = get_object_or_404(Alerta, pk=alerta_id)
+    if request.method == 'POST':
+        alerta.delete()
+        return redirect('gestionar_alertas')
+    return render(request, 'panel/eliminar_alerta.html', {'alerta': alerta})
 
 # Vistas para botones del home
 class PlanRouteView(TemplateView):
