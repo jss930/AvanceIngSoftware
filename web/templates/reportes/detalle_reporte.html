@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle del Reporte | Traffic Pulse</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    {% load static %}
+    <style>
+        .detail-card {
+            border: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        
+        .header-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .info-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .credibility-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: conic-gradient(#28a745 0deg, #28a745 var(--percentage), #e9ecef var(--percentage));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .credibility-inner {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .danger-level-1 { border-left: 5px solid #28a745; }
+        .danger-level-2 { border-left: 5px solid #ffc107; }
+        .danger-level-3 { border-left: 5px solid #dc3545; }
+        
+        .map-container {
+            height: 300px;
+            border-radius: 10px;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+        }
+        
+        .status-badge {
+            font-size: 14px;
+            padding: 8px 16px;
+            border-radius: 20px;
+        }
+        
+        .votes-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .action-button {
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 500;
+        }
+        
+        .image-preview {
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-height: 250px;
+            object-fit: cover;
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 30px;
+            margin-bottom: 15px;
+        }
+        
+        .timeline-item:before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 8px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #007bff;
+        }
+        
+        .timeline-item:after {
+            content: '';
+            position: absolute;
+            left: 13px;
+            top: 20px;
+            width: 2px;
+            height: calc(100% + 5px);
+            background: #dee2e6;
+        }
+        
+        .timeline-item:last-child:after {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm" aria-label="Barra de navegación principal">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'dashboard' %}">
+                <i class="bi bi-traffic-cone me-2"></i>Traffic Pulse
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3 text-white">
+                    <i class="bi bi-person-circle me-2"></i>{{ user.username }}
+                </span>
+                <a class="btn btn-outline-light btn-sm" href="{% url 'logout' %}">
+                    <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'mis_reportes' %}">Mis Reportes</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Detalle del Reporte</li>
+            </ol>
+        </nav>
+
+        {% if error %}
+            <div class="alert alert-danger" role="alert">
+                <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
+            </div>
+        {% else %}
+            <div class="detail-card card">
+                <!-- Header -->
+                <div class="header-gradient card-header border-0 py-4">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h2 class="mb-1">
+                                <i class="bi bi-file-earmark-text me-2"></i>{{ reporte.titulo }}
+                            </h2>
+                            <p class="mb-0 opacity-75">
+                                <i class="bi bi-calendar me-1"></i>
+                                Creado el {{ reporte.fecha_creacion|date:"d/m/Y" }} a las {{ reporte.fecha_creacion|time:"H:i" }}
+                            </p>
+                        </div>
+                        <div class="col-auto">
+                            {% if reporte.estado_reporte == 'validado' %}
+                                <span class="status-badge bg-success text-white">
+                                    <i class="bi bi-check-circle me-1"></i>Validado
+                                </span>
+                            {% elif reporte.estado_reporte == 'pendiente' %}
+                                <span class="status-badge bg-warning text-dark">
+                                    <i class="bi bi-clock me-1"></i>Pendiente
+                                </span>
+                            {% elif reporte.estado_reporte == 'rechazado' %}
+                                <span class="status-badge bg-danger text-white">
+                                    <i class="bi bi-x-circle me-1"></i>Rechazado
+                                </span>
+                            {% else %}
+                                <span class="status-badge bg-secondary text-white">
+                                    <i class="bi bi-archive me-1"></i>Archivado
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    <div class="row">
+                        <!-- Información Principal -->
+                        <div class="col-lg-8">
+                            <!-- Descripción -->
+                            <div class="info-section danger-level-{{ reporte.nivel_peligro }}">
+                                <h5 class="text-primary mb-3">
+                                    <i class="bi bi-chat-square-text me-2"></i>Descripción del Incidente
+                                </h5>
+                                <p class="mb-3 fs-6 lh-lg">{{ reporte.descripcion }}</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-tag-fill text-secondary me-2"></i>
+                                            <strong>Tipo:</strong>
+                                            <span class="ms-2 badge bg-secondary">{{ reporte.get_tipo_incidente_display }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                                            <strong>Nivel de Peligro:</strong>
+                                            <span class="ms-2">
+                                                {% if reporte.nivel_peligro == 1 %}
+                                                    <span class="badge bg-success">Bajo</span>
+                                                {% elif reporte.nivel_peligro == 2 %}
+                                                    <span class="badge bg-warning text-dark">Medio</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Alto</span>
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {% if es_reciente %}
+                                    <div class="alert alert-info border-0 mt-3">
+                                        <i class="bi bi-clock-history me-2"></i>
+                                        <strong>Reporte Reciente:</strong> Este incidente fue reportado hace menos de 24 horas.
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Imagen del Reporte -->
+                            {% if reporte.imagen_geolocalizada %}
+                                <div class="mb-4">
+                                    <h5 class="text-primary mb-3">
+                                        <i class="bi bi-image me-2"></i>Evidencia Fotográfica
+                                    </h5>
+                                    <img src="{{ reporte.imagen_geolocalizada.url }}" 
+                                         alt="Evidencia del reporte" 
+                                         class="img-fluid image-preview w-100">
+                                </div>
+                            {% endif %}
+
+                            <!-- Ubicación -->
+                            <div class="info-section">
+                                <h5 class="text-primary mb-3">
+                                    <i class="bi bi-geo-alt me-2"></i>Ubicación del Incidente
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-2">
+                                            <strong>Coordenadas:</strong>
+                                        </div>
+                                        <div class="text-muted">
+                                            <i class="bi bi-geo me-1"></i>
+                                            Latitud: {{ reporte.latitud|floatformat:6 }}<br>
+                                            <i class="bi bi-geo me-1"></i>
+                                            Longitud: {{ reporte.longitud|floatformat:6 }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-2">
+                                            <strong>Ubicación:</strong>
+                                        </div>
+                                        <div class="text-muted">
+                                            {{ ubicacion_texto }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Mapa Placeholder -->
+                                <div class="map-container mt-3">
+                                    <div class="text-center">
+                                        <i class="bi bi-map display-4 mb-2"></i>
+                                        <p class="mb-0">Mapa interactivo próximamente</p>
+                                        <small>Lat: {{ reporte.latitud|floatformat:4 }}, Lng: {{ reporte.longitud|floatformat:4 }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Panel Lateral -->
+                        <div class="col-lg-4">
+                            <!-- Credibilidad -->
+                            <div class="votes-section mb-4">
+                                <h6 class="text-primary mb-3 text-center">
+                                    <i class="bi bi-graph-up me-2"></i>Credibilidad del Reporte
+                                </h6>
+                                
+                                <div class="text-center mb-3">
+                                    <div class="credibility-circle mx-auto" 
+                                         style="--percentage: {{ credibilidad|mul:3.6 }}deg;">
+                                        <div class="credibility-inner">
+                                            {{ credibilidad|floatformat:0 }}%
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <i class="bi bi-hand-thumbs-up-fill text-success fs-4 me-2"></i>
+                                            <div>
+                                                <div class="fw-bold fs-5">{{ reporte.votos_positivos }}</div>
+                                                <small class="text-muted">Positivos</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <i class="bi bi-hand-thumbs-down-fill text-danger fs-4 me-2"></i>
+                                            <div>
+                                                <div class="fw-bold fs-5">{{ reporte.votos_negativos }}</div>
+                                                <small class="text-muted">Negativos</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3 text-center">
+                                    {% with total_votos=reporte.votos_positivos|add:reporte.votos_negativos %}
+                                        <small class="text-muted">
+                                            Total de {{ total_votos }} voto{{ total_votos|pluralize }}
+                                        </small>
+                                    {% endwith %}
+                                </div>
+                            </div>
+
+                            <!-- Información Adicional -->
+                            <div class="info-section">
+                                <h6 class="text-primary mb-3">
+                                    <i class="bi bi-info-circle me-2"></i>Información del Reporte
+                                </h6>
+                                
+                                <div class="timeline-item">
+                                    <small class="text-muted">Reportado por</small>
+                                    <div class="fw-semibold">{{ reporte.usuario_reportador.username }}</div>
+                                </div>
+
+                                <div class="timeline-item">
+                                    <small class="text-muted">Fecha de creación</small>
+                                    <div class="fw-semibold">{{ reporte.fecha_creacion|date:"d/m/Y H:i" }}</div>
+                                </div>
+
+                                {% if reporte.fecha_actualizacion != reporte.fecha_creacion %}
+                                    <div class="timeline-item">
+                                        <small class="text-muted">Última actualización</small>
+                                        <div class="fw-semibold">{{ reporte.fecha_actualizacion|date:"d/m/Y H:i" }}</div>
+                                    </div>
+                                {% endif %}
+
+                                <div class="timeline-item">
+                                    <small class="text-muted">Estado actual</small>
+                                    <div class="fw-semibold">{{ reporte.get_estado_reporte_display }}</div>
+                                </div>
+
+                                {% if reporte.es_validado %}
+                                    <div class="timeline-item">
+                                        <small class="text-muted">Estado de validación</small>
+                                        <div class="fw-semibold text-success">
+                                            <i class="bi bi-patch-check me-1"></i>Validado por la comunidad
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Acciones -->
+                            <div class="d-grid gap-2">
+                                {% if puede_editar %}
+                                    <a href="{% url 'editar_reporte' reporte.id %}" 
+                                       class="btn btn-warning action-button">
+                                        <i class="bi bi-pencil-square me-2"></i>Editar Reporte
+                                    </a>
+                                {% endif %}
+                                
+                                <a href="{% url 'mis_reportes' %}" 
+                                   class="btn btn-outline-primary action-button">
+                                    <i class="bi bi-arrow-left me-2"></i>Volver a Mis Reportes
+                                </a>
+
+                                <button class="btn btn-outline-success action-button" 
+                                        onclick="compartirReporte()">
+                                    <i class="bi bi-share me-2"></i>Compartir Reporte
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function compartirReporte() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Reporte de Tráfico - {{ reporte.titulo|escapejs }}',
+                    text: 'Revisa este reporte de tráfico en Traffic Pulse',
+                    url: window.location.href
+                });
+            } else {
+                // Fallback: copiar al portapapeles
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    alert('Enlace copiado al portapapeles');
+                });
+            }
+        }
+
+        // Animación de la credibilidad circular
+        document.addEventListener('DOMContentLoaded', function() {
+            const circle = document.querySelector('.credibility-circle');
+            if (circle) {
+                const percentage = {{ credibilidad|default:0 }};
+                let currentPercentage = 0;
+                const increment = percentage / 50;
+                
+                const animate = () => {
+                    if (currentPercentage < percentage) {
+                        currentPercentage += increment;
+                        circle.style.setProperty('--percentage', `${currentPercentage * 3.6}deg`);
+                        requestAnimationFrame(animate);
+                    }
+                };
+                
+                setTimeout(animate, 500);
+            }
+        });
+    </script>
+</body>
+</html>

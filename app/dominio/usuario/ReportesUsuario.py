@@ -2,145 +2,152 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils import timezone
+from web.models import Reporte
 
-class PerfilUsuario(models.Model):
-    """Tabla persistente para perfiles de usuario"""
-    usuario = models.OneToOneField(User, on_delete=models.CASCADE)
-    puntos_acumulados = models.IntegerField(default=0, validators=[MinValueValidator(0)])
-    total_reportes = models.IntegerField(default=0, validators=[MinValueValidator(0)])
-    perfil_visible = models.BooleanField(default=True)
-    fecha_registro = models.DateTimeField(auto_now_add=True)
-    fecha_actualizacion = models.DateTimeField(auto_now=True)
+class VotoReporte(models.Model):
+    """Modelo para almacenar votos de validación"""
+    reporte = models.ForeignKey(Reporte, on_delete=models.CASCADE, related_name='votos')
+    usuario_votante = models.ForeignKey(User, on_delete=models.CASCADE)
+    voto_positivo = models.BooleanField()
+    fecha_voto = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        db_table = 'perfil_usuario'
-        indexes = [
-            models.Index(fields=['usuario']),
-            models.Index(fields=['puntos_acumulados']),
-        ]
-
-class ContribucionUsuario(models.Model):
-    """Tabla para tracking de contribuciones"""
-    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
-    reporte_id = models.IntegerField()
-    puntos_otorgados = models.IntegerField(default=10)
-    fecha_contribucion = models.DateTimeField(auto_now_add=True)
-    tipo_contribucion = models.CharField(max_length=50, default='reporte')
-    
-    class Meta:
-        db_table = 'contribucion_usuario'
-        unique_together = ['usuario', 'reporte_id']
+        db_table = 'voto_reporte'
+        unique_together = ['reporte', 'usuario_votante']
 
 
 # 2. ESTILO ERROR/EXCEPTION HANDLING
-class PerfilUsuarioError(Exception):
-    """Excepción base para errores de perfil"""
+class ReporteError(Exception):
+    """Excepción base para errores de reporte"""
     pass
 
-class PerfilNoVisibleError(PerfilUsuarioError):
-    """Excepción cuando el perfil no es visible"""
+class ReporteNoEncontradoError(ReporteError):
+    """Excepción cuando el reporte no existe"""
     pass
 
-class UsuarioNoEncontradoError(PerfilUsuarioError):
-    """Excepción cuando el usuario no existe"""
+class SinPermisosReporteError(ReporteError):
+    """Excepción cuando el usuario no tiene permisos"""
     pass
 
-class PerfilNoExisteError(PerfilUsuarioError):
-    """Excepción cuando el perfil no existe"""
+class ReporteNoEditableError(ReporteError):
+    """Excepción cuando el reporte no puede ser editado"""
     pass
 
 
 # 3. ESTILO THINGS (Objetos con responsabilidades claras)
-class PerfilUsuarioThing:
-    """Objeto que encapsula la lógica de perfil de usuario"""
+class ReporteVisualizadorThing:
+    """Maneja la visualización de reportes de un usuario"""
     
     def __init__(self, usuario_id: int):
         self.usuario_id = usuario_id
-        self._perfil = None
-        self._contribuciones = None
+        self._reportes = None
+        self._estadisticas = None
     
     @property
-    def perfil(self):
-        """Lazy loading del perfil"""
-        if self._perfil is None:
+    def reportes(self):
+        """Lazy loading de reportes"""
+        if self._reportes is None:
+            self._reportes = Reporte.objects.filter(
+                usuario_reportador_id=self.usuario_id
+            ).order_by('-fecha_creacion')
+        return self._reportes
+    
+    def obtener_reportes_por_estado(self, estado: str = None):
+        """Obtiene reportes filtrados por estado"""
+        queryset = self.reportes
+        if estado:
+            queryset = queryset.filter(estado_reporte=estado)
+        return queryset
+    
+    def obtener_reportes_recientes(self, limite: int = 5):
+        """Obtiene los reportes más recientes"""
+        return self.reportes[:limite]
+    
+    def obtener_estadisticas_usuario(self):
+        """Calcula estadísticas del usuario"""
+        if self._estadisticas is None:
+            total_reportes = self.reportes.count()
+            reportes_validados = self.reportes.filter(es_validado=True).count()
+            reportes_pendientes = self.reportes.filter(estado_reporte='pendiente').count()
+            promedio_votos = self.reportes.aggregate(
+                promedio_positivos=models.Avg('votos_positivos'),
+                promedio_negativos=models.Avg('votos_negativos')
+            )
+            
+            self._estadisticas = {
+                'total_reportes': total_reportes,
+                'reportes_validados': reportes_validados,
+                'reportes_pendientes': reportes_pendientes,
+                'tasa_validacion': (reportes_validados / total_reportes * 100) if total_reportes > 0 else 0,
+                'promedio_votos_positivos': promedio_votos['promedio_positivos'] or 0,
+                'promedio_votos_negativos': promedio_votos['promedio_negativos'] or 0,
+            }
+        return self._estadisticas
+
+
+class ReporteDetalleThing:
+    """Maneja los detalles de un reporte específico"""
+    
+    def __init__(self, reporte_id: int):
+        self.reporte_id = reporte_id
+        self._reporte = None
+    
+    @property
+    def reporte(self):
+        """Lazy loading del reporte"""
+        if self._reporte is None:
             try:
-                self._perfil = PerfilUsuario.objects.get(usuario_id=self.usuario_id)
-            except PerfilUsuario.DoesNotExist:
-                raise PerfilNoExisteError(f"Perfil no existe para usuario {self.usuario_id}")
-        return self._perfil
+                self._reporte = Reporte.objects.select_related('usuario_reportador').get(
+                    id=self.reporte_id
+                )
+            except Reporte.DoesNotExist:
+                raise ReporteNoEncontradoError(f"Reporte {self.reporte_id} no encontrado")
+        return self._reporte
     
-    @property
-    def contribuciones(self):
-        """Lazy loading de contribuciones"""
-        if self._contribuciones is None:
-            self._contribuciones = ContribucionUsuario.objects.filter(
-                usuario_id=self.usuario_id
-            ).order_by('-fecha_contribucion')
-        return self._contribuciones
-    
-    def es_visible(self) -> bool:
-        """Verifica si el perfil es visible"""
-        return self.perfil.perfil_visible
-    
-    def obtener_estadisticas(self) -> dict:
-        """Obtiene estadísticas del perfil"""
+    def obtener_detalles_completos(self):
+        """Obtiene todos los detalles del reporte"""
+        reporte = self.reporte
+        votos = VotoReporte.objects.filter(reporte=reporte)
+        
         return {
-            'puntos_totales': self.perfil.puntos_acumulados,
-            'total_reportes': self.perfil.total_reportes,
-            'promedio_puntos_por_reporte': self._calcular_promedio_puntos(),
-            'contribuciones_recientes': self.contribuciones[:5]
+            'reporte': reporte,
+            'credibilidad': self._calcular_credibilidad(),
+            'total_votos': votos.count(),
+            'votos_detalle': votos.select_related('usuario_votante'),
+            'puede_editar': self._puede_ser_editado(),
+            'es_reciente': self._es_reporte_reciente(),
+            'ubicacion_texto': self._obtener_ubicacion_texto()
         }
     
-    def _calcular_promedio_puntos(self) -> float:
-        """Calcula promedio de puntos por reporte"""
-        if self.perfil.total_reportes == 0:
-            return 0.0
-        return self.perfil.puntos_acumulados / self.perfil.total_reportes
+    def _calcular_credibilidad(self) -> float:
+        """Calcula la credibilidad del reporte"""
+        reporte = self.reporte
+        total = reporte.votos_positivos + reporte.votos_negativos
+        return (reporte.votos_positivos / total * 100) if total > 0 else 0.0
     
-    def cambiar_visibilidad(self, visible: bool):
-        """Cambia la visibilidad del perfil"""
-        self.perfil.perfil_visible = visible
-        self.perfil.save()
-
-
-class ImagenMiniaturaCollector:
-    """Colector de miniaturas de imágenes"""
+    def _puede_ser_editado(self) -> bool:
+        """Verifica si el reporte puede ser editado"""
+        return self.reporte.estado_reporte == 'pendiente'
     
-    def __init__(self, usuario_id: int):
-        self.usuario_id = usuario_id
+    def _es_reporte_reciente(self) -> bool:
+        """Verifica si el reporte es reciente (menos de 24 horas)"""
+        return (timezone.now() - self.reporte.fecha_creacion).days < 1
     
-    def obtener_miniaturas(self, limite: int = 10) -> list:
-        """Obtiene miniaturas de imágenes de reportes"""
-        # Simulación - en realidad consultaría la base de datos de reportes
-        # from app.reporte.reporteColaborativo import ReporteColaborativo
-        
-        # Aquí iría la lógica real para obtener reportes con imágenes
-        miniaturas = []
-        contribuciones = ContribucionUsuario.objects.filter(
-            usuario_id=self.usuario_id
-        )[:limite]
-        
-        for contrib in contribuciones:
-            # Simulación de obtener imagen del reporte
-            miniatura = {
-                'reporte_id': contrib.reporte_id,
-                'imagen_url': f'/media/miniaturas/reporte_{contrib.reporte_id}.jpg',
-                'fecha': contrib.fecha_contribucion
-            }
-            miniaturas.append(miniatura)
-        
-        return miniaturas
+    def _obtener_ubicacion_texto(self) -> str:
+        """Convierte coordenadas a texto legible"""
+        # Aquí podrías integrar con un servicio de geocodificación
+        return f"Lat: {self.reporte.latitud}, Lng: {self.reporte.longitud}"
 
 
 # 4. ESTILO PIPELINE (Procesamiento en cadena)
-class PerfilDataPipeline:
-    """Pipeline para procesar datos del perfil"""
+class ReportesDataPipeline:
+    """Pipeline para procesar datos de reportes"""
     
     def __init__(self):
         self.steps = []
     
     def agregar_paso(self, step_function):
-        """Agrega un paso al pipeline"""
         self.steps.append(step_function)
         return self
     
@@ -151,49 +158,72 @@ class PerfilDataPipeline:
         return data
 
 # Pasos del pipeline
-def validar_usuario_existe(data):
-    """Paso 1: Validar que el usuario existe"""
+def validar_usuario_reportes(data):
+    """Valida que el usuario tenga acceso a ver reportes"""
     try:
         usuario = User.objects.get(id=data['usuario_id'])
         data['usuario'] = usuario
         return data
     except User.DoesNotExist:
-        raise UsuarioNoEncontradoError(f"Usuario {data['usuario_id']} no encontrado")
+        raise ReporteError(f"Usuario {data['usuario_id']} no encontrado")
 
-def verificar_perfil_visible(data):
-    """Paso 2: Verificar que el perfil es visible"""
-    perfil_thing = PerfilUsuarioThing(data['usuario_id'])
-    if not perfil_thing.es_visible():
-        raise PerfilNoVisibleError("El perfil no es visible públicamente")
-    data['perfil_thing'] = perfil_thing
+def cargar_reportes_usuario(data):
+    """Carga los reportes del usuario"""
+    visualizador = ReporteVisualizadorThing(data['usuario_id'])
+    data['visualizador'] = visualizador
+    data['reportes'] = visualizador.reportes
     return data
 
-def enriquecer_con_estadisticas(data):
-    """Paso 3: Enriquecer con estadísticas"""
-    data['estadisticas'] = data['perfil_thing'].obtener_estadisticas()
+def aplicar_filtros(data):
+    """Aplica filtros según los parámetros"""
+    filtros = data.get('filtros', {})
+    reportes = data['reportes']
+    
+    if filtros.get('estado'):
+        reportes = reportes.filter(estado_reporte=filtros['estado'])
+    
+    if filtros.get('tipo_incidente'):
+        reportes = reportes.filter(tipo_incidente=filtros['tipo_incidente'])
+    
+    if filtros.get('fecha_desde'):
+        reportes = reportes.filter(fecha_creacion__gte=filtros['fecha_desde'])
+    
+    data['reportes_filtrados'] = reportes
     return data
 
-def agregar_miniaturas(data):
-    """Paso 4: Agregar miniaturas de imágenes"""
-    collector = ImagenMiniaturaCollector(data['usuario_id'])
-    data['miniaturas'] = collector.obtener_miniaturas()
+def cargar_estadisticas(data):
+    """Carga estadísticas del usuario"""
+    data['estadisticas'] = data['visualizador'].obtener_estadisticas_usuario()
     return data
 
-def formatear_respuesta(data):
-    """Paso 5: Formatear respuesta final"""
+def formatear_respuesta_reportes(data):
+    """Formatea la respuesta final"""
+    reportes_data = []
+    for reporte in data['reportes_filtrados']:
+        reportes_data.append({
+            'id': reporte.id,
+            'titulo': reporte.titulo,
+            'descripcion': reporte.descripcion[:100] + '...' if len(reporte.descripcion) > 100 else reporte.descripcion,
+            'tipo_incidente': reporte.get_tipo_incidente_display(),
+            'estado': reporte.get_estado_reporte_display(),
+            'nivel_peligro': reporte.nivel_peligro,
+            'fecha_creacion': reporte.fecha_creacion,
+            'votos_positivos': reporte.votos_positivos,
+            'votos_negativos': reporte.votos_negativos,
+            'credibilidad': (reporte.votos_positivos / (reporte.votos_positivos + reporte.votos_negativos) * 100) if (reporte.votos_positivos + reporte.votos_negativos) > 0 else 0,
+            'tiene_imagen': bool(reporte.imagen_geolocalizada),
+            'es_validado': reporte.es_validado
+        })
+    
     return {
         'usuario': {
             'id': data['usuario'].id,
             'username': data['usuario'].username,
             'nombre_completo': f"{data['usuario'].first_name} {data['usuario'].last_name}".strip()
         },
-        'perfil': {
-            'puntos_acumulados': data['estadisticas']['puntos_totales'],
-            'total_reportes': data['estadisticas']['total_reportes'],
-            'promedio_puntos': data['estadisticas']['promedio_puntos_por_reporte']
-        },
-        'contribuciones': data['estadisticas']['contribuciones_recientes'],
-        'miniaturas': data['miniaturas']
+        'estadisticas': data['estadisticas'],
+        'reportes': reportes_data,
+        'total_reportes': len(reportes_data)
     }
 
 
@@ -202,122 +232,199 @@ from rest_framework import serializers, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.core.paginator import Paginator
 
-class PerfilUsuarioSerializer(serializers.ModelSerializer):
-    """Serializer para el perfil de usuario"""
-    usuario_username = serializers.CharField(source='usuario.username', read_only=True)
-    nombre_completo = serializers.SerializerMethodField()
+class ReporteSerializer(serializers.ModelSerializer):
+    tipo_incidente_display = serializers.CharField(source='get_tipo_incidente_display', read_only=True)
+    estado_display = serializers.CharField(source='get_estado_reporte_display', read_only=True)
+    usuario_reportador_username = serializers.CharField(source='usuario_reportador.username', read_only=True)
+    credibilidad = serializers.SerializerMethodField()
     
     class Meta:
-        model = PerfilUsuario
+        model = Reporte
         fields = [
-            'usuario_username', 'nombre_completo', 'puntos_acumulados', 
-            'total_reportes', 'perfil_visible', 'fecha_registro'
+            'id', 'titulo', 'descripcion', 'tipo_incidente', 'tipo_incidente_display',
+            'estado_reporte', 'estado_display', 'nivel_peligro', 'fecha_creacion',
+            'fecha_actualizacion', 'votos_positivos', 'votos_negativos',
+            'usuario_reportador_username', 'credibilidad', 'es_validado',
+            'latitud', 'longitud', 'imagen_geolocalizada'
         ]
     
-    def get_nombre_completo(self, obj):
-        return f"{obj.usuario.first_name} {obj.usuario.last_name}".strip()
+    def get_credibilidad(self, obj):
+        total = obj.votos_positivos + obj.votos_negativos
+        return (obj.votos_positivos / total * 100) if total > 0 else 0
 
-class ContribucionSerializer(serializers.ModelSerializer):
-    """Serializer para contribuciones"""
-    class Meta:
-        model = ContribucionUsuario
-        fields = ['reporte_id', 'puntos_otorgados', 'fecha_contribucion', 'tipo_contribucion']
+# Views Django tradicionales
+@login_required
+def mis_reportes_view(request):
+    """Vista principal para mostrar los reportes del usuario"""
+    try:
+        # Usar pipeline para procesar la solicitud
+        pipeline = ReportesDataPipeline()
+        pipeline.agregar_paso(validar_usuario_reportes) \
+                .agregar_paso(cargar_reportes_usuario) \
+                .agregar_paso(aplicar_filtros) \
+                .agregar_paso(cargar_estadisticas)
+        
+        # Obtener filtros de la URL
+        filtros = {
+            'estado': request.GET.get('estado'),
+            'tipo_incidente': request.GET.get('tipo'),
+            'fecha_desde': request.GET.get('fecha_desde')
+        }
+        
+        data = {
+            'usuario_id': request.user.id,
+            'filtros': {k: v for k, v in filtros.items() if v}
+        }
+        
+        resultado = pipeline.procesar(data)
+        
+        # Paginación
+        paginator = Paginator(resultado['reportes_filtrados'], 10)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        context = {
+            'reportes': page_obj,
+            'estadisticas': resultado['estadisticas'],
+            'filtros_aplicados': filtros,
+            'tipos_incidente': Reporte.TIPOS_INCIDENTE,
+            'estados_reporte': Reporte.ESTADOS_REPORTE,
+        }
+        
+        return render(request, 'reportes/mis_reportes.html', context)
+        
+    except Exception:
+        context = {
+            'error': 'Error al cargar los reportes',
+            'reportes': [],
+            'estadisticas': {}
+        }
+        return render(request, 'reportes/mis_reportes.html', context)
+
+@login_required
+def detalle_reporte_view(request, reporte_id):
+    """Vista para mostrar el detalle de un reporte"""
+    try:
+        detalle_thing = ReporteDetalleThing(reporte_id)
+        detalles = detalle_thing.obtener_detalles_completos()
+        
+        # Verificar permisos
+        if detalles['reporte'].usuario_reportador != request.user:
+            raise SinPermisosReporteError("No tienes permisos para ver este reporte")
+        
+        context = {
+            'reporte': detalles['reporte'],
+            'credibilidad': detalles['credibilidad'],
+            'total_votos': detalles['total_votos'],
+            'puede_editar': detalles['puede_editar'],
+            'es_reciente': detalles['es_reciente'],
+            'ubicacion_texto': detalles['ubicacion_texto']
+        }
+        
+        return render(request, 'reportes/detalle_reporte.html', context)
+        
+    except ReporteNoEncontradoError:
+        context = {'error': 'Reporte no encontrado'}
+        return render(request, 'reportes/error.html', context, status=404)
+    except SinPermisosReporteError:
+        context = {'error': 'No tienes permisos para ver este reporte'}
+        return render(request, 'reportes/error.html', context, status=403)
 
 # API Views RESTful
 @api_view(['GET'])
-def perfil_publico(request, usuario_id):
+@permission_classes([IsAuthenticated])
+def api_mis_reportes(request):
     """
-    GET /api/perfil/{usuario_id}/
-    Obtiene el perfil público de un usuario
+    GET /api/mis-reportes/
+    Obtiene los reportes del usuario autenticado via API
     """
     try:
-        # Usar el pipeline para procesar la solicitud
-        pipeline = PerfilDataPipeline()
-        pipeline.agregar_paso(validar_usuario_existe) \
-                .agregar_paso(verificar_perfil_visible) \
-                .agregar_paso(enriquecer_con_estadisticas) \
-                .agregar_paso(agregar_miniaturas) \
-                .agregar_paso(formatear_respuesta)
+        pipeline = ReportesDataPipeline()
+        pipeline.agregar_paso(validar_usuario_reportes) \
+                .agregar_paso(cargar_reportes_usuario) \
+                .agregar_paso(aplicar_filtros) \
+                .agregar_paso(cargar_estadisticas) \
+                .agregar_paso(formatear_respuesta_reportes)
         
-        resultado = pipeline.procesar({'usuario_id': usuario_id})
+        # Obtener filtros de los query parameters
+        filtros = {
+            'estado': request.GET.get('estado'),
+            'tipo_incidente': request.GET.get('tipo'),
+            'fecha_desde': request.GET.get('fecha_desde')
+        }
         
+        data = {
+            'usuario_id': request.user.id,
+            'filtros': {k: v for k, v in filtros.items() if v}
+        }
+        
+        resultado = pipeline.procesar(data)
         return Response(resultado, status=status.HTTP_200_OK)
         
-    except UsuarioNoEncontradoError as e:
+    except Exception:
         return Response(
-            {'error': str(e)}, 
-            status=status.HTTP_404_NOT_FOUND
-        )
-    except PerfilNoVisibleError as e:
-        return Response(
-            {'error': str(e)}, 
-            status=status.HTTP_403_FORBIDDEN
-        )
-    except Exception as e:
-        return Response(
-            {'error': 'Error interno del servidor'}, 
+            {'error': 'Error al obtener reportes'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 @api_view(['GET'])
-def contribuciones_usuario(request, usuario_id):
+@permission_classes([IsAuthenticated])
+def api_detalle_reporte(request, reporte_id):
     """
-    GET /api/perfil/{usuario_id}/contribuciones/
-    Obtiene las contribuciones de un usuario
+    GET /api/reporte/{id}/
+    Obtiene el detalle de un reporte específico
     """
     try:
-        perfil_thing = PerfilUsuarioThing(usuario_id)
+        detalle_thing = ReporteDetalleThing(reporte_id)
+        reporte = detalle_thing.reporte
         
-        if not perfil_thing.es_visible():
-            raise PerfilNoVisibleError("El perfil no es visible públicamente")
+        # Verificar permisos
+        if reporte.usuario_reportador != request.user:
+            raise SinPermisosReporteError("No tienes permisos para ver este reporte")
         
-        contribuciones = perfil_thing.contribuciones
-        serializer = ContribucionSerializer(contribuciones, many=True)
+        detalles = detalle_thing.obtener_detalles_completos()
+        serializer = ReporteSerializer(reporte)
         
         return Response({
-            'contribuciones': serializer.data,
-            'total': len(contribuciones)
+            'reporte': serializer.data,
+            'credibilidad': detalles['credibilidad'],
+            'puede_editar': detalles['puede_editar'],
+            'es_reciente': detalles['es_reciente'],
+            'ubicacion_texto': detalles['ubicacion_texto']
         }, status=status.HTTP_200_OK)
         
-    except PerfilNoExisteError as e:
+    except ReporteNoEncontradoError:
         return Response(
-            {'error': str(e)}, 
+            {'error': 'Reporte no encontrado'},
             status=status.HTTP_404_NOT_FOUND
         )
-    except PerfilNoVisibleError as e:
+    except SinPermisosReporteError:
         return Response(
-            {'error': str(e)}, 
+            {'error': 'No tienes permisos para ver este reporte'},
             status=status.HTTP_403_FORBIDDEN
         )
 
-@api_view(['PUT'])
+@api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def cambiar_visibilidad_perfil(request):
+def api_estadisticas_usuario(request):
     """
-    PUT /api/perfil/visibilidad/
-    Cambia la visibilidad del perfil del usuario autenticado
+    GET /api/mis-estadisticas/
+    Obtiene estadísticas del usuario
     """
     try:
-        visible = request.data.get('visible', True)
+        visualizador = ReporteVisualizadorThing(request.user.id)
+        estadisticas = visualizador.obtener_estadisticas_usuario()
         
-        perfil_thing = PerfilUsuarioThing(request.user.id)
-        perfil_thing.cambiar_visibilidad(visible)
+        return Response(estadisticas, status=status.HTTP_200_OK)
         
-        return Response({
-            'mensaje': 'Visibilidad actualizada correctamente',
-            'perfil_visible': visible
-        }, status=status.HTTP_200_OK)
-        
-    except PerfilNoExisteError as e:
+    except Exception:
         return Response(
-            {'error': str(e)}, 
-            status=status.HTTP_404_NOT_FOUND
-        )
-    except Exception as e:
-        return Response(
-            {'error': 'Error al actualizar visibilidad'}, 
+            {'error': 'Error al obtener estadísticas'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
@@ -326,38 +433,50 @@ def cambiar_visibilidad_perfil(request):
 from django.urls import path
 
 urlpatterns = [
-    path('api/perfil/<int:usuario_id>/', perfil_publico, name='perfil_publico'),
-    path('api/perfil/<int:usuario_id>/contribuciones/', contribuciones_usuario, name='contribuciones_usuario'),
-    path('api/perfil/visibilidad/', cambiar_visibilidad_perfil, name='cambiar_visibilidad'),
+    # Views tradicionales
+    path('mis-reportes/', mis_reportes_view, name='mis_reportes'),
+    path('reporte/<int:reporte_id>/', detalle_reporte_view, name='detalle_reporte'),
+    
+    # API endpoints
+    path('api/mis-reportes/', api_mis_reportes, name='api_mis_reportes'),
+    path('api/reporte/<int:reporte_id>/', api_detalle_reporte, name='api_detalle_reporte'),
+    path('api/mis-estadisticas/', api_estadisticas_usuario, name='api_estadisticas_usuario'),
 ]
 
 
 # 7. MANAGEMENT COMMAND (Cookbook style)
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
+from django.utils import timezone
+from datetime import timedelta
 
 class Command(BaseCommand):
     """
-    Comando para inicializar perfiles de usuario
-    python manage.py inicializar_perfiles
+    Comando para limpiar reportes antiguos
+    python manage.py limpiar_reportes_antiguos --dias=30
     """
-    help = 'Inicializa perfiles para usuarios existentes'
+    help = 'Limpia reportes más antiguos que X días'
+    
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--dias',
+            type=int,
+            default=30,
+            help='Número de días para considerar reportes como antiguos'
+        )
     
     def handle(self, *args, **options):
-        """Cookbook: Receta para inicializar perfiles"""
-        usuarios_sin_perfil = User.objects.filter(perfilusuario__isnull=True)
+        dias = options['dias']
+        fecha_limite = timezone.now() - timedelta(days=dias)
         
-        for usuario in usuarios_sin_perfil:
-            PerfilUsuario.objects.create(
-                usuario=usuario,
-                puntos_acumulados=0,
-                total_reportes=0,
-                perfil_visible=True
-            )
-            self.stdout.write(
-                self.style.SUCCESS(f'Perfil creado para usuario: {usuario.username}')
-            )
+        reportes_antiguos = Reporte.objects.filter(
+            fecha_creacion__lt=fecha_limite,
+            estado_reporte='archivado'
+        )
+        
+        cantidad = reportes_antiguos.count()
+        reportes_antiguos.delete()
         
         self.stdout.write(
-            self.style.SUCCESS(f'Proceso completado. {len(usuarios_sin_perfil)} perfiles creados.')
+            self.style.SUCCESS(f'Se eliminaron {cantidad} reportes antiguos (más de {dias} días)')
         )

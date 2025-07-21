@@ -41,7 +41,6 @@
         {% endif %}
       </div>
 
-      <!-- Contraseña 1 -->
       <div class="position-relative mb-3">
         <div class="form-floating position-relative col-11 d-flex w-100">
           {{ form.password1 }}
@@ -59,7 +58,6 @@
         {% endif %}
       </div>
 
-      <!-- Contraseña 2 -->
       <div class="position-relative mb-3">
         <div class="form-floating position-relative col-11 d-flex w-100">
           {{ form.password2 }}
@@ -100,7 +98,6 @@
   const passwordFields = document.querySelectorAll(".password-input");
   const toggleButtons = document.querySelectorAll(".toggle-password");
 
-  // Mostrar/ocultar contraseñas
   toggleButtons.forEach((button, index) => {
     const icon = button.querySelector(".toggle-icon");
     const input = passwordFields[index];
@@ -114,22 +111,18 @@
     });
   });
 
-  // Validación al enviar el formulario
   form.addEventListener("submit", function (e) {
     let valid = true;
 
-    // Limpiar clases anteriores
     [username, emailInput, password1, password2].forEach((input) => {
       input.classList.remove("is-invalid");
     });
 
-    // Validar usuario
     if (username.value.trim() === "") {
       username.classList.add("is-invalid");
       valid = false;
     }
 
-    // Validar email
     const emailValue = emailInput.value.trim();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -138,19 +131,16 @@
       valid = false;
     }
 
-    // Validar contraseña no vacía y longitud mínima
     if (password1.value.length < 6) {
       password1.parentElement.classList.add("is-invalid");
       valid = false;
     }
 
-    // Validar que las contraseñas coincidan
     if (password1.value !== password2.value) {
       password2.parentElement.classList.add("is-invalid");
       valid = false;
     }
 
-    // Cancelar envío si hay errores
     if (!valid) {
       e.preventDefault();
     }
