@@ -71,34 +71,43 @@ def admin_reportes(request):
     })
 
 
-@login_required(login_url="/loginadmin/")
-@user_passes_test(is_superuser, login_url="/loginadmin/")
+@login_required(login_url='/loginadmin/')
+@user_passes_test(is_superuser, login_url='/loginadmin/')
 @never_cache
 def editar_reporte(request, id):
     controlador = ReporteColaborativoController()
-    reporte = controlador.obtener_reporte(id)
-
-    if request.method == "POST":
-        # Obtener datos del formulario
-        titulo = request.POST.get("titulo")
-        descripcion = request.POST.get("descripcion")
-        ubicacion = request.POST.get("ubicacion")
-        tipo_incidente = request.POST.get("tipo_incidente")
-        estado_reporte = request.POST.get("estado_reporte")
-
-        # Actualizar el reporte
-        reporte.titulo = titulo
-        reporte.descripcion = descripcion
-        reporte.ubicacion = ubicacion
-        reporte.tipo_incidente = tipo_incidente
-        reporte.estado_reporte = estado_reporte
-
-        controlador.actualizar(reporte)
-        messages.success(request, "Reporte actualizado exitosamente.")
+    try:
+        reporte = controlador.obtener_reporte(id)
+        if not reporte:
+            messages.error(request, "Reporte no encontrado.")
+            return redirect("admin_reportes")
+    except (ValueError, TypeError):
+        messages.error(request, "ID inválido.")
         return redirect("admin_reportes")
 
-    return render(request, "partials/editar_reporte.html", {
-        "reporte": reporte,
-        "titulo": "Editar Reporte"
-    })
+    if request.method == "POST":
+        titulo = request.POST.get("titulo", "").strip()
+        descripcion = request.POST.get("descripcion", "").strip()
+        ubicacion = request.POST.get("ubicacion", "").strip()
+        tipo_incidente = request.POST.get("tipo_incidente", "").strip()
+        estado_reporte = request.POST.get("estado_reporte", "").strip()
 
+        # Validación básica
+        if not titulo or not descripcion or not ubicacion or not tipo_incidente or not estado_reporte:
+            messages.error(request, "Todos los campos son obligatorios.")
+        else:
+            # Actualiza atributos
+            reporte.titulo = titulo
+            reporte.descripcion = descripcion
+            reporte.ubicacion = ubicacion
+            reporte.tipo_incidente = tipo_incidente
+            reporte.estado_reporte = estado_reporte
+
+            # Guarda cambios usando el nuevo método
+            controlador.actualizar_reporte_completo(id, reporte)
+            messages.success(request, "Reporte actualizado correctamente.")
+            return redirect("admin_reportes")
+
+    return render(request, "partials/editar_reporte.html", {
+        "reporte": reporte
+    })
