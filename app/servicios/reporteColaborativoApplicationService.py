@@ -43,3 +43,13 @@ class ReporteColaborativoApplicationService:
     
     def obtener_reporte_por_id(self,id):
         return self.reporte_repository.buscar_por_id(id)
+    
+    def actualizar_reporte_completo(self, id, nuevo_reporte):
+        existente = self.reporte_repository.buscar_por_id(id)
+        if existente:
+            existente.titulo = nuevo_reporte.titulo
+            existente.descripcion = nuevo_reporte.descripcion
+            existente.ubicacion = nuevo_reporte.ubicacion
+            existente.tipo_incidente = nuevo_reporte.tipo_incidente
+            existente.estado_reporte = nuevo_reporte.estado_reporte
+            self.reporte_repository.actualizar(existente)
