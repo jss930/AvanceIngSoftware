@@ -76,7 +76,7 @@ def admin_reportes(request):
 @never_cache
 def editar_reporte(request, id):
     controlador = ReporteColaborativoController()
-    reporte = controlador.obtener_por_id(id)
+    reporte = controlador.obtener_reporte(id)
 
     if request.method == "POST":
         # Obtener datos del formulario
@@ -101,3 +101,4 @@ def editar_reporte(request, id):
         "reporte": reporte,
         "titulo": "Editar Reporte"
     })
+

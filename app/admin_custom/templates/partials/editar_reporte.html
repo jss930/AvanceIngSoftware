@@ -16,11 +16,11 @@
 
       <div class="card-body">
         <!-- Formulario para buscar por ID -->
-        <form method="get" class="mb-4">
+        <form method="get" class="mb-4" onsubmit="return irAEditarReporte();">
           <div class="mb-3">
             <label class="form-label">ID del Reporte a Editar</label>
             <div class="input-group">
-              <input type="number" name="id" class="form-control" placeholder="Ingrese ID del reporte" value="{{ request.GET.id }}">
+              <input type="number" id="input-id-reporte" class="form-control" placeholder="Ingrese ID del reporte" required>
               <button type="submit" class="btn btn-primary">
                 <i class="bi bi-search me-1"></i>Buscar
               </button>
@@ -82,3 +82,14 @@
   </div>
 </body>
 </html>
+
+
+<script>
+  function irAEditarReporte() {
+    const id = document.getElementById('input-id-reporte').value;
+    if (id) {
+      window.location.href = `/panel/editar/${id}/`;
+    }
+    return false; // previene el envío tradicional del form
+  }
+</script>

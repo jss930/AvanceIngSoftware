@@ -40,3 +40,6 @@ class ReporteColaborativoApplicationService:
 
     def listar_repotes(self):
         return self.reporte_repository.obtener_todos()
+    
+    def obtener_reporte_por_id(self,id):
+        return self.reporte_repository.buscar_por_id(id)

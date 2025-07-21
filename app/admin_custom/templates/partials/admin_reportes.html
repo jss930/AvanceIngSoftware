@@ -112,7 +112,7 @@
               <tbody>
                 {% for r in reportes %}
                 <tr>
-                  <td class="text-center">{{ forloop.counter }}</td>
+                  <td class="text-center">{{ r.id }}</td>
                   <td><strong>{{ r.titulo|truncatechars:20 }}</strong></td>
                   <td><small class="text-muted">{{ r.descripcion|truncatechars:40 }}</small></td>
                   <td><span class="badge bg-info text-dark">{{ r.tipo_incidente|capfirst }}</span></td>
@@ -214,6 +214,9 @@
           </div>
         </div>
         <div class="modal-footer">
+          <a id="btn-editar-reporte" class="btn btn-secondary" href="#">
+            <i class="bi bi-pen me-1"></i>Editar
+          </a>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
             <i class="bi bi-x-circle me-1"></i>Cerrar
           </button>
@@ -232,6 +235,7 @@
       document.getElementById('detalle-usuario').innerHTML = `<i class="bi bi-person-circle"></i> ${usuario}`;
       document.getElementById('detalle-fecha').textContent = fecha;
       document.getElementById('detalle-descripcion').textContent = descripcion;
+      document.getElementById('btn-editar-reporte').href = `/panel/editar/${id}/`;
 
       let estadoBadge = '';
       if (estado === 'pendiente') estadoBadge = '<span class="badge bg-warning">Pendiente</span>';
