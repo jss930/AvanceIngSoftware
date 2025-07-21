@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Mapa de calor del tráfico</h2>
+
+<iframe src="{% static 'mapa_calor.html' %}" width="100%" height="600px" frameborder="0"></iframe>
+
+<a href="" class="btn btn-outline-primary mt-3">Actualizar</a>
+{% endblock %}

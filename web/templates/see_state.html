@@ -1,16 +1,10 @@
-<<<<<<< HEAD
-{% extends "base.html" %}
-{% load static %}
-
-=======
 {% extends 'base.html' %}
->>>>>>> origin/main
+
 {% block content %}
 <h2>Últimos reportes</h2>
 
-<<<<<<< HEAD
 <iframe src="{% static 'mapa_calor.html' %}" width="100%" height="600px" frameborder="0"></iframe>
-=======
+
 {% for r in reportes %}
 <div class="card mb-3">
   <div class="card-body">
@@ -19,7 +13,6 @@
     <p><strong>Ubicación:</strong> {{ r.ubicacion }}</p>
     <p><small>Estado: {{ r.estado_reporte }}</small></p>
     <p><small>Reportado por {{ r.usuario_reportador.username }} - {{ r.fecha_creacion }}</small></p>
->>>>>>> origin/main
 
     {% if r.usuario_reportador == user or user.is_staff %}
     <form action="{% url 'eliminar_reporte' r.id %}" method="post" class="d-inline">

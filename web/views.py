@@ -96,29 +96,36 @@ class DashboardView(LoginRequiredMixin, FormView):
         })
 # Mapa de calor funcion
 def vista_mapa(request):
-    print("✅ Entrando a vista_mapa...")
+    print("✅ Entrando a vista_mapa dinámica...")
 
-    reportes = [
-        {"latitud": -16.4091, "longitud": -71.5375, "estado": "congestionado"},
-        {"latitud": -16.4100, "longitud": -71.5360, "estado": "fluido"},
-        {"latitud": -16.4080, "longitud": -71.5380, "estado": "congestionado"}
-    ]
+    from web.models import ReporteColaborativo
+    import folium
+    from folium.plugins import HeatMap
 
-    mapa = generar_mapa_calor(reportes)
+    reportes = ReporteColaborativo.objects.filter(es_validado=True)
+    puntos = []
 
-    ruta_mapa = os.path.abspath("web/static/mapa_calor.html")
-    mapa.save(ruta_mapa)
-    print("✅ Mapa guardado en:", ruta_mapa)
+    for r in reportes:
+        if r.ubicacion:
+            try:
+                lat, lon = map(float, r.ubicacion.split(","))
+                puntos.append([lat, lon, r.nivel_peligro])
+            except Exception as e:
+                print(f"❌ Error en ubicación: {r.ubicacion} => {e}")
 
-    try:
-        with open(ruta_mapa, "r", encoding="utf-8") as f:
-            mapa_html = f.read()
-        print("HTML del mapa leído correctamente")
-    except Exception as e:
-        print("ERROR leyendo mapa:", e)
-        mapa_html = "<p>Error al cargar el mapa</p>"
+    if puntos:
+        centro = [sum(p[0] for p in puntos) / len(puntos), sum(p[1] for p in puntos) / len(puntos)]
+    else:
+        centro = [-16.409, -71.537]
 
-    return render(request, "mapa_calor.html", {"mapa_html": mapa_html})
+    mapa = folium.Map(location=centro, zoom_start=13)
+    HeatMap(puntos).add_to(mapa)
+
+    mapa.save("web/static/mapa_calor.html")
+    print("✅ Mapa dinámico generado.")
+
+    return render(request, "mapa_calor_page.html")
+
 
 
 # Tus vistas existentes (mantenidas)
