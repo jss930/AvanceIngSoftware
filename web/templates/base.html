@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mi Proyecto</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+</head>
+<body>
+    <nav>
+        <a href="/">Inicio</a> |
+        <a href="/mapa-calor/">Mapa</a>
+    </nav>
+
+    <div class="contenido">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
