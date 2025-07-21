@@ -70,3 +70,34 @@ def admin_reportes(request):
         "ubicacion_actual": ubicacion
     })
 
+
+@login_required(login_url="/loginadmin/")
+@user_passes_test(is_superuser, login_url="/loginadmin/")
+@never_cache
+def editar_reporte(request, id):
+    controlador = ReporteColaborativoController()
+    reporte = controlador.obtener_por_id(id)
+
+    if request.method == "POST":
+        # Obtener datos del formulario
+        titulo = request.POST.get("titulo")
+        descripcion = request.POST.get("descripcion")
+        ubicacion = request.POST.get("ubicacion")
+        tipo_incidente = request.POST.get("tipo_incidente")
+        estado_reporte = request.POST.get("estado_reporte")
+
+        # Actualizar el reporte
+        reporte.titulo = titulo
+        reporte.descripcion = descripcion
+        reporte.ubicacion = ubicacion
+        reporte.tipo_incidente = tipo_incidente
+        reporte.estado_reporte = estado_reporte
+
+        controlador.actualizar(reporte)
+        messages.success(request, "Reporte actualizado exitosamente.")
+        return redirect("admin_reportes")
+
+    return render(request, "partials/editar_reporte.html", {
+        "reporte": reporte,
+        "titulo": "Editar Reporte"
+    })

@@ -1,3 +1,9 @@
+from app.reporte.models import ReporteColaborativo
+from app.reporte.forms import ReporteColaborativoForm
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
+from django.contrib.auth.decorators import login_required
+from app.repositorio.alerta.alertaRepositoryImpl import AlertaRepositoryImpl
 from django.shortcuts import render, redirect
 from django.views.generic import FormView, TemplateView
 from django.views.generic.edit import CreateView
@@ -63,7 +69,8 @@ class DashboardView(LoginRequiredMixin, FormView):
     login_url = 'login'
 
     def get(self, request, *args, **kwargs):
-        alertas = obtener_alertas_usuario(request.user.id)  
+        alerta_repository = AlertaRepositoryImpl()
+        alertas = alerta_repository.obtener_por_usuario(request.user.id)  
         return render(request, self.template_name, {
             'user': request.user,
             'alertas': alertas
@@ -79,11 +86,14 @@ def register(request):
 def test(request):
     return render(request, 'test.html')
 
+class MapaCalorView(TemplateView):
+    template_name = "mapa_calor.html"
+
 # Vistas para botones del home
-""" class PlanRouteView(TemplateView):
+class PlanRouteView(TemplateView):
     template_name = 'plan_route.html'
- """
-""" class ReporteIncidentView(CreateView):
+
+class ReporteIncidentView(CreateView):
     model = ReporteColaborativo
     form_class = ReporteColaborativoForm
     template_name = 'report_incident.html'
@@ -97,8 +107,7 @@ def test(request):
             form.add_error(None, "Debes iniciar sesión para enviar un reporte.")
             return self.form_invalid(form)
         return super().form_valid(form)
- """
 
-""" class SeeStateView(TemplateView):
+
+class SeeStateView(TemplateView):
     template_name = 'see_state.html'
- """
