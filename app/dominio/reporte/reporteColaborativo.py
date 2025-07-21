@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional
-# from .value_objects import Ubicacion
+from app.dominio.ubicacion.ubicacion import Ubicacion
 
 
 class ReporteColaborativo:
