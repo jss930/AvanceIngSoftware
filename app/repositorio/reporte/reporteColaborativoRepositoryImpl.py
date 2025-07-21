@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from app.dominio.reporte.interface1 import Interface1
-from web.models import ReporteColaborativo
+from app.reporte.models import ReporteColaborativo
 from app.dominio.reporte.iReporteColaborativoRepository import IReporteColaborativoRepository
 
 

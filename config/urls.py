@@ -16,19 +16,18 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from web import views
+# from web import views
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
     # admin django
-    path('admin/', admin.site.urls),
-    # Login admin
-    path('loginadmin/', views.custom_login, name='custom_login'),
-    # Nuevo panel admin
-    path('panel/', views.panel_personalizado, name='panel_personalizado'),
+    #path('admin/', admin.site.urls),
+   # path('panel/', views.panel_personalizado, name='panel_personalizado'),
     # Logout
-    path('logout/', views.logout_view, name='logout'),
     # Enlazamiento
-    path('', include('web.urls')),
+    path('', include('app.usuario.urls')),
+    path('', include('app.reporte.urls')),
+    path('', include('app.mapa.urls')),
+    path('', include('app.admin_custom.urls')),
 ]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
