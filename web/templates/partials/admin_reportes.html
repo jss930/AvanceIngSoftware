@@ -33,7 +33,7 @@
             <select name="estado" class="form-select">
               <option value="">-- Todos --</option>
               <option value="pendiente" {% if estado_actual == 'pendiente' %}selected{% endif %}>Pendiente</option>
-              <option value="resuelto" {% if estado_actual == 'resuelto' %}selected{% endif %}>Resuelto</option>
+              <option value="resuelto" {% if estado_actual == 'aprobado' %}selected{% endif %}>Resuelto</option>
               <option value="en_proceso" {% if estado_actual == 'en_proceso' %}selected{% endif %}>En proceso</option>
             </select>
           </div>
@@ -65,10 +65,10 @@
                   <td>{{ r.titulo }}</td>
                   <td>{{ r.descripcion }}</td>
                   <td>{{ r.ubicacion }}</td>
-                  <td>{{ r.fecha }}</td>
+                  <td>{{ r.fecha_creacion|date:"Y-m-d H:i" }}</td>
                   <td>
-                    <span class="badge text-bg-{% if r.estado == 'pendiente' %}warning{% elif r.estado == 'resuelto' %}success{% else %}secondary{% endif %}">
-                      {{ r.estado|capfirst }}
+                    <span class="badge text-bg-{% if r.estado_reporte == 'pendiente' %}warning{% elif r.estado_reporte == 'resuelto' %}success{% else %}secondary{% endif %}">
+                      {{ r.estado_reporte|capfirst }}
                     </span>
                   </td>
                 </tr>

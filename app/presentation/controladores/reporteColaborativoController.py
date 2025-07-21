@@ -11,8 +11,10 @@ class ReporteColaborativoController:
         pass
 
     def obtener_reporte(self, reporte_id):
-        """TODO: Obtener un reporte por ID."""
-        pass
+        return self.reporte_app_service.obtener_reporte_por_id(reporte_id)
+
+    def actualizar_reporte_completo(self, reporte_id, nuevo_reporte):
+        return self.reporte_app_service.actualizar_reporte_completo(reporte_id, nuevo_reporte)
 
     def obtener_todos(self):
         return self.reporte_app_service.listar_repotes()
