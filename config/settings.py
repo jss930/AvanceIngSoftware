@@ -140,7 +140,11 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # directorio para archivos estaticos como imagenes, css o js
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'web/static')]
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'app/usuario/static'),
+    os.path.join(BASE_DIR, 'app/admin_custom/static'),
+    os.path.join(BASE_DIR, 'app/reporte/static')
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
