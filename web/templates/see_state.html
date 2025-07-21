@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
+
 {% block content %}
 <h2>Últimos reportes</h2>
+
+<iframe src="{% static 'mapa_calor.html' %}" width="100%" height="600px" frameborder="0"></iframe>
 
 {% for r in reportes %}
 <div class="card mb-3">
