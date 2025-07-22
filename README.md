@@ -4,6 +4,17 @@ El presente proyecto tiene como objetivo aprender sobre el desarrollo de softwar
 
 ---
 
+# laboratorio 12 SOLID
+
+1. **Principio de Responsabilidad Única (SRP)**
+   El modelo ReporteColaborativo tiene una única responsabilidad: representar los datos del reporte colaborativo en la base de datos. Lo mismo ocurre con el formulario ReporteColaborativoForm, que se encarga solo de la representación y validación del formulario, y no contiene lógica de negocio.
+
+2. **Principio de Abierto/Cerrado (OCP)**
+   La vista ReporteIncidentView extiende CreateView, agregando nueva funcionalidad (como la geocodificación y validación personalizada) sin modificar la clase base. También se usa LoginRequiredMixin para añadir comportamiento adicional sin alterar la vista principal, cumpliendo con el principio de extensión sin modificación.
+
+3. **Principio de Inversión de Dependencias (DIP)**
+   La lógica que depende de un servicio externo (la API de OpenRouteService) está encapsulada en métodos separados (get_address_from_coords y get_coords_from_address), lo que desacopla el flujo principal del formulario de los detalles de implementación de la API. Esto facilita sustituir el servicio en el futuro sin alterar la lógica principal, cumpliendo con la idea de depender de abstracciones en lugar de detalles concretos.
+
 ---
 
 # lab 11 CLEAN CODE
