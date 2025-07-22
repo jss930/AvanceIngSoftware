@@ -4,6 +4,10 @@ El presente proyecto tiene como objetivo aprender sobre el desarrollo de softwar
 
 ---
 
+# lab 11 CLEAN CODE
+
+---
+
 # lab 10
 
 ## Estilos de programación
