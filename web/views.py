@@ -152,23 +152,119 @@ class MisReportesView(LoginRequiredMixin, TemplateView):
         
         try:
             controlador = ReporteColaborativoController()
-            # Filtrar reportes del usuario actual
             user_reports = [r for r in controlador.obtener_todos() if r.usuario_reportador == user]
             
-            # Aplicar filtros de la URL si existen
+            # Aplicar filtros
             estado = self.request.GET.get("estado", "")
+            tipo = self.request.GET.get("tipo", "")
+            fecha_desde = self.request.GET.get("fecha_desde", "")
+            
+            filtered_reports = user_reports
+            
             if estado:
-                user_reports = [r for r in user_reports if r.estado_reporte == estado]
+                filtered_reports = [r for r in filtered_reports if r.estado_reporte == estado]
             
-            context['reportes'] = user_reports
-            context['estado_actual'] = estado
+            if tipo:
+                filtered_reports = [r for r in filtered_reports if r.tipo_incidente == tipo]
             
-        except Exception:
+            # Calcular credibilidad para cada reporte
+            for reporte in filtered_reports:
+                total_votos = reporte.votos_positivos + reporte.votos_negativos
+                if total_votos > 0:
+                    reporte.credibilidad_porcentaje = round((reporte.votos_positivos * 100) / total_votos)
+                    reporte.credibilidad_width = reporte.credibilidad_porcentaje
+                else:
+                    reporte.credibilidad_porcentaje = 0
+                    reporte.credibilidad_width = 0
+                reporte.total_votos = total_votos
+            
+            # Resto del código existente...
+            total_reportes = len(user_reports)
+            validados = len([r for r in user_reports if r.estado_reporte == 'validado'])
+            pendientes = len([r for r in user_reports if r.estado_reporte == 'pendiente'])
+            tasa_validacion = (validados / total_reportes * 100) if total_reportes > 0 else 0
+            
+            context['reportes'] = filtered_reports
+            context['estadisticas'] = {
+                'total_reportes': total_reportes,
+                'reportes_validados': validados,
+                'reportes_pendientes': pendientes,
+                'tasa_validacion': tasa_validacion,
+            }
+            
+            context['filtros_aplicados'] = {
+                'estado': estado,
+                'tipo_incidente': tipo,
+                'fecha_desde': fecha_desde,
+            }
+            
+            context['estados_reporte'] = [
+                ('pendiente', 'Pendiente'),
+                ('validado', 'Validado'),
+                ('rechazado', 'Rechazado'),
+            ]
+            
+            context['tipos_incidente'] = [
+                ('accidente', 'Accidente'),
+                ('congestion', 'Congestión'),
+                ('obra', 'Obra en construcción'),
+                ('otro', 'Otro'),
+            ]
+            
+        except Exception as e:
+            # En caso de error, usar valores por defecto
             context['reportes'] = []
-            context['estado_actual'] = ""
+            context['estadisticas'] = {
+                'total_reportes': 0,
+                'reportes_validados': 0,
+                'reportes_pendientes': 0,
+                'tasa_validacion': 0,
+            }
+            context['filtros_aplicados'] = {
+                'estado': "",
+                'tipo_incidente': "",
+                'fecha_desde': "",
+            }
+            context['estados_reporte'] = []
+            context['tipos_incidente'] = []
             
         return context
+
+
+class DetalleReporteView(LoginRequiredMixin, TemplateView):
+    template_name = 'detalle_reporte.html'  # Cambiado a la ruta correcta
+    login_url = 'login'
     
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        reporte_id = self.kwargs.get('reporte_id')
+        
+        try:
+            controlador = ReporteColaborativoController()
+            todos_reportes = controlador.obtener_todos()
+            
+            # Buscar el reporte específico
+            reporte = None
+            for r in todos_reportes:
+                if r.id == reporte_id:
+                    reporte = r
+                    break
+            
+            if reporte is None:
+                # Si no se encuentra el reporte, redirigir o mostrar error
+                context['error'] = "Reporte no encontrado"
+            else:
+                # Verificar que el usuario puede ver este reporte
+                if reporte.usuario_reportador != self.request.user and not self.request.user.is_superuser:
+                    context['error'] = "No tienes permisos para ver este reporte"
+                else:
+                    context['reporte'] = reporte
+            
+        except Exception:
+            context['error'] = "Error al cargar el reporte"
+            
+        return context
+
 
 # Tus vistas existentes (mantenidas)
 def home(request):

@@ -221,10 +221,11 @@
                           Consulta y gestiona todos tus reportes de tráfico.
                         </p>
                         <a
-                          href="/mis_reportes/"
+                          href="{% url 'mis_reportes' %}"
                           class="btn btn-info btn-sm px-4 rounded-pill"
                         >
-                          <i class="bi bi-list-ul me-2"></i>Ver Reportes
+                          <i class="bi bi-list-ul me-2"></i>
+                          Ver Reportes
                         </a>
                       </div>
                     </div>
@@ -347,44 +348,56 @@
                         <i class="bi bi-activity me-2"></i>Actividad Reciente
                       </h6>
                       <a
-                        href="#"
-                        class="btn btn-outline-primary btn-sm"
-                        onclick="showMessage('info', 'Función Ver Todos próximamente disponible')"
-                        >Ver todos</a
+                        href="{% url 'mis_reportes' %}"
+                        class="btn btn-sm btn-outline-primary"
                       >
+                        Ver todos
+                      </a>
                     </div>
                   </div>
                   <div class="card-body p-0">
                     <div class="list-group list-group-flush">
-                      <!-- Aquí puedes agregar datos reales desde Django -->
+                      <!-- Reportes reales del usuario -->
                       {% if recent_reports %} {% for report in recent_reports %}
-                      <div
-                        class="list-group-item d-flex align-items-center py-3"
+                      <a
+                        href="{% url 'detalle_reporte' report.id %}"
+                        class="list-group-item list-group-item-action d-flex align-items-center py-3 text-decoration-none"
                       >
                         <div class="me-3">
-                          <div class="bg-warning rounded-circle p-2">
+                          <div
+                            class="{% if report.tipo_incidente == 'accidente' %}bg-danger{% elif report.tipo_incidente == 'congestion' %}bg-warning{% elif report.tipo_incidente == 'obra' %}bg-info{% else %}bg-secondary{% endif %} rounded-circle p-2"
+                          >
+                            {% if report.tipo_incidente == 'accidente' %}
+                            <i class="bi bi-car-front text-white"></i>
+                            {% elif report.tipo_incidente == 'congestion' %}
                             <i
                               class="bi bi-exclamation-triangle text-white"
                             ></i>
+                            {% elif report.tipo_incidente == 'obra' %}
+                            <i class="bi bi-tools text-white"></i>
+                            {% else %}
+                            <i class="bi bi-exclamation-circle text-white"></i>
+                            {% endif %}
                           </div>
                         </div>
                         <div class="flex-grow-1">
-                          <h6 class="mb-1">
-                            {{ report.tipo_incidente }} en {{ report.ubicacion
-                            }}
+                          <h6 class="mb-1 text-dark">
+                            {{ report.tipo_incidente|title }} en {{
+                            report.ubicacion }}
                           </h6>
-                          <small class="text-muted"
-                            >{{ report.fecha_creacion|timesince }} • {{
-                            report.estado_reporte }}</small
-                          >
+                          <small class="text-muted">
+                            {{ report.fecha_creacion|timesince }} • {{
+                            report.estado_reporte|title }}
+                          </small>
                         </div>
                         <span
-                          class="badge bg-{% if report.estado_reporte == 'validado' %}success{% else %}warning{% endif %}"
-                          >{{ report.estado_reporte|title }}</span
+                          class="badge bg-{% if report.estado_reporte == 'validado' %}success{% elif report.estado_reporte == 'pendiente' %}warning{% else %}secondary{% endif %}"
                         >
-                      </div>
+                          {{ report.estado_reporte|title }}
+                        </span>
+                      </a>
                       {% endfor %} {% else %}
-                      <!-- Datos de ejemplo -->
+                      <!-- Datos de ejemplo cuando no hay reportes -->
                       <div
                         class="list-group-item d-flex align-items-center py-3"
                       >
@@ -396,46 +409,17 @@
                           </div>
                         </div>
                         <div class="flex-grow-1">
-                          <h6 class="mb-1">Congestión en Av. Ejercito</h6>
-                          <small class="text-muted"
-                            >Hace 2 horas • Validado</small
-                          >
+                          <h6 class="mb-1">No tienes reportes recientes</h6>
+                          <small class="text-muted">
+                            Crea tu primer reporte para ver la actividad aquí
+                          </small>
                         </div>
-                        <span class="badge bg-success">Validado</span>
-                      </div>
-
-                      <div
-                        class="list-group-item d-flex align-items-center py-3"
-                      >
-                        <div class="me-3">
-                          <div class="bg-danger rounded-circle p-2">
-                            <i class="bi bi-car-front text-white"></i>
-                          </div>
-                        </div>
-                        <div class="flex-grow-1">
-                          <h6 class="mb-1">Accidente en Óvalo Paisajista</h6>
-                          <small class="text-muted"
-                            >Hace 4 horas • Pendiente</small
-                          >
-                        </div>
-                        <span class="badge bg-warning">Pendiente</span>
-                      </div>
-
-                      <div
-                        class="list-group-item d-flex align-items-center py-3"
-                      >
-                        <div class="me-3">
-                          <div class="bg-info rounded-circle p-2">
-                            <i class="bi bi-tools text-white"></i>
-                          </div>
-                        </div>
-                        <div class="flex-grow-1">
-                          <h6 class="mb-1">Obra en Av. Dolores</h6>
-                          <small class="text-muted"
-                            >Hace 1 día • Validado</small
-                          >
-                        </div>
-                        <span class="badge bg-success">Validado</span>
+                        <a
+                          href="{% url 'report_incident' %}"
+                          class="btn btn-sm btn-primary"
+                        >
+                          Crear Reporte
+                        </a>
                       </div>
                       {% endif %}
                     </div>
@@ -457,10 +441,9 @@
                     </div>
                     <div class="d-flex align-items-center mb-3">
                       <span class="status-indicator bg-info me-2"></span>
-                      <span class="text-muted"
-                        >{{ users_online|default:'1,247' }} Usuarios
-                        Online</span
-                      >
+                      <span class="text-muted">
+                        {{ users_online|default:'1,247' }} Usuarios Online
+                      </span>
                     </div>
                     <div class="d-flex align-items-center mb-3">
                       <span class="status-indicator bg-warning me-2"></span>

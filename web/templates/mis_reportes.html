@@ -229,7 +229,7 @@
                                         {% with total_votos=reporte.votos_positivos|add:reporte.votos_negativos %}
                                             {% if total_votos > 0 %}
                                                 <div class="credibilidad-fill" 
-                                                     style="width: {{ reporte.votos_positivos|mul:100|div:total_votos }}%"></div>
+                                                     style="width: {{ reporte.credibilidad_width }}%"></div>
                                             {% else %}
                                                 <div class="credibilidad-fill" style="width: 0%"></div>
                                             {% endif %}

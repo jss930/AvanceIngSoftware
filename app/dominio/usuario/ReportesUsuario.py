@@ -1,446 +1,610 @@
-# 1. ESTILO PERSISTENT-TABLES (Models)
+# ReportesUsuario.py - Refactorizado con principios de Clean Code
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
-from web.models import Reporte
-
-class VotoReporte(models.Model):
-    """Modelo para almacenar votos de validación"""
-    reporte = models.ForeignKey(Reporte, on_delete=models.CASCADE, related_name='votos')
-    usuario_votante = models.ForeignKey(User, on_delete=models.CASCADE)
-    voto_positivo = models.BooleanField()
-    fecha_voto = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        db_table = 'voto_reporte'
-        unique_together = ['reporte', 'usuario_votante']
-
-
-# 2. ESTILO ERROR/EXCEPTION HANDLING
-class ReporteError(Exception):
-    """Excepción base para errores de reporte"""
-    pass
-
-class ReporteNoEncontradoError(ReporteError):
-    """Excepción cuando el reporte no existe"""
-    pass
-
-class SinPermisosReporteError(ReporteError):
-    """Excepción cuando el usuario no tiene permisos"""
-    pass
-
-class ReporteNoEditableError(ReporteError):
-    """Excepción cuando el reporte no puede ser editado"""
-    pass
-
-
-# 3. ESTILO THINGS (Objetos con responsabilidades claras)
-class ReporteVisualizadorThing:
-    """Maneja la visualización de reportes de un usuario"""
-    
-    def __init__(self, usuario_id: int):
-        self.usuario_id = usuario_id
-        self._reportes = None
-        self._estadisticas = None
-    
-    @property
-    def reportes(self):
-        """Lazy loading de reportes"""
-        if self._reportes is None:
-            self._reportes = Reporte.objects.filter(
-                usuario_reportador_id=self.usuario_id
-            ).order_by('-fecha_creacion')
-        return self._reportes
-    
-    def obtener_reportes_por_estado(self, estado: str = None):
-        """Obtiene reportes filtrados por estado"""
-        queryset = self.reportes
-        if estado:
-            queryset = queryset.filter(estado_reporte=estado)
-        return queryset
-    
-    def obtener_reportes_recientes(self, limite: int = 5):
-        """Obtiene los reportes más recientes"""
-        return self.reportes[:limite]
-    
-    def obtener_estadisticas_usuario(self):
-        """Calcula estadísticas del usuario"""
-        if self._estadisticas is None:
-            total_reportes = self.reportes.count()
-            reportes_validados = self.reportes.filter(es_validado=True).count()
-            reportes_pendientes = self.reportes.filter(estado_reporte='pendiente').count()
-            promedio_votos = self.reportes.aggregate(
-                promedio_positivos=models.Avg('votos_positivos'),
-                promedio_negativos=models.Avg('votos_negativos')
-            )
-            
-            self._estadisticas = {
-                'total_reportes': total_reportes,
-                'reportes_validados': reportes_validados,
-                'reportes_pendientes': reportes_pendientes,
-                'tasa_validacion': (reportes_validados / total_reportes * 100) if total_reportes > 0 else 0,
-                'promedio_votos_positivos': promedio_votos['promedio_positivos'] or 0,
-                'promedio_votos_negativos': promedio_votos['promedio_negativos'] or 0,
-            }
-        return self._estadisticas
-
-
-class ReporteDetalleThing:
-    """Maneja los detalles de un reporte específico"""
-    
-    def __init__(self, reporte_id: int):
-        self.reporte_id = reporte_id
-        self._reporte = None
-    
-    @property
-    def reporte(self):
-        """Lazy loading del reporte"""
-        if self._reporte is None:
-            try:
-                self._reporte = Reporte.objects.select_related('usuario_reportador').get(
-                    id=self.reporte_id
-                )
-            except Reporte.DoesNotExist:
-                raise ReporteNoEncontradoError(f"Reporte {self.reporte_id} no encontrado")
-        return self._reporte
-    
-    def obtener_detalles_completos(self):
-        """Obtiene todos los detalles del reporte"""
-        reporte = self.reporte
-        votos = VotoReporte.objects.filter(reporte=reporte)
-        
-        return {
-            'reporte': reporte,
-            'credibilidad': self._calcular_credibilidad(),
-            'total_votos': votos.count(),
-            'votos_detalle': votos.select_related('usuario_votante'),
-            'puede_editar': self._puede_ser_editado(),
-            'es_reciente': self._es_reporte_reciente(),
-            'ubicacion_texto': self._obtener_ubicacion_texto()
-        }
-    
-    def _calcular_credibilidad(self) -> float:
-        """Calcula la credibilidad del reporte"""
-        reporte = self.reporte
-        total = reporte.votos_positivos + reporte.votos_negativos
-        return (reporte.votos_positivos / total * 100) if total > 0 else 0.0
-    
-    def _puede_ser_editado(self) -> bool:
-        """Verifica si el reporte puede ser editado"""
-        return self.reporte.estado_reporte == 'pendiente'
-    
-    def _es_reporte_reciente(self) -> bool:
-        """Verifica si el reporte es reciente (menos de 24 horas)"""
-        return (timezone.now() - self.reporte.fecha_creacion).days < 1
-    
-    def _obtener_ubicacion_texto(self) -> str:
-        """Convierte coordenadas a texto legible"""
-        # Aquí podrías integrar con un servicio de geocodificación
-        return f"Lat: {self.reporte.latitud}, Lng: {self.reporte.longitud}"
-
-
-# 4. ESTILO PIPELINE (Procesamiento en cadena)
-class ReportesDataPipeline:
-    """Pipeline para procesar datos de reportes"""
-    
-    def __init__(self):
-        self.steps = []
-    
-    def agregar_paso(self, step_function):
-        self.steps.append(step_function)
-        return self
-    
-    def procesar(self, data):
-        """Ejecuta todos los pasos del pipeline"""
-        for step in self.steps:
-            data = step(data)
-        return data
-
-# Pasos del pipeline
-def validar_usuario_reportes(data):
-    """Valida que el usuario tenga acceso a ver reportes"""
-    try:
-        usuario = User.objects.get(id=data['usuario_id'])
-        data['usuario'] = usuario
-        return data
-    except User.DoesNotExist:
-        raise ReporteError(f"Usuario {data['usuario_id']} no encontrado")
-
-def cargar_reportes_usuario(data):
-    """Carga los reportes del usuario"""
-    visualizador = ReporteVisualizadorThing(data['usuario_id'])
-    data['visualizador'] = visualizador
-    data['reportes'] = visualizador.reportes
-    return data
-
-def aplicar_filtros(data):
-    """Aplica filtros según los parámetros"""
-    filtros = data.get('filtros', {})
-    reportes = data['reportes']
-    
-    if filtros.get('estado'):
-        reportes = reportes.filter(estado_reporte=filtros['estado'])
-    
-    if filtros.get('tipo_incidente'):
-        reportes = reportes.filter(tipo_incidente=filtros['tipo_incidente'])
-    
-    if filtros.get('fecha_desde'):
-        reportes = reportes.filter(fecha_creacion__gte=filtros['fecha_desde'])
-    
-    data['reportes_filtrados'] = reportes
-    return data
-
-def cargar_estadisticas(data):
-    """Carga estadísticas del usuario"""
-    data['estadisticas'] = data['visualizador'].obtener_estadisticas_usuario()
-    return data
-
-def formatear_respuesta_reportes(data):
-    """Formatea la respuesta final"""
-    reportes_data = []
-    for reporte in data['reportes_filtrados']:
-        reportes_data.append({
-            'id': reporte.id,
-            'titulo': reporte.titulo,
-            'descripcion': reporte.descripcion[:100] + '...' if len(reporte.descripcion) > 100 else reporte.descripcion,
-            'tipo_incidente': reporte.get_tipo_incidente_display(),
-            'estado': reporte.get_estado_reporte_display(),
-            'nivel_peligro': reporte.nivel_peligro,
-            'fecha_creacion': reporte.fecha_creacion,
-            'votos_positivos': reporte.votos_positivos,
-            'votos_negativos': reporte.votos_negativos,
-            'credibilidad': (reporte.votos_positivos / (reporte.votos_positivos + reporte.votos_negativos) * 100) if (reporte.votos_positivos + reporte.votos_negativos) > 0 else 0,
-            'tiene_imagen': bool(reporte.imagen_geolocalizada),
-            'es_validado': reporte.es_validado
-        })
-    
-    return {
-        'usuario': {
-            'id': data['usuario'].id,
-            'username': data['usuario'].username,
-            'nombre_completo': f"{data['usuario'].first_name} {data['usuario'].last_name}".strip()
-        },
-        'estadisticas': data['estadisticas'],
-        'reportes': reportes_data,
-        'total_reportes': len(reportes_data)
-    }
-
-
-# 5. ESTILO RESTFUL (Views y Serializers)
-from rest_framework import serializers, status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.core.paginator import Paginator
+from rest_framework import serializers, status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from datetime import timedelta
+from web.models import Reporte
 
-class ReporteSerializer(serializers.ModelSerializer):
-    tipo_incidente_display = serializers.CharField(source='get_tipo_incidente_display', read_only=True)
-    estado_display = serializers.CharField(source='get_estado_reporte_display', read_only=True)
-    usuario_reportador_username = serializers.CharField(source='usuario_reportador.username', read_only=True)
-    credibilidad = serializers.SerializerMethodField()
+
+# 1. PERSISTENT-TABLES (Models)
+class InteraccionUsuario(models.Model):
+    """Modelo para rastrear interacciones del usuario con reportes"""
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    reporte = models.ForeignKey(Reporte, on_delete=models.CASCADE)
+    fecha_vista = models.DateTimeField(auto_now=True)
+    tiempo_lectura_segundos = models.PositiveIntegerField(default=0)
     
     class Meta:
-        model = Reporte
-        fields = [
-            'id', 'titulo', 'descripcion', 'tipo_incidente', 'tipo_incidente_display',
-            'estado_reporte', 'estado_display', 'nivel_peligro', 'fecha_creacion',
-            'fecha_actualizacion', 'votos_positivos', 'votos_negativos',
-            'usuario_reportador_username', 'credibilidad', 'es_validado',
-            'latitud', 'longitud', 'imagen_geolocalizada'
-        ]
+        db_table = 'interaccion_usuario'
+        unique_together = ['usuario', 'reporte']
+
+
+class ConfiguracionUsuario(models.Model):
+    """Configuraciones de visualización del usuario"""
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE)
+    reportes_por_pagina = models.PositiveIntegerField(
+        default=10,
+        validators=[MinValueValidator(5), MaxValueValidator(50)]
+    )
+    mostrar_estadisticas = models.BooleanField(default=True)
+    notificaciones_activas = models.BooleanField(default=True)
     
-    def get_credibilidad(self, obj):
-        total = obj.votos_positivos + obj.votos_negativos
-        return (obj.votos_positivos / total * 100) if total > 0 else 0
+    class Meta:
+        db_table = 'configuracion_usuario'
+
+
+# 2. ERROR/EXCEPTION HANDLING
+class UsuarioReporteError(Exception):
+    """Excepción base para errores relacionados con reportes de usuario"""
+    pass
+
+
+class UsuarioSinReportesError(UsuarioReporteError):
+    """Excepción cuando el usuario no tiene reportes"""
+    pass
+
+
+class ConfiguracionInvalidaError(UsuarioReporteError):
+    """Excepción para configuraciones inválidas"""
+    pass
+
+
+class PermisosInsuficientesError(UsuarioReporteError):
+    """Excepción para permisos insuficientes"""
+    pass
+
+
+# 3. THINGS (Objetos con responsabilidades claras)
+class EstadisticasUsuarioThing:
+    """Maneja el cálculo de estadísticas del usuario"""
+    
+    PERIODO_REPORTE_RECIENTE_DIAS = 7
+    UMBRAL_USUARIO_ACTIVO = 5
+    
+    def __init__(self, usuario_id: int):
+        self.usuario_id = usuario_id
+        self._estadisticas_cache = None
+    
+    def obtener_estadisticas_completas(self):
+        """Calcula y retorna todas las estadísticas del usuario"""
+        if self._estadisticas_cache is None:
+            self._estadisticas_cache = self._calcular_estadisticas()
+        return self._estadisticas_cache
+    
+    def _calcular_estadisticas(self):
+        """Calcula las estadísticas del usuario"""
+        reportes = self._obtener_reportes_usuario()
+        fecha_corte_reciente = timezone.now() - timedelta(days=self.PERIODO_REPORTE_RECIENTE_DIAS)
+        
+        return {
+            'total_reportes': self._contar_reportes_totales(reportes),
+            'reportes_validados': self._contar_reportes_validados(reportes),
+            'reportes_recientes': self._contar_reportes_recientes(reportes, fecha_corte_reciente),
+            'tasa_validacion': self._calcular_tasa_validacion(reportes),
+            'promedio_credibilidad': self._calcular_promedio_credibilidad(reportes),
+            'es_usuario_activo': self._determinar_usuario_activo(reportes),
+            'tipos_reportes_frecuentes': self._obtener_tipos_frecuentes(reportes)
+        }
+    
+    def _obtener_reportes_usuario(self):
+        """Obtiene los reportes del usuario"""
+        return Reporte.objects.filter(usuario_reportador_id=self.usuario_id)
+    
+    def _contar_reportes_totales(self, reportes):
+        """Cuenta el total de reportes"""
+        return reportes.count()
+    
+    def _contar_reportes_validados(self, reportes):
+        """Cuenta reportes validados"""
+        return reportes.filter(es_validado=True).count()
+    
+    def _contar_reportes_recientes(self, reportes, fecha_corte):
+        """Cuenta reportes recientes"""
+        return reportes.filter(fecha_creacion__gte=fecha_corte).count()
+    
+    def _calcular_tasa_validacion(self, reportes):
+        """Calcula la tasa de validación de reportes"""
+        total = reportes.count()
+        validados = reportes.filter(es_validado=True).count()
+        return (validados / total * 100) if total > 0 else 0.0
+    
+    def _calcular_promedio_credibilidad(self, reportes):
+        """Calcula el promedio de credibilidad"""
+        credibilidades = []
+        for reporte in reportes:
+            total_votos = reporte.votos_positivos + reporte.votos_negativos
+            if total_votos > 0:
+                credibilidad = (reporte.votos_positivos / total_votos) * 100
+                credibilidades.append(credibilidad)
+        
+        return sum(credibilidades) / len(credibilidades) if credibilidades else 0.0
+    
+    def _determinar_usuario_activo(self, reportes):
+        """Determina si el usuario es activo basado en reportes recientes"""
+        fecha_corte = timezone.now() - timedelta(days=self.PERIODO_REPORTE_RECIENTE_DIAS)
+        reportes_recientes = reportes.filter(fecha_creacion__gte=fecha_corte).count()
+        return reportes_recientes >= self.UMBRAL_USUARIO_ACTIVO
+    
+    def _obtener_tipos_frecuentes(self, reportes):
+        """Obtiene los tipos de reporte más frecuentes"""
+        from django.db.models import Count
+        return list(reportes.values('tipo_incidente').annotate(
+            cantidad=Count('tipo_incidente')
+        ).order_by('-cantidad')[:3])
+
+
+class FiltroReportesThing:
+    """Maneja el filtrado de reportes del usuario"""
+    
+    ESTADOS_VALIDOS = ['pendiente', 'validado', 'archivado']
+    
+    def __init__(self, reportes_queryset):
+        self.reportes = reportes_queryset
+    
+    def aplicar_filtros(self, filtros: dict):
+        """Aplica múltiples filtros a los reportes"""
+        reportes_filtrados = self.reportes
+        
+        reportes_filtrados = self._filtrar_por_estado(reportes_filtrados, filtros.get('estado'))
+        reportes_filtrados = self._filtrar_por_tipo(reportes_filtrados, filtros.get('tipo_incidente'))
+        reportes_filtrados = self._filtrar_por_fecha(reportes_filtrados, filtros.get('fecha_desde'))
+        reportes_filtrados = self._filtrar_por_nivel_peligro(reportes_filtrados, filtros.get('nivel_peligro'))
+        reportes_filtrados = self._filtrar_por_validacion(reportes_filtrados, filtros.get('solo_validados'))
+        
+        return reportes_filtrados
+    
+    def _filtrar_por_estado(self, queryset, estado):
+        """Filtra por estado del reporte"""
+        if estado and estado in self.ESTADOS_VALIDOS:
+            return queryset.filter(estado_reporte=estado)
+        return queryset
+    
+    def _filtrar_por_tipo(self, queryset, tipo_incidente):
+        """Filtra por tipo de incidente"""
+        if tipo_incidente:
+            return queryset.filter(tipo_incidente=tipo_incidente)
+        return queryset
+    
+    def _filtrar_por_fecha(self, queryset, fecha_desde):
+        """Filtra por fecha desde"""
+        if fecha_desde:
+            return queryset.filter(fecha_creacion__gte=fecha_desde)
+        return queryset
+    
+    def _filtrar_por_nivel_peligro(self, queryset, nivel_peligro):
+        """Filtra por nivel de peligro"""
+        if nivel_peligro:
+            return queryset.filter(nivel_peligro=nivel_peligro)
+        return queryset
+    
+    def _filtrar_por_validacion(self, queryset, solo_validados):
+        """Filtra solo reportes validados si se solicita"""
+        if solo_validados:
+            return queryset.filter(es_validado=True)
+        return queryset
+
+
+class ConfiguracionUsuarioThing:
+    """Maneja la configuración de visualización del usuario"""
+    
+    REPORTES_POR_PAGINA_DEFAULT = 10
+    
+    def __init__(self, usuario_id: int):
+        self.usuario_id = usuario_id
+        self._configuracion = None
+    
+    def obtener_configuracion(self):
+        """Obtiene o crea la configuración del usuario"""
+        if self._configuracion is None:
+            self._configuracion, created = ConfiguracionUsuario.objects.get_or_create(
+                usuario_id=self.usuario_id,
+                defaults={
+                    'reportes_por_pagina': self.REPORTES_POR_PAGINA_DEFAULT,
+                    'mostrar_estadisticas': True,
+                    'notificaciones_activas': True
+                }
+            )
+        return self._configuracion
+    
+    def actualizar_configuracion(self, nuevos_datos: dict):
+        """Actualiza la configuración del usuario"""
+        configuracion = self.obtener_configuracion()
+        
+        self._validar_datos_configuracion(nuevos_datos)
+        
+        for campo, valor in nuevos_datos.items():
+            if hasattr(configuracion, campo):
+                setattr(configuracion, campo, valor)
+        
+        configuracion.save()
+        self._configuracion = configuracion
+        return configuracion
+    
+    def _validar_datos_configuracion(self, datos: dict):
+        """Valida los datos de configuración"""
+        if 'reportes_por_pagina' in datos:
+            reportes_por_pagina = datos['reportes_por_pagina']
+            if not (5 <= reportes_por_pagina <= 50):
+                raise ConfiguracionInvalidaError("Los reportes por página deben estar entre 5 y 50")
+
+
+# 4. PIPELINE (Procesamiento en cadena)
+class ReportesUsuarioPipeline:
+    """Pipeline para procesar solicitudes de reportes de usuario"""
+    
+    def __init__(self):
+        self.pasos = []
+    
+    def agregar_paso(self, paso_funcion):
+        """Agrega un paso al pipeline"""
+        self.pasos.append(paso_funcion)
+        return self
+    
+    def ejecutar(self, datos_iniciales: dict):
+        """Ejecuta todos los pasos del pipeline"""
+        datos = datos_iniciales.copy()
+        
+        for paso in self.pasos:
+            datos = paso(datos)
+            
+        return datos
+
+
+# Pasos del pipeline
+def validar_usuario_existe(datos: dict):
+    """Valida que el usuario existe"""
+    try:
+        usuario = User.objects.get(id=datos['usuario_id'])
+        datos['usuario'] = usuario
+        return datos
+    except User.DoesNotExist:
+        raise UsuarioReporteError(f"Usuario {datos['usuario_id']} no encontrado")
+
+
+def cargar_configuracion_usuario(datos: dict):
+    """Carga la configuración del usuario"""
+    config_thing = ConfiguracionUsuarioThing(datos['usuario_id'])
+    datos['configuracion'] = config_thing.obtener_configuracion()
+    return datos
+
+
+def cargar_reportes_usuario(datos: dict):
+    """Carga los reportes base del usuario"""
+    reportes = Reporte.objects.filter(
+        usuario_reportador_id=datos['usuario_id']
+    ).select_related('usuario_reportador').order_by('-fecha_creacion')
+    
+    if not reportes.exists():
+        raise UsuarioSinReportesError("El usuario no tiene reportes")
+    
+    datos['reportes_base'] = reportes
+    return datos
+
+
+def aplicar_filtros_reportes(datos: dict):
+    """Aplica filtros a los reportes"""
+    filtro_thing = FiltroReportesThing(datos['reportes_base'])
+    filtros = datos.get('filtros', {})
+    
+    datos['reportes_filtrados'] = filtro_thing.aplicar_filtros(filtros)
+    return datos
+
+
+def calcular_estadisticas_usuario(datos: dict):
+    """Calcula las estadísticas del usuario"""
+    stats_thing = EstadisticasUsuarioThing(datos['usuario_id'])
+    datos['estadisticas'] = stats_thing.obtener_estadisticas_completas()
+    return datos
+
+
+def aplicar_paginacion(datos: dict):
+    """Aplica paginación a los reportes"""
+    reportes = datos['reportes_filtrados']
+    reportes_por_pagina = datos['configuracion'].reportes_por_pagina
+    pagina_actual = datos.get('pagina', 1)
+    
+    paginator = Paginator(reportes, reportes_por_pagina)
+    page_obj = paginator.get_page(pagina_actual)
+    
+    datos['reportes_paginados'] = page_obj
+    datos['info_paginacion'] = {
+        'pagina_actual': page_obj.number,
+        'total_paginas': paginator.num_pages,
+        'tiene_anterior': page_obj.has_previous(),
+        'tiene_siguiente': page_obj.has_next(),
+        'total_reportes': paginator.count
+    }
+    return datos
+
+
+def formatear_respuesta_web(datos: dict):
+    """Formatea la respuesta para templates web"""
+    return {
+        'usuario': datos['usuario'],
+        'reportes': datos['reportes_paginados'],
+        'estadisticas': datos['estadisticas'] if datos['configuracion'].mostrar_estadisticas else None,
+        'configuracion': datos['configuracion'],
+        'info_paginacion': datos['info_paginacion'],
+        'filtros_aplicados': datos.get('filtros', {})
+    }
+
+
+def formatear_respuesta_api(datos: dict):
+    """Formatea la respuesta para API"""
+    reportes_serializados = []
+    
+    for reporte in datos['reportes_paginados']:
+        total_votos = reporte.votos_positivos + reporte.votos_negativos
+        credibilidad = (reporte.votos_positivos / total_votos * 100) if total_votos > 0 else 0
+        
+        reportes_serializados.append({
+            'id': reporte.id,
+            'titulo': reporte.titulo,
+            'descripcion_corta': reporte.descripcion[:100] + '...' if len(reporte.descripcion) > 100 else reporte.descripcion,
+            'tipo_incidente': reporte.get_tipo_incidente_display(),
+            'estado': reporte.get_estado_reporte_display(),
+            'nivel_peligro': reporte.nivel_peligro,
+            'fecha_creacion': reporte.fecha_creacion.isoformat(),
+            'credibilidad': round(credibilidad, 2),
+            'es_validado': reporte.es_validado,
+            'tiene_imagen': bool(reporte.imagen_geolocalizada)
+        })
+    
+    return {
+        'usuario': {
+            'id': datos['usuario'].id,
+            'username': datos['usuario'].username,
+            'nombre_completo': f"{datos['usuario'].first_name} {datos['usuario'].last_name}".strip()
+        },
+        'reportes': reportes_serializados,
+        'estadisticas': datos['estadisticas'],
+        'paginacion': datos['info_paginacion'],
+        'configuracion': {
+            'reportes_por_pagina': datos['configuracion'].reportes_por_pagina,
+            'mostrar_estadisticas': datos['configuracion'].mostrar_estadisticas
+        }
+    }
+
+
+# 5. RESTFUL (Views y Serializers)
+class ConfiguracionUsuarioSerializer(serializers.ModelSerializer):
+    """Serializer para configuración de usuario"""
+    
+    class Meta:
+        model = ConfiguracionUsuario
+        fields = ['reportes_por_pagina', 'mostrar_estadisticas', 'notificaciones_activas']
+    
+    def validate_reportes_por_pagina(self, value):
+        """Valida el número de reportes por página"""
+        if not (5 <= value <= 50):
+            raise serializers.ValidationError("Debe estar entre 5 y 50")
+        return value
+
 
 # Views Django tradicionales
 @login_required
-def mis_reportes_view(request):
-    """Vista principal para mostrar los reportes del usuario"""
+def vista_reportes_usuario(request):
+    """Vista principal para mostrar reportes del usuario"""
     try:
-        # Usar pipeline para procesar la solicitud
-        pipeline = ReportesDataPipeline()
-        pipeline.agregar_paso(validar_usuario_reportes) \
+        # Construir pipeline
+        pipeline = ReportesUsuarioPipeline()
+        pipeline.agregar_paso(validar_usuario_existe) \
+                .agregar_paso(cargar_configuracion_usuario) \
                 .agregar_paso(cargar_reportes_usuario) \
-                .agregar_paso(aplicar_filtros) \
-                .agregar_paso(cargar_estadisticas)
+                .agregar_paso(aplicar_filtros_reportes) \
+                .agregar_paso(calcular_estadisticas_usuario) \
+                .agregar_paso(aplicar_paginacion) \
+                .agregar_paso(formatear_respuesta_web)
         
-        # Obtener filtros de la URL
+        # Preparar datos iniciales
         filtros = {
             'estado': request.GET.get('estado'),
             'tipo_incidente': request.GET.get('tipo'),
-            'fecha_desde': request.GET.get('fecha_desde')
+            'fecha_desde': request.GET.get('fecha_desde'),
+            'nivel_peligro': request.GET.get('nivel_peligro'),
+            'solo_validados': request.GET.get('solo_validados') == 'true'
         }
         
-        data = {
+        datos_iniciales = {
             'usuario_id': request.user.id,
-            'filtros': {k: v for k, v in filtros.items() if v}
+            'filtros': {k: v for k, v in filtros.items() if v},
+            'pagina': request.GET.get('page', 1)
         }
         
-        resultado = pipeline.procesar(data)
+        # Ejecutar pipeline
+        resultado = pipeline.ejecutar(datos_iniciales)
         
-        # Paginación
-        paginator = Paginator(resultado['reportes_filtrados'], 10)
-        page_number = request.GET.get('page')
-        page_obj = paginator.get_page(page_number)
-        
-        context = {
-            'reportes': page_obj,
-            'estadisticas': resultado['estadisticas'],
-            'filtros_aplicados': filtros,
+        # Agregar datos adicionales para el template
+        resultado.update({
             'tipos_incidente': Reporte.TIPOS_INCIDENTE,
             'estados_reporte': Reporte.ESTADOS_REPORTE,
-        }
+            'niveles_peligro': range(1, 6)  # Asumiendo niveles 1-5
+        })
         
-        return render(request, 'reportes/mis_reportes.html', context)
+        return render(request, 'reportes/usuario_reportes.html', resultado)
         
-    except Exception:
+    except UsuarioSinReportesError:
         context = {
-            'error': 'Error al cargar los reportes',
-            'reportes': [],
-            'estadisticas': {}
+            'mensaje_info': 'No tienes reportes creados aún.',
+            'mostrar_boton_crear': True
         }
-        return render(request, 'reportes/mis_reportes.html', context)
+        return render(request, 'reportes/sin_reportes.html', context)
+    
+    except Exception as e:
+        context = {
+            'error': 'Error al cargar tus reportes. Intenta de nuevo.',
+            'detalle_error': str(e) if settings.DEBUG else None
+        }
+        return render(request, 'reportes/error.html', context)
+
 
 @login_required
-def detalle_reporte_view(request, reporte_id):
-    """Vista para mostrar el detalle de un reporte"""
-    try:
-        detalle_thing = ReporteDetalleThing(reporte_id)
-        detalles = detalle_thing.obtener_detalles_completos()
-        
-        # Verificar permisos
-        if detalles['reporte'].usuario_reportador != request.user:
-            raise SinPermisosReporteError("No tienes permisos para ver este reporte")
-        
+def vista_configuracion_usuario(request):
+    """Vista para configurar preferencias del usuario"""
+    config_thing = ConfiguracionUsuarioThing(request.user.id)
+    
+    if request.method == 'POST':
+        try:
+            nuevos_datos = {
+                'reportes_por_pagina': int(request.POST.get('reportes_por_pagina', 10)),
+                'mostrar_estadisticas': request.POST.get('mostrar_estadisticas') == 'on',
+                'notificaciones_activas': request.POST.get('notificaciones_activas') == 'on'
+            }
+            
+            configuracion = config_thing.actualizar_configuracion(nuevos_datos)
+            
+            context = {
+                'configuracion': configuracion,
+                'mensaje_exito': 'Configuración actualizada correctamente'
+            }
+            
+        except ConfiguracionInvalidaError as e:
+            context = {
+                'configuracion': config_thing.obtener_configuracion(),
+                'error': str(e)
+            }
+    else:
         context = {
-            'reporte': detalles['reporte'],
-            'credibilidad': detalles['credibilidad'],
-            'total_votos': detalles['total_votos'],
-            'puede_editar': detalles['puede_editar'],
-            'es_reciente': detalles['es_reciente'],
-            'ubicacion_texto': detalles['ubicacion_texto']
+            'configuracion': config_thing.obtener_configuracion()
         }
-        
-        return render(request, 'reportes/detalle_reporte.html', context)
-        
-    except ReporteNoEncontradoError:
-        context = {'error': 'Reporte no encontrado'}
-        return render(request, 'reportes/error.html', context, status=404)
-    except SinPermisosReporteError:
-        context = {'error': 'No tienes permisos para ver este reporte'}
-        return render(request, 'reportes/error.html', context, status=403)
+    
+    return render(request, 'reportes/configuracion_usuario.html', context)
 
-# API Views RESTful
+
+# API Views
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def api_mis_reportes(request):
+def api_reportes_usuario(request):
     """
     GET /api/mis-reportes/
-    Obtiene los reportes del usuario autenticado via API
+    Obtiene los reportes del usuario autenticado
     """
     try:
-        pipeline = ReportesDataPipeline()
-        pipeline.agregar_paso(validar_usuario_reportes) \
+        pipeline = ReportesUsuarioPipeline()
+        pipeline.agregar_paso(validar_usuario_existe) \
+                .agregar_paso(cargar_configuracion_usuario) \
                 .agregar_paso(cargar_reportes_usuario) \
-                .agregar_paso(aplicar_filtros) \
-                .agregar_paso(cargar_estadisticas) \
-                .agregar_paso(formatear_respuesta_reportes)
+                .agregar_paso(aplicar_filtros_reportes) \
+                .agregar_paso(calcular_estadisticas_usuario) \
+                .agregar_paso(aplicar_paginacion) \
+                .agregar_paso(formatear_respuesta_api)
         
-        # Obtener filtros de los query parameters
+        # Obtener filtros de query parameters
         filtros = {
             'estado': request.GET.get('estado'),
             'tipo_incidente': request.GET.get('tipo'),
-            'fecha_desde': request.GET.get('fecha_desde')
+            'fecha_desde': request.GET.get('fecha_desde'),
+            'nivel_peligro': request.GET.get('nivel_peligro'),
+            'solo_validados': request.GET.get('solo_validados') == 'true'
         }
         
-        data = {
+        datos_iniciales = {
             'usuario_id': request.user.id,
-            'filtros': {k: v for k, v in filtros.items() if v}
+            'filtros': {k: v for k, v in filtros.items() if v},
+            'pagina': request.GET.get('page', 1)
         }
         
-        resultado = pipeline.procesar(data)
+        resultado = pipeline.ejecutar(datos_iniciales)
         return Response(resultado, status=status.HTTP_200_OK)
         
-    except Exception:
+    except UsuarioSinReportesError:
         return Response(
-            {'error': 'Error al obtener reportes'},
+            {
+                'mensaje': 'No tienes reportes creados',
+                'reportes': [],
+                'estadisticas': None
+            },
+            status=status.HTTP_200_OK
+        )
+    
+    except UsuarioReporteError as e:
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    except Exception as e:
+        return Response(
+            {'error': 'Error interno del servidor'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
-@api_view(['GET'])
+
+@api_view(['GET', 'PUT'])
 @permission_classes([IsAuthenticated])
-def api_detalle_reporte(request, reporte_id):
+def api_configuracion_usuario(request):
     """
-    GET /api/reporte/{id}/
-    Obtiene el detalle de un reporte específico
+    GET/PUT /api/mi-configuracion/
+    Obtiene o actualiza la configuración del usuario
     """
-    try:
-        detalle_thing = ReporteDetalleThing(reporte_id)
-        reporte = detalle_thing.reporte
-        
-        # Verificar permisos
-        if reporte.usuario_reportador != request.user:
-            raise SinPermisosReporteError("No tienes permisos para ver este reporte")
-        
-        detalles = detalle_thing.obtener_detalles_completos()
-        serializer = ReporteSerializer(reporte)
-        
-        return Response({
-            'reporte': serializer.data,
-            'credibilidad': detalles['credibilidad'],
-            'puede_editar': detalles['puede_editar'],
-            'es_reciente': detalles['es_reciente'],
-            'ubicacion_texto': detalles['ubicacion_texto']
-        }, status=status.HTTP_200_OK)
-        
-    except ReporteNoEncontradoError:
-        return Response(
-            {'error': 'Reporte no encontrado'},
-            status=status.HTTP_404_NOT_FOUND
-        )
-    except SinPermisosReporteError:
-        return Response(
-            {'error': 'No tienes permisos para ver este reporte'},
-            status=status.HTTP_403_FORBIDDEN
-        )
+    config_thing = ConfiguracionUsuarioThing(request.user.id)
+    
+    if request.method == 'GET':
+        configuracion = config_thing.obtener_configuracion()
+        serializer = ConfiguracionUsuarioSerializer(configuracion)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    elif request.method == 'PUT':
+        try:
+            serializer = ConfiguracionUsuarioSerializer(data=request.data)
+            if serializer.is_valid():
+                configuracion = config_thing.actualizar_configuracion(serializer.validated_data)
+                response_serializer = ConfiguracionUsuarioSerializer(configuracion)
+                return Response(response_serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                
+        except ConfiguracionInvalidaError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def api_estadisticas_usuario(request):
     """
     GET /api/mis-estadisticas/
-    Obtiene estadísticas del usuario
+    Obtiene las estadísticas del usuario
     """
     try:
-        visualizador = ReporteVisualizadorThing(request.user.id)
-        estadisticas = visualizador.obtener_estadisticas_usuario()
+        stats_thing = EstadisticasUsuarioThing(request.user.id)
+        estadisticas = stats_thing.obtener_estadisticas_completas()
         
         return Response(estadisticas, status=status.HTTP_200_OK)
         
     except Exception:
         return Response(
-            {'error': 'Error al obtener estadísticas'},
+            {'error': 'Error al calcular estadísticas'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-# 6. URLS CONFIGURATION
+# 6. URLS Configuration
 from django.urls import path
+
+app_name = 'reportes_usuario'
 
 urlpatterns = [
     # Views tradicionales
-    path('mis-reportes/', mis_reportes_view, name='mis_reportes'),
-    path('reporte/<int:reporte_id>/', detalle_reporte_view, name='detalle_reporte'),
+    path('mis-reportes/', vista_reportes_usuario, name='lista_reportes'),
+    path('configuracion/', vista_configuracion_usuario, name='configuracion'),
     
     # API endpoints
-    path('api/mis-reportes/', api_mis_reportes, name='api_mis_reportes'),
-    path('api/reporte/<int:reporte_id>/', api_detalle_reporte, name='api_detalle_reporte'),
-    path('api/mis-estadisticas/', api_estadisticas_usuario, name='api_estadisticas_usuario'),
+    path('api/mis-reportes/', api_reportes_usuario, name='api_lista_reportes'),
+    path('api/mi-configuracion/', api_configuracion_usuario, name='api_configuracion'),
+    path('api/mis-estadisticas/', api_estadisticas_usuario, name='api_estadisticas'),
 ]
 
 
