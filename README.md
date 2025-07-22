@@ -4,7 +4,41 @@ El presente proyecto tiene como objetivo aprender sobre el desarrollo de softwar
 
 ---
 
+---
+
 # lab 11 CLEAN CODE
+
+1. **Nombres**
+   Se aplican buenas prácticas:
+   Clases como ReporteColaborativo, ReporteIncidentView, ReporteColaborativoForm usan CamelCase.
+   Nombres como get_coords_from_address, form_valid, success_url son expresivos y concisos.
+   En los modelos, campos como usuario_reportador, votos_positivos, imagen_geolocalizada reflejan claramente su propósito y están en snake_case.
+
+2. **Funciones**
+   Se cumplen principios de funciones limpias:
+   Las funciones get_address_from_coords y get_coords_from_address realizan una sola tarea específica.
+   form_valid está ligeramente larga, pero sigue una lógica clara, con validación progresiva y sin anidar en exceso.
+
+3. **Comentarios**
+   \# Si el usuario escribió una ubicación, geocodificamos con ORS
+   Este es útil y no obvio.
+
+4. **Estructura del Código Fuente**
+   Importaciones están agrupadas y ordenadas (standard, luego Django, luego terceros, luego locales).
+   Clases y funciones están bien separadas por líneas en blanco.
+   La vista, el formulario y el modelo están en módulos separados, conforme al patrón de Django.
+
+5. **Objetos / Estructuras de Datos**
+   ReporteColaborativo y Alerta están modelados como clases Django models.Model, encapsulando datos y responsabilidades de persistencia.
+   Se usa correctamente ManyToManyField para usuarios_votantes y destinatarios, lo cual refleja bien las relaciones de dominio.
+
+6. **Tratamiento de Errores**
+   Se manejan errores correctamente con try/except:
+   En get_address_from_coords y get_coords_from_address, se hace response.raise_for_status() seguido de try/except, lo cual es buena práctica.
+
+7. **Clases**
+   ReporteColaborativoForm hereda de forms.ModelForm, respetando el principio de especialización progresiva.
+   ReporteIncidentView usa mixins (LoginRequiredMixin) correctamente.
 
 ---
 
@@ -22,18 +56,6 @@ El presente proyecto tiene como objetivo aprender sobre el desarrollo de softwar
   - Modelos (titulo = models.CharField(...))
   - Formularios (widgets = { 'titulo': forms.TextInput(...) })
   - Templates ({{ form.as_p }} declara cómo se debe renderizar)
-
-- Programación defensiva
-
-  Lo usamos en:
-
-  if self.request.user.is_authenticated:
-
-  ...
-
-  else
-
-  ...
 
 - Cookbook
 
