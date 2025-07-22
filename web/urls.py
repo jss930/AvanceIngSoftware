@@ -25,7 +25,6 @@ urlpatterns = [
     # Alertas
     path('panel/crear_alerta/', crear_alerta, name='crear_alerta'),
     # Mapa de calor
-    #path('ver-mapa/', vista_mapa, name='mapa_calor'),
     path("mapa-calor/", vista_mapa, name="mapa_calor"),
 
 ]

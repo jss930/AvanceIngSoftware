@@ -16,6 +16,9 @@ from .models import ReporteColaborativo, Alerta
 from app.presentation.controladores.reporteColaborativoController import ReporteColaborativoController
 from app.presentation.controladores.alertaController import obtener_alertas_usuario
 from app.dominio.mapa_calor.generador_mapa import generar_mapa_calor
+from web.services.mapa_calor_service import MapaCalorService
+from django.conf import settings
+
 import os
 # admin
 def is_superuser(user):
@@ -95,36 +98,18 @@ class DashboardView(LoginRequiredMixin, FormView):
             'alertas': alertas
         })
 # Mapa de calor funcion
+
 def vista_mapa(request):
-    print("✅ Entrando a vista_mapa dinámica...")
+    generador = MapaCalorService(settings.BASE_DIR / "web")
+    path_html = generador.generar_mapa()
 
-    from web.models import ReporteColaborativo
-    import folium
-    from folium.plugins import HeatMap
+    try:
+        with open(path_html, "r", encoding="utf-8") as file:
+            html = file.read()
+    except Exception as e:
+        html = f"<p>Error al cargar el mapa: {e}</p>"
 
-    reportes = ReporteColaborativo.objects.filter(es_validado=True)
-    puntos = []
-
-    for r in reportes:
-        if r.ubicacion:
-            try:
-                lat, lon = map(float, r.ubicacion.split(","))
-                puntos.append([lat, lon, r.nivel_peligro])
-            except Exception as e:
-                print(f"❌ Error en ubicación: {r.ubicacion} => {e}")
-
-    if puntos:
-        centro = [sum(p[0] for p in puntos) / len(puntos), sum(p[1] for p in puntos) / len(puntos)]
-    else:
-        centro = [-16.409, -71.537]
-
-    mapa = folium.Map(location=centro, zoom_start=13)
-    HeatMap(puntos).add_to(mapa)
-
-    mapa.save("web/static/mapa_calor.html")
-    print("✅ Mapa dinámico generado.")
-
-    return render(request, "mapa_calor_page.html")
+    return render(request, "mapa_calor_page.html", {"mapa": html})
 
 
 
