@@ -40,20 +40,31 @@
 </html>
 
 <script>
-  // Solicita ubicación cuando se carga el formulario
-  window.onload = function () {
+  window.addEventListener("DOMContentLoaded", () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         function (position) {
-          document.getElementById("latitud").value = position.coords.latitude;
-          document.getElementById("longitud").value = position.coords.longitude;
+          const latInput = document.getElementById("id_latitud");
+          const lonInput = document.getElementById("id_longitud");
+          const ubi = document.getElementById("id_ubicacion");
+          ubi.placeholder = "Ubicacion automatica";
+          if (latInput && lonInput) {
+            latInput.value = position.coords.latitude;
+            lonInput.value = position.coords.longitude;
+          } else {
+            console.error(
+              "No se encontraron los campos de latitud o longitud."
+            );
+          }
         },
         function (error) {
-          alert("No se pudo obtener tu ubicación. Por favor habilítala.");
+          alert(
+            "No se pudo obtener tu ubicación. Por favor habilítala para un mejor servicio :D"
+          );
         }
       );
     } else {
       alert("Tu navegador no soporta geolocalización.");
     }
-  };
+  });
 </script>
