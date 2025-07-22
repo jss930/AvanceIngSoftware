@@ -26,7 +26,9 @@ class Alerta(models.Model):
     ubi = models.CharField(max_length=200, blank=True, default='')
 ```
 Ahora:
-   ![Nombres CC](img/nombres.png)
+
+
+![Nombres CC](img/nombres.png)
 
 ### 2. **Comentarios utiles**
 > Los comentarios fueron corregidos para aportar un mensaje de valor de forma clara
@@ -63,7 +65,9 @@ class LoginView(FormView):
             return self.form_invalid(form)
 ```
 Ahora:
-   ![Buenos comentarios](img/comentarios.png)
+
+
+![Buenos comentarios](img/comentarios.png)
 
 ### 3. **Eliminar redundancias (DRY)**
 > Se corrigio varias redundancias innecesarias
@@ -87,7 +91,9 @@ def form_valid(self, form):
 ```
 
 Ahora:
-    ![DRY](img/dry.png)
+
+
+![DRY](img/dry.png)
 
 ### 4. **Funciones breves**
 > Se modularizo las funciones para evitar que sean tediosas de leer y gane independencia.
@@ -109,4 +115,6 @@ def main_view(request, action=None):
 ```
 
 Ahora:
-    ![Funcion](img/funcion.png)
+
+
+![Funcion](img/funcion.png)
