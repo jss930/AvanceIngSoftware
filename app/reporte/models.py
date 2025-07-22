@@ -8,7 +8,7 @@ class ReporteColaborativo(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
     usuario_reportador = models.ForeignKey(User, on_delete=models.CASCADE)
-    ubicacion = models.CharField(max_length=100, blank=True, null=True)
+    ubicacion = models.CharField(max_length=100, blank=True)
     latitud = models.FloatField(null=True, blank=True)
     longitud = models.FloatField(null=True, blank=True)
     tipo_incidente = models.CharField(max_length=50)
