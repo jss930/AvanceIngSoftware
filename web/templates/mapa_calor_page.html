@@ -1,7 +1,29 @@
 {% extends "base.html" %}
 {% load static %}
-
 {% block content %}
-<h2>Mapa de tráfico en tiempo real</h2>
-<iframe src="{% static 'mapa_calor.html' %}" width="100%" height="500px" frameborder="0"></iframe>
+<style>
+    body {
+        background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+    }
+</style>
+
+<div class="container py-5">
+    <div class="card shadow-lg border-0 rounded-4 bg-white">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center rounded-top-4 py-3 px-4">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-map-fill fs-4 me-2"></i>
+                <h5 class="mb-0 fw-semibold">Mapa de Calor de Reportes de Tráfico</h5>
+            </div>
+            <a href="{% url 'report_incident' %}" class="btn btn-light btn-sm fw-bold shadow-sm">
+                <i class="bi bi-plus-circle me-1"></i> Nuevo Reporte
+            </a>
+        </div>
+        <div class="card-body bg-white p-0 rounded-bottom-4" style="height: 75vh;">
+            <iframe src="{% static 'mapa_calor.html' %}" width="100%" height="100%" style="border: none;" loading="lazy"></iframe>
+        </div>
+        <div class="card-footer text-muted text-center small py-2 bg-light rounded-bottom-4">
+            Visualización dinámica basada en alertas recientes de la comunidad
+        </div>
+    </div>
+</div>
 {% endblock %}
