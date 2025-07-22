@@ -23,7 +23,6 @@ class ReporteIncidentView(LoginRequiredMixin, CreateView):
         ubicacion = self.request.POST.get("ubicacion", "").strip()
 
         if not (lat and lng) and not ubicacion:
-            # messages.error(self.request, "Debe proporcionar una ubicación o permitir acceso a su ubicación actual.")
             return self.form_invalid(form)
 
         # Si el usuario escribió una ubicación, geocodificamos con ORS
@@ -51,8 +50,8 @@ class ReporteIncidentView(LoginRequiredMixin, CreateView):
 
         # Asociamos el usuario autenticado
         form.instance.usuario_reportador = self.request.user
-        obj = form.save(commit=False)
-        obj.save()
+        reporte = form.save(commit=False)
+        reporte.save()
         print("Lat:", form.instance.latitud, "Lng:", form.instance.longitud)
         messages.success(self.request, "Reporte enviado exitosamente.")
         return super().form_valid(form)
