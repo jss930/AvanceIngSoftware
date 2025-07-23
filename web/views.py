@@ -16,6 +16,9 @@ from .models import ReporteColaborativo, Alerta
 from app.presentation.controladores.reporteColaborativoController import ReporteColaborativoController
 from app.presentation.controladores.alertaController import obtener_alertas_usuario
 from app.dominio.mapa_calor.generador_mapa import generar_mapa_calor
+from web.services.mapa_calor_service import MapaCalorService
+from django.conf import settings
+
 import os
 
 # admin
@@ -96,30 +99,19 @@ class DashboardView(LoginRequiredMixin, FormView):
             'alertas': alertas
         })
 # Mapa de calor funcion
+
 def vista_mapa(request):
-    print("✅ Entrando a vista_mapa...")
-
-    reportes = [
-        {"latitud": -16.4091, "longitud": -71.5375, "estado": "congestionado"},
-        {"latitud": -16.4100, "longitud": -71.5360, "estado": "fluido"},
-        {"latitud": -16.4080, "longitud": -71.5380, "estado": "congestionado"}
-    ]
-
-    mapa = generar_mapa_calor(reportes)
-
-    ruta_mapa = os.path.abspath("web/static/mapa_calor.html")
-    mapa.save(ruta_mapa)
-    print("✅ Mapa guardado en:", ruta_mapa)
+    generador = MapaCalorService(settings.BASE_DIR / "web")
+    path_html = generador.generar_mapa()
 
     try:
-        with open(ruta_mapa, "r", encoding="utf-8") as f:
-            mapa_html = f.read()
-        print("HTML del mapa leído correctamente")
+        with open(path_html, "r", encoding="utf-8") as file:
+            html = file.read()
     except Exception as e:
-        print("ERROR leyendo mapa:", e)
-        mapa_html = "<p>Error al cargar el mapa</p>"
+        html = f"<p>Error al cargar el mapa: {e}</p>"
 
-    return render(request, "mapa_calor.html", {"mapa_html": mapa_html})
+    return render(request, "mapa_calor_page.html", {"mapa": html})
+
 
 
 # Tus vistas existentes (mantenidas)

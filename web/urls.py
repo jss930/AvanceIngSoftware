@@ -17,6 +17,7 @@ urlpatterns = [
     path('plan_route/', views.PlanRouteView.as_view(), name='plan_route'),
     path('report_incident/', views.ReporteIncidentView.as_view(), name='report_incident'),
     path('see_state/', views.SeeStateView.as_view(), name='see_state'),
+
     # Reportes colaborativos
     path('reportes/', views.lista_reportes, name='lista_reportes'),
     path('reportes/agregar/', views.agregar_reporte, name='agregar_reporte'),
@@ -28,5 +29,6 @@ urlpatterns = [
     path('panel/alertas/eliminar/<int:alerta_id>/', views.eliminar_alerta, name='eliminar_alerta'),
 
     # Mapa de calor
-    path('ver-mapa/', vista_mapa, name='mapa_calor'),
+    path("mapa-calor/", vista_mapa, name="mapa_calor"),
+
 ]
