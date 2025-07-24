@@ -216,24 +216,20 @@
                                     <div class="d-flex justify-content-between align-items-center mb-1">
                                         <small class="text-muted">Credibilidad</small>
                                         <small class="fw-semibold">
-                                            {% with total_votos=reporte.votos_positivos|add:reporte.votos_negativos %}
-                                                {% if total_votos > 0 %}
-                                                    {{ reporte.votos_positivos|mul:100|div:total_votos|floatformat:0 }}%
-                                                {% else %}
-                                                    Sin votos
-                                                {% endif %}
-                                            {% endwith %}
+                                            {% if reporte.total_votos > 0 %}
+                                                {{ reporte.credibilidad_porcentaje }}%
+                                            {% else %}
+                                                Sin votos
+                                            {% endif %}
                                         </small>
                                     </div>
                                     <div class="credibilidad-bar">
-                                        {% with total_votos=reporte.votos_positivos|add:reporte.votos_negativos %}
-                                            {% if total_votos > 0 %}
-                                                <div class="credibilidad-fill" 
-                                                     style="width: {{ reporte.credibilidad_width }}%"></div>
-                                            {% else %}
-                                                <div class="credibilidad-fill" style="width: 0%"></div>
-                                            {% endif %}
-                                        {% endwith %}
+                                        {% if reporte.total_votos > 0 %}
+                                            <div class="credibilidad-fill" 
+                                                style="width: {{ reporte.credibilidad_width }}%"></div>
+                                        {% else %}
+                                            <div class="credibilidad-fill" style="width: 0%"></div>
+                                        {% endif %}
                                     </div>
                                 </div>
 

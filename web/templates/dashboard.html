@@ -341,16 +341,11 @@
               <div class="col-md-8">
                 <div class="card border-0 rounded-3 shadow-sm">
                   <div class="card-header bg-white border-0 py-3">
-                    <div
-                      class="d-flex align-items-center justify-content-between"
-                    >
+                    <div class="d-flex align-items-center justify-content-between">
                       <h6 class="mb-0">
                         <i class="bi bi-activity me-2"></i>Actividad Reciente
                       </h6>
-                      <a
-                        href="{% url 'mis_reportes' %}"
-                        class="btn btn-sm btn-outline-primary"
-                      >
+                      <a href="{% url 'mis_reportes' %}" class="btn btn-sm btn-outline-primary">
                         Ver todos
                       </a>
                     </div>
@@ -358,69 +353,54 @@
                   <div class="card-body p-0">
                     <div class="list-group list-group-flush">
                       <!-- Reportes reales del usuario -->
-                      {% if recent_reports %} {% for report in recent_reports %}
-                      <a
-                        href="{% url 'detalle_reporte' report.id %}"
-                        class="list-group-item list-group-item-action d-flex align-items-center py-3 text-decoration-none"
-                      >
-                        <div class="me-3">
-                          <div
-                            class="{% if report.tipo_incidente == 'accidente' %}bg-danger{% elif report.tipo_incidente == 'congestion' %}bg-warning{% elif report.tipo_incidente == 'obra' %}bg-info{% else %}bg-secondary{% endif %} rounded-circle p-2"
-                          >
-                            {% if report.tipo_incidente == 'accidente' %}
-                            <i class="bi bi-car-front text-white"></i>
-                            {% elif report.tipo_incidente == 'congestion' %}
-                            <i
-                              class="bi bi-exclamation-triangle text-white"
-                            ></i>
-                            {% elif report.tipo_incidente == 'obra' %}
-                            <i class="bi bi-tools text-white"></i>
-                            {% else %}
-                            <i class="bi bi-exclamation-circle text-white"></i>
-                            {% endif %}
+                      {% if recent_reports %}
+                        {% for report in recent_reports %}
+                        <a href="{% url 'detalle_reporte' report.id %}" 
+                          class="list-group-item list-group-item-action d-flex align-items-center py-3 text-decoration-none">
+                          <div class="me-3">
+                            <div class="{% if report.tipo_incidente == 'accidente' %}bg-danger{% elif report.tipo_incidente == 'congestion' %}bg-warning{% elif report.tipo_incidente == 'obra' %}bg-info{% else %}bg-secondary{% endif %} rounded-circle p-2">
+                              {% if report.tipo_incidente == 'accidente' %}
+                                <i class="bi bi-car-front text-white"></i>
+                              {% elif report.tipo_incidente == 'congestion' %}
+                                <i class="bi bi-exclamation-triangle text-white"></i>
+                              {% elif report.tipo_incidente == 'obra' %}
+                                <i class="bi bi-tools text-white"></i>
+                              {% else %}
+                                <i class="bi bi-exclamation-circle text-white"></i>
+                              {% endif %}
+                            </div>
                           </div>
-                        </div>
-                        <div class="flex-grow-1">
-                          <h6 class="mb-1 text-dark">
-                            {{ report.tipo_incidente|title }} en {{
-                            report.ubicacion }}
-                          </h6>
-                          <small class="text-muted">
-                            {{ report.fecha_creacion|timesince }} • {{
-                            report.estado_reporte|title }}
-                          </small>
-                        </div>
-                        <span
-                          class="badge bg-{% if report.estado_reporte == 'validado' %}success{% elif report.estado_reporte == 'pendiente' %}warning{% else %}secondary{% endif %}"
-                        >
-                          {{ report.estado_reporte|title }}
-                        </span>
-                      </a>
-                      {% endfor %} {% else %}
-                      <!-- Datos de ejemplo cuando no hay reportes -->
-                      <div
-                        class="list-group-item d-flex align-items-center py-3"
-                      >
-                        <div class="me-3">
-                          <div class="bg-warning rounded-circle p-2">
-                            <i
-                              class="bi bi-exclamation-triangle text-white"
-                            ></i>
+                          <div class="flex-grow-1">
+                            <h6 class="mb-1 text-dark">
+                              {{ report.get_tipo_incidente_display }} - {{ report.titulo }}
+                            </h6>
+                            <small class="text-muted">
+                              {{ report.fecha_creacion|timesince }} • {{ report.get_estado_reporte_display }}
+                            </small>
                           </div>
-                        </div>
-                        <div class="flex-grow-1">
-                          <h6 class="mb-1">No tienes reportes recientes</h6>
-                          <small class="text-muted">
-                            Crea tu primer reporte para ver la actividad aquí
-                          </small>
-                        </div>
-                        <a
-                          href="{% url 'report_incident' %}"
-                          class="btn btn-sm btn-primary"
-                        >
-                          Crear Reporte
+                          <span class="badge bg-{% if report.estado_reporte == 'validado' %}success{% elif report.estado_reporte == 'pendiente' %}warning{% else %}secondary{% endif %}">
+                            {{ report.get_estado_reporte_display }}
+                          </span>
                         </a>
-                      </div>
+                        {% endfor %}
+                      {% else %}
+                        <!-- Sin reportes -->
+                        <div class="list-group-item d-flex align-items-center py-3">
+                          <div class="me-3">
+                            <div class="bg-warning rounded-circle p-2">
+                              <i class="bi bi-exclamation-triangle text-white"></i>
+                            </div>
+                          </div>
+                          <div class="flex-grow-1">
+                            <h6 class="mb-1">No tienes reportes recientes</h6>
+                            <small class="text-muted">
+                              Crea tu primer reporte para ver la actividad aquí
+                            </small>
+                          </div>
+                          <a href="{% url 'report_incident' %}" class="btn btn-sm btn-primary">
+                            Crear Reporte
+                          </a>
+                        </div>
                       {% endif %}
                     </div>
                   </div>
@@ -459,6 +439,28 @@
                         <i class="bi bi-clock me-1"></i>
                         Última actualización: Hace 2 min
                       </small>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tarjeta de acceso rápido a configuración -->
+                <div class="card border-0 rounded-3 shadow-sm mt-3">
+                  <div class="card-header bg-white border-0 py-3">
+                    <h6 class="mb-0">
+                      <i class="bi bi-gear me-2"></i>Acceso Rápido
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="d-grid gap-2">
+                      <a href="{% url 'mis_reportes' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-list-ul me-2"></i>Ver Mis Reportes
+                      </a>
+                      <a href="{% url 'report_incident' %}" class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-plus-circle me-2"></i>Crear Reporte
+                      </a>
+                      <a href="{% url 'configuracion_usuario' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-gear me-2"></i>Configuración
+                      </a>
                     </div>
                   </div>
                 </div>

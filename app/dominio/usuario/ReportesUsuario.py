@@ -18,7 +18,6 @@ from web.models import Reporte
 
 # 1. PERSISTENT-TABLES (Models)
 class InteraccionUsuario(models.Model):
-    """Modelo para rastrear interacciones del usuario con reportes"""
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
     reporte = models.ForeignKey(Reporte, on_delete=models.CASCADE)
     fecha_vista = models.DateTimeField(auto_now=True)
@@ -30,7 +29,6 @@ class InteraccionUsuario(models.Model):
 
 
 class ConfiguracionUsuario(models.Model):
-    """Configuraciones de visualización del usuario"""
     usuario = models.OneToOneField(User, on_delete=models.CASCADE)
     reportes_por_pagina = models.PositiveIntegerField(
         default=10,
@@ -65,9 +63,7 @@ class PermisosInsuficientesError(UsuarioReporteError):
 
 
 # 3. THINGS (Objetos con responsabilidades claras)
-class EstadisticasUsuarioThing:
-    """Maneja el cálculo de estadísticas del usuario"""
-    
+class EstadisticasUsuarioThing:    
     PERIODO_REPORTE_RECIENTE_DIAS = 7
     UMBRAL_USUARIO_ACTIVO = 5
     
@@ -76,13 +72,11 @@ class EstadisticasUsuarioThing:
         self._estadisticas_cache = None
     
     def obtener_estadisticas_completas(self):
-        """Calcula y retorna todas las estadísticas del usuario"""
         if self._estadisticas_cache is None:
             self._estadisticas_cache = self._calcular_estadisticas()
         return self._estadisticas_cache
     
     def _calcular_estadisticas(self):
-        """Calcula las estadísticas del usuario"""
         reportes = self._obtener_reportes_usuario()
         fecha_corte_reciente = timezone.now() - timedelta(days=self.PERIODO_REPORTE_RECIENTE_DIAS)
         
@@ -97,29 +91,23 @@ class EstadisticasUsuarioThing:
         }
     
     def _obtener_reportes_usuario(self):
-        """Obtiene los reportes del usuario"""
         return Reporte.objects.filter(usuario_reportador_id=self.usuario_id)
     
     def _contar_reportes_totales(self, reportes):
-        """Cuenta el total de reportes"""
         return reportes.count()
     
     def _contar_reportes_validados(self, reportes):
-        """Cuenta reportes validados"""
         return reportes.filter(es_validado=True).count()
     
     def _contar_reportes_recientes(self, reportes, fecha_corte):
-        """Cuenta reportes recientes"""
         return reportes.filter(fecha_creacion__gte=fecha_corte).count()
     
     def _calcular_tasa_validacion(self, reportes):
-        """Calcula la tasa de validación de reportes"""
         total = reportes.count()
         validados = reportes.filter(es_validado=True).count()
         return (validados / total * 100) if total > 0 else 0.0
     
     def _calcular_promedio_credibilidad(self, reportes):
-        """Calcula el promedio de credibilidad"""
         credibilidades = []
         for reporte in reportes:
             total_votos = reporte.votos_positivos + reporte.votos_negativos
@@ -130,29 +118,24 @@ class EstadisticasUsuarioThing:
         return sum(credibilidades) / len(credibilidades) if credibilidades else 0.0
     
     def _determinar_usuario_activo(self, reportes):
-        """Determina si el usuario es activo basado en reportes recientes"""
         fecha_corte = timezone.now() - timedelta(days=self.PERIODO_REPORTE_RECIENTE_DIAS)
         reportes_recientes = reportes.filter(fecha_creacion__gte=fecha_corte).count()
         return reportes_recientes >= self.UMBRAL_USUARIO_ACTIVO
     
     def _obtener_tipos_frecuentes(self, reportes):
-        """Obtiene los tipos de reporte más frecuentes"""
         from django.db.models import Count
         return list(reportes.values('tipo_incidente').annotate(
             cantidad=Count('tipo_incidente')
         ).order_by('-cantidad')[:3])
 
 
-class FiltroReportesThing:
-    """Maneja el filtrado de reportes del usuario"""
-    
+class FiltroReportesThing:    
     ESTADOS_VALIDOS = ['pendiente', 'validado', 'archivado']
     
     def __init__(self, reportes_queryset):
         self.reportes = reportes_queryset
     
     def aplicar_filtros(self, filtros: dict):
-        """Aplica múltiples filtros a los reportes"""
         reportes_filtrados = self.reportes
         
         reportes_filtrados = self._filtrar_por_estado(reportes_filtrados, filtros.get('estado'))
@@ -164,39 +147,32 @@ class FiltroReportesThing:
         return reportes_filtrados
     
     def _filtrar_por_estado(self, queryset, estado):
-        """Filtra por estado del reporte"""
         if estado and estado in self.ESTADOS_VALIDOS:
             return queryset.filter(estado_reporte=estado)
         return queryset
     
     def _filtrar_por_tipo(self, queryset, tipo_incidente):
-        """Filtra por tipo de incidente"""
         if tipo_incidente:
             return queryset.filter(tipo_incidente=tipo_incidente)
         return queryset
     
     def _filtrar_por_fecha(self, queryset, fecha_desde):
-        """Filtra por fecha desde"""
         if fecha_desde:
             return queryset.filter(fecha_creacion__gte=fecha_desde)
         return queryset
     
     def _filtrar_por_nivel_peligro(self, queryset, nivel_peligro):
-        """Filtra por nivel de peligro"""
         if nivel_peligro:
             return queryset.filter(nivel_peligro=nivel_peligro)
         return queryset
     
     def _filtrar_por_validacion(self, queryset, solo_validados):
-        """Filtra solo reportes validados si se solicita"""
         if solo_validados:
             return queryset.filter(es_validado=True)
         return queryset
 
 
-class ConfiguracionUsuarioThing:
-    """Maneja la configuración de visualización del usuario"""
-    
+class ConfiguracionUsuarioThing:    
     REPORTES_POR_PAGINA_DEFAULT = 10
     
     def __init__(self, usuario_id: int):
@@ -204,7 +180,6 @@ class ConfiguracionUsuarioThing:
         self._configuracion = None
     
     def obtener_configuracion(self):
-        """Obtiene o crea la configuración del usuario"""
         if self._configuracion is None:
             self._configuracion, created = ConfiguracionUsuario.objects.get_or_create(
                 usuario_id=self.usuario_id,
@@ -217,7 +192,6 @@ class ConfiguracionUsuarioThing:
         return self._configuracion
     
     def actualizar_configuracion(self, nuevos_datos: dict):
-        """Actualiza la configuración del usuario"""
         configuracion = self.obtener_configuracion()
         
         self._validar_datos_configuracion(nuevos_datos)
@@ -231,7 +205,6 @@ class ConfiguracionUsuarioThing:
         return configuracion
     
     def _validar_datos_configuracion(self, datos: dict):
-        """Valida los datos de configuración"""
         if 'reportes_por_pagina' in datos:
             reportes_por_pagina = datos['reportes_por_pagina']
             if not (5 <= reportes_por_pagina <= 50):
@@ -239,19 +212,15 @@ class ConfiguracionUsuarioThing:
 
 
 # 4. PIPELINE (Procesamiento en cadena)
-class ReportesUsuarioPipeline:
-    """Pipeline para procesar solicitudes de reportes de usuario"""
-    
+class ReportesUsuarioPipeline:    
     def __init__(self):
         self.pasos = []
     
     def agregar_paso(self, paso_funcion):
-        """Agrega un paso al pipeline"""
         self.pasos.append(paso_funcion)
         return self
     
     def ejecutar(self, datos_iniciales: dict):
-        """Ejecuta todos los pasos del pipeline"""
         datos = datos_iniciales.copy()
         
         for paso in self.pasos:
@@ -262,7 +231,6 @@ class ReportesUsuarioPipeline:
 
 # Pasos del pipeline
 def validar_usuario_existe(datos: dict):
-    """Valida que el usuario existe"""
     try:
         usuario = User.objects.get(id=datos['usuario_id'])
         datos['usuario'] = usuario
@@ -272,14 +240,12 @@ def validar_usuario_existe(datos: dict):
 
 
 def cargar_configuracion_usuario(datos: dict):
-    """Carga la configuración del usuario"""
     config_thing = ConfiguracionUsuarioThing(datos['usuario_id'])
     datos['configuracion'] = config_thing.obtener_configuracion()
     return datos
 
 
 def cargar_reportes_usuario(datos: dict):
-    """Carga los reportes base del usuario"""
     reportes = Reporte.objects.filter(
         usuario_reportador_id=datos['usuario_id']
     ).select_related('usuario_reportador').order_by('-fecha_creacion')
@@ -292,7 +258,6 @@ def cargar_reportes_usuario(datos: dict):
 
 
 def aplicar_filtros_reportes(datos: dict):
-    """Aplica filtros a los reportes"""
     filtro_thing = FiltroReportesThing(datos['reportes_base'])
     filtros = datos.get('filtros', {})
     
@@ -301,14 +266,12 @@ def aplicar_filtros_reportes(datos: dict):
 
 
 def calcular_estadisticas_usuario(datos: dict):
-    """Calcula las estadísticas del usuario"""
     stats_thing = EstadisticasUsuarioThing(datos['usuario_id'])
     datos['estadisticas'] = stats_thing.obtener_estadisticas_completas()
     return datos
 
 
 def aplicar_paginacion(datos: dict):
-    """Aplica paginación a los reportes"""
     reportes = datos['reportes_filtrados']
     reportes_por_pagina = datos['configuracion'].reportes_por_pagina
     pagina_actual = datos.get('pagina', 1)
@@ -328,7 +291,6 @@ def aplicar_paginacion(datos: dict):
 
 
 def formatear_respuesta_web(datos: dict):
-    """Formatea la respuesta para templates web"""
     return {
         'usuario': datos['usuario'],
         'reportes': datos['reportes_paginados'],
@@ -340,7 +302,6 @@ def formatear_respuesta_web(datos: dict):
 
 
 def formatear_respuesta_api(datos: dict):
-    """Formatea la respuesta para API"""
     reportes_serializados = []
     
     for reporte in datos['reportes_paginados']:
@@ -377,15 +338,12 @@ def formatear_respuesta_api(datos: dict):
 
 
 # 5. RESTFUL (Views y Serializers)
-class ConfiguracionUsuarioSerializer(serializers.ModelSerializer):
-    """Serializer para configuración de usuario"""
-    
+class ConfiguracionUsuarioSerializer(serializers.ModelSerializer):    
     class Meta:
         model = ConfiguracionUsuario
         fields = ['reportes_por_pagina', 'mostrar_estadisticas', 'notificaciones_activas']
     
     def validate_reportes_por_pagina(self, value):
-        """Valida el número de reportes por página"""
         if not (5 <= value <= 50):
             raise serializers.ValidationError("Debe estar entre 5 y 50")
         return value
@@ -394,7 +352,6 @@ class ConfiguracionUsuarioSerializer(serializers.ModelSerializer):
 # Views Django tradicionales
 @login_required
 def vista_reportes_usuario(request):
-    """Vista principal para mostrar reportes del usuario"""
     try:
         # Construir pipeline
         pipeline = ReportesUsuarioPipeline()
@@ -450,7 +407,6 @@ def vista_reportes_usuario(request):
 
 @login_required
 def vista_configuracion_usuario(request):
-    """Vista para configurar preferencias del usuario"""
     config_thing = ConfiguracionUsuarioThing(request.user.id)
     
     if request.method == 'POST':

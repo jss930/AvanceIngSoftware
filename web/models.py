@@ -43,6 +43,30 @@ class ReporteColaborativo(models.Model):
         return f"{self.titulo} ({self.estado_reporte})"
     
 
+class InteraccionUsuario(models.Model):
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    reporte = models.ForeignKey('Reporte', on_delete=models.CASCADE)  # Asumiendo que tienes un modelo Reporte
+    fecha_vista = models.DateTimeField(auto_now=True)
+    tiempo_lectura_segundos = models.PositiveIntegerField(default=0)
+    
+    class Meta:
+        db_table = 'interaccion_usuario'
+        unique_together = ['usuario', 'reporte']
+
+
+class ConfiguracionUsuario(models.Model):
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE)
+    reportes_por_pagina = models.PositiveIntegerField(
+        default=10,
+        validators=[MinValueValidator(5), MaxValueValidator(50)]
+    )
+    mostrar_estadisticas = models.BooleanField(default=True)
+    notificaciones_activas = models.BooleanField(default=True)
+    
+    class Meta:
+        db_table = 'configuracion_usuario'
+
+
 class Reporte(models.Model):
     TIPOS_INCIDENTE = [
         ('accidente', 'Accidente'),
@@ -75,6 +99,13 @@ class Reporte(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
     
+    def __str__(self):
+        return f"{self.titulo} - {self.usuario_reportador.username}"
+    
+    @property
+    def ubicacion(self):
+        return f"Lat: {self.latitud}, Lng: {self.longitud}"
+
     class Meta:
         db_table = 'reporte_trafico'
         indexes = [
