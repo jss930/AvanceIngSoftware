@@ -18,12 +18,7 @@ urlpatterns = [
     path('see_state/', views.SeeStateView.as_view(), name='see_state'),
     path('mis_reportes/', views.MisReportesView.as_view(), name='mis_reportes'),
     path('reporte/<int:reporte_id>/', views.DetalleReporteView.as_view(), name='detalle_reporte'),
-    path('configuracion/', views.vista_configuracion_usuario, name='configuracion_usuario'),
-    
-    # Crear reporte
-    path('reportar/', views.ReportIncidentView.as_view(), name='report_incident'),
-    
-    # URLs para validación/edición (si las necesitas)
+    path('configuracion/', views.vista_configuracion_usuario, name='configuracion_usuario'),    
     #path('reporte/<int:reporte_id>/editar/', views.EditarReporteView.as_view(), name='editar_reporte'),
     path('reportes/validar/<int:reporte_id>/', views.DetalleReporteView.as_view(), name='validar_reporte'),
 ]
