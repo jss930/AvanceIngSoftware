@@ -7,7 +7,8 @@ class NotificationApplicationService:
         self.notification_factory = None
 
     def enviar_notificacion_usuario(self, usuario_id, mensaje, tipo):
-        pass
+        print(f"🔔 Notificación enviada a usuario {usuario_id}: {mensaje} ({tipo})")
+        # Aquí deberías guardar en BD o en cola de mensajes, etc.
 
     def enviar_notificacion_masiva(self, usuarios_ids, mensaje, tipo):
         pass

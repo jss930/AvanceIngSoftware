@@ -222,3 +222,35 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    function obtenerUbicacionYNotificar() {
+      if (!navigator.geolocation) return;
+  
+      navigator.geolocation.getCurrentPosition((position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+  
+        fetch("{% url 'recibir_ubicacion_usuario' %}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}",
+          },
+          body: JSON.stringify({ lat, lng }),
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.mensaje && data.mensaje.includes("Zona congestionada")) {
+            alert(data.mensaje); // Aquí el popup
+          }
+        })
+        .catch(err => console.error("Error al enviar ubicación:", err));
+      });
+    }
+  
+    // Ejecuta cada 60 segundos
+    setInterval(obtenerUbicacionYNotificar, 60000);
+  });
+  </script>
+  

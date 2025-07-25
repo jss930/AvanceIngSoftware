@@ -1,10 +1,11 @@
 # urls.py
 from django.urls import path
 from . import views
-from .views import admin_reportes, LoginView, custom_login, editar_reporte, crear_alerta, vista_mapa
+from .views import admin_reportes, LoginView, custom_login, editar_reporte, crear_alerta, vista_mapa, recibir_ubicacion_usuario
 
 urlpatterns = [
     path('', views.home, name='home'),
+    path('perfil/', views.mi_perfil, name='mi_perfil'),
     path('register/', views.RegistroUsuarioView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),  # Cambiado de views.home
     path('loginadmin/', custom_login, name='custom_login'),  # Login para admin
@@ -31,4 +32,5 @@ urlpatterns = [
     # Mapa de calor
     path("mapa-calor/", vista_mapa, name="mapa_calor"),
 
+    path('api/ubicacion/', recibir_ubicacion_usuario, name='recibir_ubicacion_usuario')
 ]

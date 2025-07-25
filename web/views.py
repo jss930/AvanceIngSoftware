@@ -19,9 +19,30 @@ from app.dominio.mapa_calor.generador_mapa import generar_mapa_calor
 from web.services.mapa_calor_service import MapaCalorService
 from django.conf import settings
 
+# Nueva funcionalidad para notificaciones por ubicación
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+from math import radians, cos, sin, asin, sqrt
+from app.servicios.notificationApplicationService import NotificationApplicationService
+
 import os
 
-# admin
+# ========================== PERFIL ============================
+
+@login_required
+def mi_perfil(request):
+    perfil = request.user.perfil  # Asegúrate de tener el modelo Perfil
+    if request.method == 'POST':
+        recibir = request.POST.get('recibir_notificaciones') == 'on'
+        perfil.recibir_notificaciones = recibir
+        perfil.save()
+        messages.success(request, 'Preferencias actualizadas correctamente.')
+        return redirect('mi_perfil')
+    return render(request, 'mi_perfil.html', {'perfil': perfil})
+
+# ========================== PANEL ADMIN ============================
+
 def is_superuser(user):
     return user.is_authenticated and user.is_superuser
 
@@ -29,17 +50,15 @@ def is_superuser(user):
 @user_passes_test(is_superuser, login_url='/loginadmin/')
 @never_cache
 def panel_personalizado(request):
-    context = {
-        'titulo': 'Panel Administrativo',
-    }
+    context = {'titulo': 'Panel Administrativo'}
     return render(request, 'panel/personalizado.html', context)
 
-# Logout del admin
 def logout_admin(request):
     logout(request)
     return redirect('custom_login')
 
-# Registro existente (mantenida)
+# ========================== AUTENTICACIÓN ============================
+
 class RegistroUsuarioView(FormView):
     template_name = 'register.html'
     form_class = RegistroUsuarioForm
@@ -51,7 +70,6 @@ class RegistroUsuarioView(FormView):
         messages.success(self.request, f"¡Bienvenido, {user.username}!")
         return super().form_valid(form)
 
-# Nueva vista de login usando Class-Based View
 class LoginView(FormView):
     template_name = 'login.html'
     form_class = LoginForm
@@ -65,12 +83,10 @@ class LoginView(FormView):
     def form_valid(self, form):
         username = form.cleaned_data.get('username')
         password = form.cleaned_data.get('password')
-
         user = authenticate(username=username, password=password)
         if user is not None:
             login(self.request, user)
             messages.success(self.request, f'¡Bienvenido, {user.username}!')
-
             next_page = self.request.GET.get('next')
             if next_page:
                 return redirect(next_page)
@@ -79,13 +95,13 @@ class LoginView(FormView):
             form.add_error(None, 'Usuario o contraseña incorrectos.')
             return self.form_invalid(form)
 
-# Vista de logout (function-based es más simple para logout)
 def logout_view(request):
     logout(request)
     messages.info(request, 'Has cerrado sesión exitosamente.')
     return redirect('login')
 
-# Dashboard como Class-Based View
+# ========================== VISTAS PRINCIPALES ============================
+
 @method_decorator(login_required(login_url='/login/'), name='dispatch')
 @method_decorator(never_cache, name='dispatch')
 class DashboardView(LoginRequiredMixin, FormView):
@@ -93,28 +109,19 @@ class DashboardView(LoginRequiredMixin, FormView):
     login_url = 'login'
 
     def get(self, request, *args, **kwargs):
-        alertas = obtener_alertas_usuario(request.user.id)  
-        return render(request, self.template_name, {
-            'user': request.user,
-            'alertas': alertas
-        })
-# Mapa de calor funcion
+        alertas = obtener_alertas_usuario(request.user.id)
+        return render(request, self.template_name, {'user': request.user, 'alertas': alertas})
 
 def vista_mapa(request):
     generador = MapaCalorService(settings.BASE_DIR / "web")
     path_html = generador.generar_mapa()
-
     try:
         with open(path_html, "r", encoding="utf-8") as file:
             html = file.read()
     except Exception as e:
         html = f"<p>Error al cargar el mapa: {e}</p>"
-
     return render(request, "mapa_calor_page.html", {"mapa": html})
 
-
-
-# Tus vistas existentes (mantenidas)
 def home(request):
     return render(request, 'home.html')
 
@@ -124,7 +131,6 @@ def register(request):
 def test(request):
     return render(request, 'test.html')
 
-# login admin / django
 @csrf_protect
 def custom_login(request):
     if request.method == 'POST':
@@ -133,31 +139,28 @@ def custom_login(request):
         user = authenticate(request, username=username, password=password)
         if user is not None and user.is_superuser:
             login(request, user)
-            response = redirect('/panel/')
-            return response
+            return redirect('/panel/')
         else:
             messages.error(request, 'Credenciales inválidas o no eres superusuario.')
     return render(request, 'login_admin.html')
+
+# ========================== REPORTES ADMIN ============================
 
 @login_required(login_url='/loginadmin/')
 @user_passes_test(is_superuser, login_url='/loginadmin/')
 @never_cache
 def admin_reportes(request):
     controlador = ReporteColaborativoController()
-
     estado = request.GET.get("estado", "")
     fecha = request.GET.get("fecha", "")
     ubicacion = request.GET.get("ubicacion", "")
-
     reportes = controlador.obtener_todos()
-
     if estado:
         reportes = [r for r in reportes if r.estado_reporte == estado]
     if fecha:
         reportes = [r for r in reportes if r.fecha_creacion == fecha]
     if ubicacion:
         reportes = [r for r in reportes if r.ubicacion == ubicacion]
-
     return render(request, 'partials/admin_reportes.html', {
         "titulo": "Control de Reportes",
         "reportes": reportes,
@@ -173,40 +176,32 @@ def editar_reporte(request):
     controlador = ReporteColaborativoController()
     reporte_id = request.GET.get('id')
     reporte = None
-
     if reporte_id:
         try:
             reporte_id = int(reporte_id)
             reporte = controlador.obtener_reporte(reporte_id)
         except (ValueError, TypeError):
             messages.error(request, "ID inválido.")
-
     if request.method == "POST" and reporte:
         titulo = request.POST.get("titulo", "").strip()
         descripcion = request.POST.get("descripcion", "").strip()
         ubicacion = request.POST.get("ubicacion", "").strip()
         tipo_incidente = request.POST.get("tipo_incidente", "").strip()
         estado_reporte = request.POST.get("estado_reporte", "").strip()
-
-        # Validación básica
         if not titulo or not descripcion or not ubicacion or not tipo_incidente or not estado_reporte:
             messages.error(request, "Todos los campos son obligatorios.")
         else:
-            # Actualiza atributos
             reporte.titulo = titulo
             reporte.descripcion = descripcion
             reporte.ubicacion = ubicacion
             reporte.tipo_incidente = tipo_incidente
             reporte.estado_reporte = estado_reporte
-
-            # Guarda cambios usando el nuevo método
             controlador.actualizar_reporte_completo(reporte_id, reporte)
             messages.success(request, "Reporte actualizado correctamente.")
-            return redirect("admin_reportes")  # Reemplaza con el nombre real de tu URL
+            return redirect("admin_reportes")
+    return render(request, "partials/editar_reporte.html", {"reporte": reporte})
 
-    return render(request, "partials/editar_reporte.html", {
-        "reporte": reporte
-    })
+# ========================== ALERTAS ADMIN ============================
 
 @login_required(login_url='/loginadmin/')
 @user_passes_test(is_superuser, login_url='/loginadmin/')
@@ -217,28 +212,23 @@ def gestionar_alertas(request):
 @login_required(login_url='/loginadmin/')
 @user_passes_test(is_superuser, login_url='/loginadmin/')
 def crear_alerta(request):
-    """Crea y envía alertas desde el panel administrativo"""
     if request.method == 'POST':
         form = AlertaForm(request.POST)
         if form.is_valid():
             titulo = form.cleaned_data['titulo']
             mensaje = form.cleaned_data['mensaje']
             ubicacion = form.cleaned_data['ubicacion']
-
             if request.POST.get("enviar_a_todos"):
                 destinatarios = User.objects.filter(is_active=True)
             else:
                 destinatarios_ids = request.POST.getlist("destinatarios")
                 destinatarios = User.objects.filter(id__in=destinatarios_ids)
-
             from app.presentation.controladores.alertaController import emitir_alerta
             emitir_alerta(titulo, mensaje, request.user, destinatarios, ubicacion)
-
             messages.success(request, 'Alerta enviada con éxito.')
             return redirect('crear_alerta')
     else:
         form = AlertaForm()
-
     return render(request, 'panel/crear_alerta.html', {'form': form, 'titulo': 'Crear Alerta'})
 
 @login_required(login_url='/loginadmin/')
@@ -263,7 +253,8 @@ def eliminar_alerta(request, alerta_id):
         return redirect('gestionar_alertas')
     return render(request, 'panel/eliminar_alerta.html', {'alerta': alerta})
 
-# Vistas para botones del home
+# ========================== REPORTES USUARIO ============================
+
 class PlanRouteView(TemplateView):
     template_name = 'plan_route.html'
 
@@ -271,13 +262,12 @@ class ReporteIncidentView(CreateView):
     model = ReporteColaborativo
     form_class = ReporteColaborativoForm
     template_name = 'report_incident.html'
-    success_url = reverse_lazy('dashboard')  # Cambia esto según tu vista destino
+    success_url = reverse_lazy('dashboard')
 
     def form_valid(self, form):
         if self.request.user.is_authenticated:
             form.instance.usuario_reportador = self.request.user
         else:
-            # defensa ante un mal uso 
             form.add_error(None, "Debes iniciar sesión para enviar un reporte.")
             return self.form_invalid(form)
         return super().form_valid(form)
@@ -285,7 +275,6 @@ class ReporteIncidentView(CreateView):
 class SeeStateView(TemplateView):
     template_name = 'see_state.html'
 
-# Implementación en vista de el reporte colaborativo.
 @login_required
 def lista_reportes(request):
     reportes = ReporteColaborativo.objects.order_by('-fecha_creacion')[:4]
@@ -314,3 +303,46 @@ def eliminar_reporte(request, id):
     else:
         messages.error(request, "No tienes permiso para eliminar este reporte.")
     return redirect('lista_reportes')
+
+# ========================== H8: Recibir Ubicación y Notificar ============================
+
+@csrf_exempt
+@login_required
+def recibir_ubicacion_usuario(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            lat_usuario = float(data.get("lat"))
+            lng_usuario = float(data.get("lng"))
+            usuario_id = request.user.id
+
+            zonas = obtener_zonas_simuladas()
+            for zona in zonas:
+                distancia = calcular_distancia(lat_usuario, lng_usuario, zona["lat"], zona["lng"])
+                if distancia <= zona["radio_km"]:
+                    notif_service = NotificationApplicationService()
+                    notif_service.enviar_notificacion_usuario(
+                        usuario_id,
+                        f"¡Zona congestionada cercana: {zona['nombre']}!",
+                        tipo="alerta_trafico"
+                    )
+                    return JsonResponse({"mensaje": "Notificación enviada."})
+
+            return JsonResponse({"mensaje": "No hay zonas peligrosas cerca."})
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+    return JsonResponse({"error": "Método no permitido"}, status=405)
+
+def obtener_zonas_simuladas():
+    return [
+        {"nombre": "Centro Ciudad", "lat": -12.0464, "lng": -77.0428, "radio_km": 1.0},
+        {"nombre": "Avenida Siempre Viva", "lat": -12.0433, "lng": -77.0283, "radio_km": 0.8},
+    ]
+
+def calcular_distancia(lat1, lon1, lat2, lon2):
+    R = 6371
+    dlat = radians(lat2 - lat1)
+    dlon = radians(lon2 - lon1)
+    a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a))
+    return R * c

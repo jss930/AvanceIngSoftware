@@ -1,7 +1,18 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
-# Create your models here.
+
+# ----------- PERFIL DE USUARIO -----------
+
+class Perfil(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    recibir_notificaciones = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Perfil de {self.user.username}"
+
+
+# ----------- REPORTE COLABORATIVO -----------
 
 class ReporteColaborativo(models.Model):
     titulo = models.CharField(max_length=100)
@@ -12,6 +23,7 @@ class ReporteColaborativo(models.Model):
     ubicacion = models.CharField(max_length=100)
     tipo_incidente = models.CharField(max_length=50)
     imagen_geolocalizada = models.ImageField(upload_to='reportes/', null=True, blank=True)
+    
     estado_reporte = models.CharField(
         max_length=20,
         choices=[
@@ -21,6 +33,7 @@ class ReporteColaborativo(models.Model):
         ],
         default='pendiente'
     )
+    
     nivel_peligro = models.IntegerField(default=1)
     votos_positivos = models.IntegerField(default=0)
     votos_negativos = models.IntegerField(default=0)
@@ -29,12 +42,17 @@ class ReporteColaborativo(models.Model):
 
     def __str__(self):
         return f"{self.titulo} ({self.estado_reporte})"
-    
+
+
+# ----------- ALERTAS -----------
+
 class Alerta(models.Model):
     titulo = models.CharField(max_length=100)
     mensaje = models.TextField()
+    latitud = models.FloatField(default=0.0)
+    longitud = models.FloatField(default=0.0)
     fecha_envio = models.DateTimeField(auto_now_add=True)
-    fecha_creacion = models.DateTimeField(auto_now_add=True)  # 🟢 nuevo campo necesario
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
     enviado_por = models.ForeignKey(User, on_delete=models.CASCADE, related_name='alertas_enviadas')
     destinatarios = models.ManyToManyField(User, related_name='alertas_recibidas')
     ubicacion = models.CharField(max_length=200, blank=True, default='')
@@ -42,4 +60,3 @@ class Alerta(models.Model):
 
     def __str__(self):
         return f"{self.titulo} - {self.fecha_envio.strftime('%Y-%m-%d %H:%M')}"
-

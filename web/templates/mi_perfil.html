@@ -1,0 +1,20 @@
+<!-- templates/mi_perfil.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Configuración de Notificaciones</h2>
+  <form method="POST">
+    {% csrf_token %}
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" id="notificaciones" name="recibir_notificaciones"
+        {% if perfil.recibir_notificaciones %}checked{% endif %}>
+      <label class="form-check-label" for="notificaciones">
+        Recibir notificaciones de tráfico o peligro cercanos
+      </label>
+    </div>
+    <button class="btn btn-primary mt-3" type="submit">Guardar cambios</button>
+  </form>
+</div>
+{% endblock %}
