@@ -177,81 +177,142 @@ class ConfiguracionUsuarioService:
                 raise ConfiguracionInvalidaError("Los reportes por página deben estar entre 5 y 50")
 
 
-class ReportesUsuarioService:
-    """Servicio principal para gestionar reportes de usuario"""
-    
+class ReportesUsuarioService:    
     def __init__(self, usuario_id: int):
         self.usuario_id = usuario_id
-        self.config_service = ConfiguracionUsuarioService(usuario_id)
-        self.stats_service = EstadisticasUsuarioService(usuario_id)
+        self.pipeline = ReportesUsuarioPipeline()
+        self._configurar_pipeline()
+    
+    def _configurar_pipeline(self):
+        self.pipeline.agregar_paso(self._validar_usuario_existe)
+        self.pipeline.agregar_paso(self._cargar_configuracion_usuario)
+        self.pipeline.agregar_paso(self._cargar_reportes_usuario)
+        self.pipeline.agregar_paso(self._aplicar_filtros_reportes)
+        self.pipeline.agregar_paso(self._calcular_estadisticas_usuario)
+        self.pipeline.agregar_paso(self._agregar_credibilidad_reportes)
+        self.pipeline.agregar_paso(self._aplicar_paginacion)
     
     def obtener_reportes_usuario(self, filtros: dict = None, pagina: int = 1):
-        """Obtiene los reportes del usuario con filtros y paginación"""
-        try:
-            # Validar que el usuario existe
-            usuario = User.objects.get(id=self.usuario_id)
-            
-            # Obtener configuración
-            configuracion = self.config_service.obtener_configuracion()
-            
-            # Obtener reportes base
-            reportes = Reporte.objects.filter(
-                usuario_reportador_id=self.usuario_id
-            ).select_related('usuario_reportador').order_by('-fecha_creacion')
-            
-            if not reportes.exists():
-                raise UsuarioSinReportesError("El usuario no tiene reportes")
-            
-            # Aplicar filtros
-            if filtros:
-                filtro_service = FiltroReportesService(reportes)
-                reportes = filtro_service.aplicar_filtros(filtros)
-            
-            # Aplicar paginación
-            paginator = Paginator(reportes, configuracion.reportes_por_pagina)
-            page_obj = paginator.get_page(pagina)
-            
-            # Calcular estadísticas
-            estadisticas = self.stats_service.obtener_estadisticas_completas()
-            
-            # Agregar datos de credibilidad a cada reporte
-            reportes_con_credibilidad = []
-            for reporte in page_obj:
-                total_votos = reporte.votos_positivos + reporte.votos_negativos
-                if total_votos > 0:
-                    reporte.credibilidad_porcentaje = round((reporte.votos_positivos * 100) / total_votos)
-                    reporte.credibilidad_width = reporte.credibilidad_porcentaje
-                else:
-                    reporte.credibilidad_porcentaje = 0
-                    reporte.credibilidad_width = 0
-                reporte.total_votos = total_votos
-                reportes_con_credibilidad.append(reporte)
-            
-            # Actualizar page_obj con los reportes procesados
-            page_obj.object_list = reportes_con_credibilidad
-            
-            return {
-                'usuario': usuario,
-                'reportes': page_obj,
-                'estadisticas': estadisticas if configuracion.mostrar_estadisticas else None,
-                'configuracion': configuracion,
-                'info_paginacion': {
-                    'pagina_actual': page_obj.number,
-                    'total_paginas': paginator.num_pages,
-                    'tiene_anterior': page_obj.has_previous(),
-                    'tiene_siguiente': page_obj.has_next(),
-                    'total_reportes': paginator.count
-                },
-                'filtros_aplicados': filtros or {}
-            }
-            
-        except User.DoesNotExist:
-            raise UsuarioReporteError(f"Usuario {self.usuario_id} no encontrado")
+        datos_iniciales = {
+            'usuario_id': self.usuario_id,
+            'filtros': filtros or {},
+            'pagina': pagina
+        }
+        
+        return self.pipeline.ejecutar(datos_iniciales)
     
+    # Pasos del pipeline como métodos privados
+    def _validar_usuario_existe(self, datos: dict):
+        try:
+            usuario = User.objects.get(id=datos['usuario_id'])
+            datos['usuario'] = usuario
+            return datos
+        except User.DoesNotExist:
+            raise UsuarioReporteError(f"Usuario {datos['usuario_id']} no encontrado")
+
     def obtener_reportes_recientes(self, limite: int = 5):
-        """Obtiene los reportes más recientes del usuario"""
+        pipeline_recientes = ReportesUsuarioPipeline()
+        pipeline_recientes.agregar_paso(self._validar_usuario_existe)
+        pipeline_recientes.agregar_paso(self._cargar_reportes_recientes)
+        
+        datos_iniciales = {
+            'usuario_id': self.usuario_id,
+            'limite': limite
+        }
+        
+        resultado = pipeline_recientes.ejecutar(datos_iniciales)
+        return resultado['reportes_recientes']
+    
+    def _cargar_reportes_recientes(self, datos: dict):
+        limite = datos.get('limite', 5)
         reportes = Reporte.objects.filter(
-            usuario_reportador_id=self.usuario_id
+            usuario_reportador_id=datos['usuario_id']
         ).select_related('usuario_reportador').order_by('-fecha_creacion')[:limite]
         
-        return list(reportes)
+        datos['reportes_recientes'] = list(reportes)
+        return datos
+    
+    def _cargar_configuracion_usuario(self, datos: dict):
+        config_service = ConfiguracionUsuarioService(datos['usuario_id'])
+        datos['configuracion'] = config_service.obtener_configuracion()
+        return datos
+    
+    def _cargar_reportes_usuario(self, datos: dict):
+        reportes = Reporte.objects.filter(
+            usuario_reportador_id=datos['usuario_id']
+        ).select_related('usuario_reportador').order_by('-fecha_creacion')
+        
+        if not reportes.exists():
+            raise UsuarioSinReportesError("El usuario no tiene reportes")
+        
+        datos['reportes_base'] = reportes
+        return datos
+    
+    def _aplicar_filtros_reportes(self, datos: dict):
+        if datos['filtros']:
+            filtro_service = FiltroReportesService(datos['reportes_base'])
+            datos['reportes_filtrados'] = filtro_service.aplicar_filtros(datos['filtros'])
+        else:
+            datos['reportes_filtrados'] = datos['reportes_base']
+        return datos
+    
+    def _calcular_estadisticas_usuario(self, datos: dict):
+        stats_service = EstadisticasUsuarioService(datos['usuario_id'])
+        datos['estadisticas'] = stats_service.obtener_estadisticas_completas()
+        return datos
+    
+    def _agregar_credibilidad_reportes(self, datos: dict):
+        reportes_con_credibilidad = []
+        
+        for reporte in datos['reportes_filtrados']:
+            total_votos = reporte.votos_positivos + reporte.votos_negativos
+            if total_votos > 0:
+                reporte.credibilidad_porcentaje = round((reporte.votos_positivos * 100) / total_votos)
+                reporte.credibilidad_width = reporte.credibilidad_porcentaje
+            else:
+                reporte.credibilidad_porcentaje = 0
+                reporte.credibilidad_width = 0
+            reporte.total_votos = total_votos
+            reportes_con_credibilidad.append(reporte)
+        
+        datos['reportes_procesados'] = reportes_con_credibilidad
+        return datos
+    
+    def _aplicar_paginacion(self, datos: dict):
+        reportes = datos['reportes_procesados']
+        reportes_por_pagina = datos['configuracion'].reportes_por_pagina
+        pagina_actual = datos.get('pagina', 1)
+        
+        paginator = Paginator(reportes, reportes_por_pagina)
+        page_obj = paginator.get_page(pagina_actual)
+        
+        return {
+            'usuario': datos['usuario'],
+            'reportes': page_obj,
+            'estadisticas': datos['estadisticas'] if datos['configuracion'].mostrar_estadisticas else None,
+            'configuracion': datos['configuracion'],
+            'info_paginacion': {
+                'pagina_actual': page_obj.number,
+                'total_paginas': paginator.num_pages,
+                'tiene_anterior': page_obj.has_previous(),
+                'tiene_siguiente': page_obj.has_next(),
+                'total_reportes': paginator.count
+            },
+            'filtros_aplicados': datos.get('filtros', {})
+        }
+
+class ReportesUsuarioPipeline:    
+    def __init__(self):
+        self.pasos = []
+    
+    def agregar_paso(self, paso_funcion):
+        self.pasos.append(paso_funcion)
+        return self
+    
+    def ejecutar(self, datos_iniciales: dict):
+        datos = datos_iniciales.copy()
+        
+        for paso in self.pasos:
+            datos = paso(datos)
+            
+        return datos
