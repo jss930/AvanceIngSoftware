@@ -28,19 +28,6 @@ from app.servicios.notificationApplicationService import NotificationApplication
 
 import os
 
-# ========================== PERFIL ============================
-
-@login_required
-def mi_perfil(request):
-    perfil = request.user.perfil  # Asegúrate de tener el modelo Perfil
-    if request.method == 'POST':
-        recibir = request.POST.get('recibir_notificaciones') == 'on'
-        perfil.recibir_notificaciones = recibir
-        perfil.save()
-        messages.success(request, 'Preferencias actualizadas correctamente.')
-        return redirect('mi_perfil')
-    return render(request, 'mi_perfil.html', {'perfil': perfil})
-
 # ========================== PANEL ADMIN ============================
 
 def is_superuser(user):
@@ -346,3 +333,20 @@ def calcular_distancia(lat1, lon1, lat2, lon2):
     a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
     c = 2 * asin(sqrt(a))
     return R * c
+
+@login_required
+def mi_perfil(request):
+    from .models import Perfil  # Asegúrate de importar esto si no está al inicio
+
+    # Crear perfil si no existe
+    perfil, created = Perfil.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        recibir = request.POST.get('recibir_notificaciones') == 'on'
+        perfil.recibir_notificaciones = recibir
+        perfil.save()
+        messages.success(request, 'Preferencias actualizadas correctamente.')
+        return redirect('mi_perfil')
+
+    return render(request, 'mi_perfil.html', {'perfil': perfil})
+
