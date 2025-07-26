@@ -25,7 +25,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 
 # Load secret key
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY') or 'django-insecure-fhk38#qgkd$z3&c88%4hwd_4qe%!@o9n1zv45)3=-31pv)_zlt'
 ORS_API_KEY = os.getenv('ORS_API_KEY')
 
 DEBUG=True

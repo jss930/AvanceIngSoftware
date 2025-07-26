@@ -1,9 +1,12 @@
 from django.shortcuts import render
 from django.urls import reverse_lazy
-from django.views.generic.edit import CreateView
+from django.views.generic.edit import CreateView, FormView
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.conf import settings
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required, user_passes_test
 import requests
 
 from .models import ReporteColaborativo
@@ -57,39 +60,86 @@ class ReporteIncidentView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
     def get_address_from_coords(self, lat, lon):
-        url = "https://api.openrouteservice.org/geocode/reverse"
-        headers = {'Authorization': settings.ORS_API_KEY}
-        params = {
-            'point.lat': lat,
-            'point.lon': lon,
-            'size': 1,
-            'lang': 'es'
-        }
+        """Obtener dirección a partir de coordenadas usando ORS"""
+        if hasattr(settings, 'ORS_API_KEY') and settings.ORS_API_KEY:
+            url = "https://api.openrouteservice.org/geocode/reverse"
+            headers = {'Authorization': settings.ORS_API_KEY}
+            params = {
+                'point.lat': lat,
+                'point.lon': lon,
+                'size': 1,
+                'lang': 'es'
+            }
 
-        try:
-            response = requests.get(url, params=params, headers=headers)
-            response.raise_for_status()
-            data = response.json()
-            return data["features"][0]["properties"]["label"]
-        except Exception as e:
-            print("Error ORS (reverse):", e)
-            return None
+            try:
+                response = requests.get(url, params=params, headers=headers)
+                response.raise_for_status()
+                data = response.json()
+                return data["features"][0]["properties"]["label"]
+            except Exception as e:
+                print("Error ORS (reverse):", e)
+        return f"Lat: {lat}, Lng: {lon}"
 
     def get_coords_from_address(self, address):
-        url = "https://api.openrouteservice.org/geocode/search"
-        headers = {'Authorization': settings.ORS_API_KEY}
-        params = {
-            'text': address,
-            'size': 1,
-            'lang': 'es'
-        }
+        """Obtener coordenadas a partir de dirección usando ORS"""
+        if hasattr(settings, 'ORS_API_KEY') and settings.ORS_API_KEY:
+            url = "https://api.openrouteservice.org/geocode/search"
+            headers = {'Authorization': settings.ORS_API_KEY}
+            params = {
+                'text': address,
+                'size': 1,
+                'lang': 'es'
+            }
 
-        try:
-            response = requests.get(url, params=params, headers=headers)
-            response.raise_for_status()
-            data = response.json()
-            coords = data["features"][0]["geometry"]["coordinates"]  # [lon, lat]
-            return coords[1], coords[0]
-        except Exception as e:
-            print("Error ORS (search):", e)
-            return None, None
+            try:
+                response = requests.get(url, params=params, headers=headers)
+                response.raise_for_status()
+                data = response.json()
+                coords = data["features"][0]["geometry"]["coordinates"]  # [lon, lat]
+                return coords[1], coords[0]
+            except Exception as e:
+                print("Error ORS (search):", e)
+        return None, None
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user'] = self.request.user
+        return context
+    
+    def form_invalid(self, form):
+        print("❌ Errores en el formulario:")
+        print(form.errors.as_json())  
+        messages.error(
+            self.request, 
+            'Hubo errores en el formulario. Por favor, corrígelos.'
+        )
+        return super().form_invalid(form)
+
+# VISTA ADICIONAL PARA AJAX (opcional - para mejor experiencia de usuario)
+@login_required
+@require_http_methods(["POST"])
+def report_incident_ajax(request):
+    """Vista para manejar reportes via AJAX"""
+    try:
+        form = ReporteColaborativoForm(request.POST, request.FILES)
+        if form.is_valid():
+            reporte = form.save(commit=False)
+            reporte.usuario_reportador = request.user
+            reporte.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Incidente reportado exitosamente',
+                'incident_id': reporte.id
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'errors': form.errors,
+                'message': 'Errores en el formulario'
+            })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error del servidor: {str(e)}'
+        })
