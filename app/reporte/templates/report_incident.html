@@ -15,7 +15,7 @@
           <h5 class="mb-0">Crear Reporte Colaborativo</h5>
         </div>
         <div class="card-body">
-          <form method="POST" enctype="multipart/form-data">
+          <form method="POST" enctype="multipart/form-data" id="reporte-form">
             {% csrf_token %} {% for field in form %}
             <div class="mb-3">
               <label class="form-label" for="{{ field.id_for_label }}"
@@ -26,6 +26,9 @@
               {% endif %}
             </div>
             {% endfor %}
+            <input type="hidden" id="id_latitud" name="latitud" />
+            <input type="hidden" id="id_longitud" name="longitud" />
+
             <button type="submit" class="btn btn-success">
               Enviar Reporte
             </button>
@@ -35,3 +38,33 @@
     </div>
   </body>
 </html>
+
+<script>
+  window.addEventListener("DOMContentLoaded", () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        function (position) {
+          const latInput = document.getElementById("id_latitud");
+          const lonInput = document.getElementById("id_longitud");
+          const ubi = document.getElementById("id_ubicacion");
+          ubi.placeholder = "Ubicacion automatica";
+          if (latInput && lonInput) {
+            latInput.value = position.coords.latitude;
+            lonInput.value = position.coords.longitude;
+          } else {
+            console.error(
+              "No se encontraron los campos de latitud o longitud."
+            );
+          }
+        },
+        function (error) {
+          alert(
+            "No se pudo obtener tu ubicación. Por favor habilítala para un mejor servicio :D"
+          );
+        }
+      );
+    } else {
+      alert("Tu navegador no soporta geolocalización.");
+    }
+  });
+</script>

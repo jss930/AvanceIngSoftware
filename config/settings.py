@@ -26,6 +26,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Load secret key
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+ORS_API_KEY = os.getenv('ORS_API_KEY')
 
 DEBUG=True
 
