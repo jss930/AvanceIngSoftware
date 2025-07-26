@@ -339,7 +339,7 @@ def mi_perfil(request):
     from .models import Perfil  # Asegúrate de importar esto si no está al inicio
 
     # Crear perfil si no existe
-    perfil, created = Perfil.objects.get_or_create(user=request.user)
+    perfil, _ = Perfil.objects.get_or_create(user=request.user)
 
     if request.method == 'POST':
         recibir = request.POST.get('recibir_notificaciones') == 'on'

@@ -11,13 +11,18 @@ class NotificationApplicationService:
         # Aquí deberías guardar en BD o en cola de mensajes, etc.
 
     def enviar_notificacion_masiva(self, usuarios_ids, mensaje, tipo):
+    # Implementar lógica para envío masivo de notificaciones
         pass
 
     def obtener_notificaciones_no_leidas(self, usuario_id):
+    # Implementar lógica para recuperar notificaciones no leídas
         pass
 
     def procesar_notificacion_reporte(self, reporte_id):
+    # Implementar procesamiento de reporte para notificación
         pass
 
     def notificar_reporte_cercano(self, usuario_id, reporte):
+    # Implementar lógica para notificación de reporte cercano
         pass
+
