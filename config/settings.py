@@ -25,7 +25,8 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 
 # Load secret key
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+#SECRET_KEY = os.getenv('fhk38#qgkd$z3&c88%4hwd_4qe%!@o9n1zv45)3=-31pv)_zlt')
+SECRET_KEY = 'django-insecure-fhk38#qgkd$z3&c88%4hwd_4qe%!@o9n1zv45)3=-31pv)_zlt'
 
 DEBUG=True
 

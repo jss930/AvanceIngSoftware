@@ -1,9 +1,10 @@
+<!--
 {% load static %}
 <!DOCTYPE html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <title>Nuevo Reporte</title>
+    <title>Nuevo Reporte1</title>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet" />
@@ -34,4 +35,341 @@
       </div>
     </div>
   </body>
+</html>
+-->
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reportar Incidente - Traffic Pulse</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .main-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-weight: 600;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        .page-title {
+            color: #333;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        #map {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            height: 300px;
+        }
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+        }
+        .alert {
+            border-radius: 8px;
+        }
+        .img-preview {
+            max-width: 200px;
+            max-height: 150px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    
+    <nav class="navbar navbar-expand-lg navbar-custom mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'home' %}">
+                <i class="fas fa-map-marked-alt me-2"></i>Traffic Pulse
+            </a>
+            <div class="navbar-nav ms-auto">
+                {% if user.is_authenticated %}
+                    <span class="navbar-text me-3">
+                        <i class="fas fa-user-circle"></i> {{ user.username }}
+                    </span>
+                    <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+                    <a class="nav-link" href="{% url 'logout' %}">Cerrar Sesión</a>
+                {% else %}
+                    <a class="nav-link" href="{% url 'login' %}">Iniciar Sesión</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h1 class="page-title">🚨 Reportar Incidente de Tráfico</h1>
+                {% if user.is_authenticated %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Reportando como:</strong> {{ user.get_full_name|default:user.username }}
+                    <br>
+                    <small class="text-muted">Tu reporte será visible para otros usuarios en tiempo real</small>
+                </div>
+                {% endif %}
+
+                <form id="reportForm" method="post" enctype="multipart/form-data" class="main-card p-4">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.titulo.id_for_label }}" class="form-label">📝 Título del Incidente</label>
+                                {{ form.titulo }}
+                                {% if form.titulo.errors %}
+                                    <div class="error-message">
+                                        {{ form.titulo.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.tipo_incidente.id_for_label }}" class="form-label">🚨 Tipo de Incidente</label>
+                                {{ form.tipo_incidente }}
+                                {% if form.tipo_incidente.errors %}
+                                    <div class="error-message">
+                                        {{ form.tipo_incidente.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.descripcion.id_for_label }}" class="form-label">📄 Descripción</label>
+                        {{ form.descripcion }}
+                        {% if form.descripcion.errors %}
+                            <div class="error-message">
+                                {{ form.descripcion.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <!-- FOTO DEL INCIDENTE (col-md-8) -->
+                        <div class="col-md-8 mb-3">
+                            <label for="foto" class="form-label">📸 Foto del Incidente (opcional)</label>
+                            <input type="file" class="form-control" id="foto" name="foto" accept="image/*">
+                            <div class="form-text"><em>📁 Formatos permitidos: JPG, PNG, GIF. Máximo 5MB</em></div>
+                            <div id="foto-preview" class="mt-2"></div>
+                        </div>
+
+                        <!-- NIVEL DE PELIGRO (col-md-4) -->
+                        <div class="col-md-4 mb-3">
+                        
+                            <label for="{{ form.nivel_peligro.id_for_label }}" class="form-label">⚠️ Nivel de Peligro</label>
+                            {{ form.nivel_peligro }}
+                            {% if form.nivel_peligro.errors %}
+                                <div class="error-message">
+                                    {{ form.nivel_peligro.errors.0 }}
+                                </div>
+                                {% endif %}
+                            <div class="form-text"><em>Selecciona según la gravedad</em></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="latitud" class="form-label">📍 Ubicación del Incidente</label>
+                        <div id="map"></div>
+                        <div class="form-text mt-2">Haga clic en el mapa para seleccionar la ubicación</div>
+                        <div id="location-info" class="mt-2"></div>
+                        {% if form.latitud.errors or form.longitud.errors %}
+                            <div class="error-message">
+                                Debe seleccionar una ubicación válida
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <input type="hidden" id="latitud" name="latitud">
+                    <input type="hidden" id="longitud" name="longitud">
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-paper-plane me-2"></i> Enviar Reporte
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <script>
+        let map;
+        let marker;
+
+        let selectedLocation = null;
+        let userLocationMarker = null;
+
+
+        function initMap() {
+            const defaultLocation = [-16.4090, -71.5375]; // Arequipa, Perú
+            map = L.map('map').setView(defaultLocation, 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const userLocation = [position.coords.latitude, position.coords.longitude];
+
+                    // Marcar ubicación del usuario
+                    userLocationMarker = L.marker(userLocation, {
+                        icon: L.icon({
+                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                            iconSize: [25, 41],
+                            iconAnchor: [12, 41],
+                            popupAnchor: [1, -34],
+                            shadowSize: [41, 41]
+                        })
+                    }).addTo(map);
+                    
+                    userLocationMarker.bindPopup('Tu ubicación actual');
+                    //hasta aqui
+
+
+                    map.setView(userLocation, 15);
+                    L.marker(userLocation, {
+                        icon: L.icon({
+                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                            iconSize: [25, 41],
+                            iconAnchor: [12, 41],
+                            popupAnchor: [1, -34],
+                            shadowSize: [41, 41]
+                        })
+                    }).addTo(map).bindPopup('Tu ubicación');
+                });
+            }
+
+            map.on('click', function(e) {
+                if (marker) map.removeLayer(marker);
+
+                marker = L.marker([e.latlng.lat, e.latlng.lng], {
+                    icon: L.icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    })
+                }).addTo(map).bindPopup('Ubicación del incidente');
+
+                //document.getElementById('latitud').value = e.latlng.lat;
+                //document.getElementById('longitud').value = e.latlng.lng; 
+                document.getElementById('latitud').value = e.latlng.lat.toFixed(6);
+                document.getElementById('longitud').value = e.latlng.lng.toFixed(6);
+
+
+                document.getElementById('location-info').innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Ubicación seleccionada: ${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}
+                    </div>`;
+            });
+        }
+
+        function clearPhoto() {
+            document.getElementById('foto').value = '';
+            document.getElementById('foto-preview').innerHTML = '';
+        }
+
+        window.onload = function () {
+            initMap();
+
+            document.getElementById('foto').addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                const previewDiv = document.getElementById('foto-preview');
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        previewDiv.innerHTML = `
+                            <img src="${e.target.result}" class="img-preview">
+                            <div class="mt-2">
+                                <small class="text-muted">${file.name}</small>
+                                <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="clearPhoto()">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>`;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            document.getElementById('reportForm').addEventListener('submit', function (e) {
+                //e.preventDefault();
+                console.log('Formulario capturado por JS ✅');
+
+                const title = document.getElementById('titulo').value.trim();
+                const description = document.getElementById('descripcion').value.trim();
+                const incidentType = document.getElementById('tipo_incidente').value;
+                const latitude = document.getElementById('latitud').value;
+                const longitude = document.getElementById('longitud').value;
+
+                if (!title || !description || !incidentType || !latitude || !longitude) {
+                    alert('Por favor complete todos los campos obligatorios y seleccione una ubicación en el mapa.');
+                    return;
+                }
+
+                const submitBtn = document.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Enviando...';
+                submitBtn.disabled = true;
+
+                setTimeout(() => {
+                    alert('¡Reporte enviado exitosamente!');
+                    document.getElementById('reportForm').reset();
+                    document.getElementById('foto-preview').innerHTML = '';
+                    document.getElementById('location-info').innerHTML = '';
+                    if (marker) {
+                        map.removeLayer(marker);
+                        marker = null;
+                    }
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }, 2000);
+            });
+        };
+    </script>
+</body>
 </html>
