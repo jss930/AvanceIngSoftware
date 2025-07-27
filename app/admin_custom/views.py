@@ -269,10 +269,21 @@ def cambiar_estado_reporte(request, id):
 @user_passes_test(is_superuser, login_url='/loginadmin/')
 def gestionar_alertas(request):
     alertas = Alerta.objects.all().order_by('-fecha_envio')
-    return render(request, 'panel/gestionar_alertas.html', {'alertas': alertas})
+    
+    prioridad = request.GET.get('prioridad')
+    if prioridad:
+        alertas = alertas.filter(prioridad=prioridad)
 
-@login_required(login_url='/loginadmin/')
-@user_passes_test(is_superuser, login_url='/loginadmin/')
+    activo = request.GET.get('activo')
+    if activo in ['true', 'false']:
+        alertas = alertas.filter(activo=(activo == 'true'))
+
+    return render(request, 'panel/gestionar_alertas.html', {
+        'alertas': alertas,
+        'prioridad_actual': prioridad,
+        'activo_actual': activo,
+    })
+
 def crear_alerta(request):
     if request.method == 'POST':
         form = AlertaForm(request.POST)
@@ -280,34 +291,23 @@ def crear_alerta(request):
             titulo = form.cleaned_data['titulo']
             mensaje = form.cleaned_data['mensaje']
             ubicacion = form.cleaned_data['ubicacion']
-            if request.POST.get("enviar_a_todos"):
-                destinatarios = User.objects.filter(is_active=True)
-            else:
-                destinatarios_ids = request.POST.getlist("destinatarios")
-                destinatarios = User.objects.filter(id__in=destinatarios_ids)
+            destinatarios = User.objects.filter(id__in=request.POST.getlist("destinatarios"))
             from app.presentation.controladores.alertaController import emitir_alerta
             emitir_alerta(titulo, mensaje, request.user, destinatarios, ubicacion)
             messages.success(request, 'Alerta enviada con éxito.')
             return redirect('crear_alerta')
     else:
         form = AlertaForm()
-    return render(request, 'panel/crear_alerta.html', {'form': form, 'titulo': 'Crear Alerta'})
+    return render(request, 'panel/crear_alerta.html', {'form': form})
 
-@login_required(login_url='/loginadmin/')
-@user_passes_test(is_superuser, login_url='/loginadmin/')
 def editar_alerta(request, alerta_id):
     alerta = get_object_or_404(Alerta, pk=alerta_id)
-    if request.method == 'POST':
-        form = AlertaForm(request.POST, instance=alerta)
-        if form.is_valid():
-            form.save()
-            return redirect('gestionar_alertas')
-    else:
-        form = AlertaForm(instance=alerta)
+    form = AlertaForm(request.POST or None, instance=alerta)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        return redirect('gestionar_alertas')
     return render(request, 'panel/editar_alerta.html', {'form': form, 'alerta': alerta})
 
-@login_required(login_url='/loginadmin/')
-@user_passes_test(is_superuser, login_url='/loginadmin/')
 def eliminar_alerta(request, alerta_id):
     alerta = get_object_or_404(Alerta, pk=alerta_id)
     if request.method == 'POST':

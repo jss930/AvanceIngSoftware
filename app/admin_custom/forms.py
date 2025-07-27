@@ -1,25 +1,17 @@
 from django import forms
 from django.contrib.auth.models import User
-from app.admin_custom.models import Alerta
-
-FORM_CONTROL = 'form-control'
+from .models import Alerta
 
 class AlertaForm(forms.ModelForm):
     destinatarios = forms.ModelMultipleChoiceField(
         queryset=User.objects.all(),
-        widget=forms.SelectMultiple(attrs={
-            'class': 'form-control select2',
-            'id': 'destinatarios',
-        }),
-        required=False,
+        widget=forms.CheckboxSelectMultiple,
+        required=False
     )
 
     class Meta:
         model = Alerta
-        fields = ['titulo', 'mensaje', 'destinatarios', 'ubicacion']
+        fields = ['titulo', 'mensaje', 'destinatarios', 'ubicacion', 'prioridad', 'activo', 'fecha_expiracion']
         widgets = {
-            'titulo': forms.TextInput(attrs={'class': FORM_CONTROL}),
-            'mensaje': forms.Textarea(attrs={'class': FORM_CONTROL}),
-            'ubicacion': forms.TextInput(attrs={'class': FORM_CONTROL}),
+            'fecha_expiracion': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
         }
-

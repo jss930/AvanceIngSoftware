@@ -68,28 +68,38 @@
       {% csrf_token %}
 
       <div class="mb-3">
-        <label for="id_titulo" class="form-label">Título</label>
+        <label for="id_titulo" class="form-label"><i class="bi bi-type me-1"></i>Título</label>
         {{ form.titulo }}
       </div>
 
       <div class="mb-3">
-        <label for="id_mensaje" class="form-label">Mensaje</label>
+        <label for="id_mensaje" class="form-label"><i class="bi bi-chat-text me-1"></i>Mensaje</label>
         {{ form.mensaje }}
       </div>
 
       <div class="mb-3">
-        <label for="id_ubicacion" class="form-label">Ubicación (opcional)</label>
+        <label for="id_ubicacion" class="form-label"><i class="bi bi-geo-alt me-1"></i>Ubicación (opcional)</label>
         {{ form.ubicacion }}
+      </div>
+
+      <div class="mb-3">
+        <label for="id_prioridad" class="form-label"><i class="bi bi-exclamation-triangle me-1"></i>Prioridad</label>
+        {{ form.prioridad }}
+      </div>
+
+      <div class="mb-3">
+        <label for="id_fecha_expiracion" class="form-label"><i class="bi bi-calendar-x me-1"></i>Fecha de expiración</label>
+        {{ form.fecha_expiracion }}
       </div>
 
       <div class="form-check mb-4">
         <input class="form-check-input" type="checkbox" id="enviar_a_todos" name="enviar_a_todos">
-        <label class="form-check-label" for="enviar_a_todos">Enviar a todos los usuarios</label>
+        <label class="form-check-label" for="enviar_a_todos"><i class="bi bi-people-fill me-1"></i>Enviar a todos los usuarios</label>
       </div>
 
       <div id="dualbox_container">
         <fieldset>
-          <legend class="form-label mb-3">Seleccionar destinatarios:</legend>
+          <legend class="form-label mb-3"><i class="bi bi-person-lines-fill me-1"></i>Seleccionar destinatarios:</legend>
           <div class="row">
             <div class="col-md-5">
               <label for="usuarios-disponibles" class="form-label">Todos los usuarios</label>
