@@ -16,6 +16,8 @@ class Alerta(models.Model):
     fecha_envio = models.DateTimeField(auto_now_add=True)
     activo = models.BooleanField(default=True)
     fecha_expiracion = models.DateTimeField(null=True, blank=True)
+    enviado_por = models.ForeignKey(User, on_delete=models.CASCADE, related_name='alertas_enviadas')
+    enviar_a_todos = models.BooleanField(default=False)
 
     def __str__(self):
         return self.titulo

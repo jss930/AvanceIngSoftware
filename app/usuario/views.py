@@ -270,3 +270,6 @@ def configuracion_notificaciones(request):
     }
     
     return render(request, 'configuracion_notificaciones.html', context)
+
+def estado_trafico(request):
+    return render(request, 'estado_trafico.html')

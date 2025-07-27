@@ -114,10 +114,10 @@
                   {% endif %}
                 </td>
                 <td>
-                  {% if alerta.destinatarios.count > 0 %}
-                    {{ alerta.destinatarios.count }} usuario{{ alerta.destinatarios.count|pluralize }}
-                  {% else %}
+                  {% if alerta.enviar_a_todos %}
                     <em>Todos</em>
+                  {% else %}
+                    {{ alerta.destinatarios.count }} usuario{{ alerta.destinatarios.count|pluralize }}
                   {% endif %}
                 </td>
                 <td>
