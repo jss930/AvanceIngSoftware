@@ -1,3 +1,4 @@
+{% load l10n %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -189,8 +190,8 @@
             <div id="map" style="display: none;"></div>
             <div id="location-info" class="mt-2"></div>
             
-            <input type="hidden" id="latitud" name="latitud" value="{{ reporte.latitud }}">
-            <input type="hidden" id="longitud" name="longitud" value="{{ reporte.longitud }}">
+            <input type="hidden" id="latitud" name="latitud" value="{{ reporte.latitud|unlocalize }}">
+            <input type="hidden" id="longitud" name="longitud" value="{{ reporte.longitud|unlocalize }}">
           </div>
 
           <!-- Imagen -->
@@ -231,8 +232,22 @@
   <script>
     let map;
     let marker;
-    let currentLat = parseFloat(document.getElementById('latitud').value) || -16.4040102;
-    let currentLng = parseFloat(document.getElementById('longitud').value) || -71.5421953;
+    
+    // Función para parsear números que pueden venir con coma o punto
+    function parseCoordinate(value) {
+      if (!value) return 0;
+      // Reemplazar coma por punto si es necesario
+      return parseFloat(value.toString().replace(',', '.'));
+    }
+    
+    // Usar directamente las coordenadas de la base de datos
+    let latValue = document.getElementById('latitud').value;
+    let lngValue = document.getElementById('longitud').value;
+    let currentLat = parseCoordinate(latValue);
+    let currentLng = parseCoordinate(lngValue);
+    
+    console.log('Valores originales:', latValue, lngValue);
+    console.log('Coordenadas parseadas:', currentLat, currentLng);
 
     // Inicializar mapa
     function initMap() {
