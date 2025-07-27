@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.cache import never_cache
 from django.core.exceptions import ValidationError
+from django.http import JsonResponse
 from functools import wraps
 import logging
 from app.presentation.controladores.reporteColaborativoController import ReporteColaborativoController
@@ -38,6 +39,15 @@ def admin_required(view_func):
 def sanitizar_input(valor):
     """Limpia y valida inputs básicos"""
     return valor.strip() if valor else ''
+
+
+def validar_longitud(valor, campo, min=1, max=255):
+    """Valida la longitud de un campo"""
+    if not valor or len(valor) < min:
+        raise ValidationError(f"El campo {campo} debe tener al menos {min} caracteres.")
+    if len(valor) > max:
+        raise ValidationError(f"El campo {campo} no puede exceder {max} caracteres.")
+    return True
 
 
 def is_superuser(user):
@@ -97,14 +107,14 @@ def admin_reportes(request):
     Lista reportes con capacidad de filtrado por:
     - Estado
     - Fecha
-    - Ubicación
+    - Distrito/Nombre de vía
     """
     controlador = ReporteColaborativoController()
 
     # Sanitiza parámetros de búsqueda
     estado = sanitizar_input(request.GET.get("estado"))
     fecha = sanitizar_input(request.GET.get("fecha"))
-    ubicacion = sanitizar_input(request.GET.get("ubicacion"))
+    filtro_ubicacion = sanitizar_input(request.GET.get("ubicacion"))  # Mantenemos 'ubicacion' para compatibilidad con el template
 
     try:
         reportes = controlador.obtener_todos()
@@ -114,15 +124,15 @@ def admin_reportes(request):
             reportes = [r for r in reportes if r.estado_reporte.lower() == estado.lower()]
         if fecha:
             reportes = [r for r in reportes if str(r.fecha_creacion) == fecha]
-        if ubicacion:
-            reportes = [r for r in reportes if ubicacion.lower() in r.ubicacion.lower()]
+        if filtro_ubicacion:
+            reportes = [r for r in reportes if filtro_ubicacion.lower() in (r.nombre_via or '').lower() or filtro_ubicacion.lower() in (r.distrito or '').lower()]
 
         context = {
             "titulo": "Control de Reportes",
             "reportes": reportes,
             "estado_actual": estado,
             "fecha_actual": fecha,
-            "ubicacion_actual": ubicacion
+            "ubicacion_actual": filtro_ubicacion
         }
         
         return render(request, 'partials/admin_reportes.html', context)
@@ -155,26 +165,98 @@ def editar_reporte(request, id):
     if request.method == "POST":
         titulo = request.POST.get("titulo", "").strip()
         descripcion = request.POST.get("descripcion", "").strip()
-        ubicacion = request.POST.get("ubicacion", "").strip()
+        nombre_via = request.POST.get("nombre_via", "").strip()
+        distrito = request.POST.get("distrito", "").strip()
         tipo_incidente = request.POST.get("tipo_incidente", "").strip()
         estado_reporte = request.POST.get("estado_reporte", "").strip()
+        nivel_peligro = request.POST.get("nivel_peligro", "1")
+        latitud = request.POST.get("latitud")
+        longitud = request.POST.get("longitud")
+        is_active = request.POST.get("is_active") == "on"
+        nueva_foto = request.FILES.get("foto")
 
         # Validación
-        if not titulo or not descripcion or not ubicacion or not tipo_incidente or not estado_reporte:
-            messages.error(request, "Todos los campos son obligatorios.")
+        if not titulo or not descripcion or not tipo_incidente or not estado_reporte:
+            messages.error(request, "Los campos título, descripción, tipo de incidente y estado son obligatorios.")
         else:
-            # Actualiza atributos
-            reporte.titulo = titulo
-            reporte.descripcion = descripcion
-            reporte.ubicacion = ubicacion
-            reporte.tipo_incidente = tipo_incidente
-            reporte.estado_reporte = estado_reporte
+            try:
+                # Actualiza atributos básicos
+                reporte.titulo = titulo
+                reporte.descripcion = descripcion
+                reporte.nombre_via = nombre_via
+                reporte.distrito = distrito
+                reporte.tipo_incidente = tipo_incidente
+                reporte.estado_reporte = estado_reporte
+                reporte.nivel_peligro = int(nivel_peligro)
+                reporte.is_active = is_active
+                
+                # Actualizar coordenadas si se proporcionan
+                if latitud and longitud:
+                    from decimal import Decimal
+                    reporte.latitud = Decimal(str(latitud))
+                    reporte.longitud = Decimal(str(longitud))
+                
+                # Manejar nueva imagen si se proporciona
+                if nueva_foto:
+                    # Validar tamaño de imagen
+                    if nueva_foto.size > 5 * 1024 * 1024:  # 5MB
+                        messages.error(request, "La imagen no puede ser mayor a 5MB.")
+                        return render(request, "partials/editar_reporte.html", {"reporte": reporte})
+                    
+                    # Eliminar imagen anterior si existe
+                    if hasattr(reporte, 'foto') and reporte.foto:
+                        try:
+                            import os
+                            if os.path.exists(reporte.foto.path):
+                                os.remove(reporte.foto.path)
+                        except:
+                            pass  # Si hay error eliminando, continuar
+                    
+                    # Asignar nueva imagen
+                    reporte.foto = nueva_foto
 
-            # Guarda cambios usando el nuevo método
-            controlador.actualizar_reporte_completo(id, reporte)
-            messages.success(request, "Reporte actualizado correctamente.")
-            return redirect("admin_reportes")
+                # Guarda cambios usando el nuevo método
+                controlador.actualizar_reporte_completo(id, reporte)
+                messages.success(request, "Reporte actualizado correctamente.")
+                logger.info(f"Reporte {id} actualizado por admin {request.user}")
+                return redirect("admin_reportes")
+                
+            except Exception as e:
+                logger.error(f"Error actualizando reporte {id}: {str(e)}")
+                messages.error(request, f"Error al actualizar el reporte: {str(e)}")
 
     return render(request, "partials/editar_reporte.html", {
         "reporte": reporte
     })
+
+
+@admin_required
+def cambiar_estado_reporte(request, id):
+    """Cambia el estado de un reporte (aceptar/rechazar)"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'})
+    
+    try:
+        import json
+        data = json.loads(request.body)
+        nuevo_estado = data.get('estado')
+        
+        if nuevo_estado not in ['probado', 'rechazado']:
+            return JsonResponse({'success': False, 'error': 'Estado no válido'})
+        
+        controlador = ReporteColaborativoController()
+        reporte = controlador.obtener_reporte(id)
+        
+        if not reporte:
+            return JsonResponse({'success': False, 'error': 'Reporte no encontrado'})
+        
+        # Actualizar estado
+        reporte.estado_reporte = nuevo_estado
+        controlador.actualizar_reporte_completo(id, reporte)
+        
+        logger.info(f"Estado cambiado para reporte {id}: {nuevo_estado} por {request.user}")
+        return JsonResponse({'success': True, 'mensaje': 'Estado actualizado correctamente'})
+        
+    except Exception as e:
+        logger.error(f"Error cambiando estado reporte {id}: {str(e)}")
+        return JsonResponse({'success': False, 'error': str(e)})
