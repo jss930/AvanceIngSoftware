@@ -2,7 +2,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth.models import User
 from django.utils import timezone
-from web.models import Reporte, Ubicacion  # Asumiendo que Ubicacion está en models
+from web.models import Reporte #, Ubicacion  
 from datetime import datetime, timedelta
 import random
 
@@ -19,12 +19,7 @@ class Command(BaseCommand):
     
     help = 'Crea datos de prueba para reportes de tráfico en Arequipa'
     
-    # Configuración de datos de prueba (estilo cookbook)
-    TIPOS_INCIDENTE = [
-        'accidente', 'congestion', 'obra', 'manifestacion', 
-        'vehiculo_varado', 'semaforo_dañado', 'evento_especial', 'otro'
-    ]
-    
+    TIPOS_INCIDENTE = ['accidente', 'congestion', 'obra', 'manifestacion', 'vehiculo_varado', 'otro']
     ESTADOS_REPORTE = ['pendiente', 'validado', 'rechazado', 'archivado']
     
     # Coordenadas base de Arequipa
@@ -33,14 +28,14 @@ class Command(BaseCommand):
     RADIO_VARIACION = 0.08  # Radio de variación en grados
     
     # Frases para nivel de peligro automático
-    FRASES_PELIGRO_ALTO = ['muerte', 'choque', 'fatal', 'grave', 'ambulancia', 'bomberos']
-    FRASES_PELIGRO_MEDIO = ['herido', 'congestion', 'colision', 'lesionado', 'tráfico denso']
+    FRASES_PELIGRO_ALTO = ['muerte', 'choque'] # Extras: 'fatal', 'grave', 'ambulancia', 'bomberos'
+    FRASES_PELIGRO_MEDIO = ['herido', 'congestion'] # Extras: 'colision', 'lesionado', 'tráfico denso'
     
     # URLs de imágenes de ejemplo para geolocalización
     IMAGENES_EJEMPLO = [
-        'https://ejemplo.com/imagen1.jpg',
-        'https://ejemplo.com/imagen2.jpg', 
-        'https://ejemplo.com/imagen3.jpg',
+        'https://estudiovilaplana.com.ar/wp-content/uploads/2021/11/ChoqueNvoo1200.jpg',
+        'https://www.utalca.cl/content/uploads/2022/08/Universidad-de-Talca-2022-08-03T160018.730.png', 
+        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3V1EBM-3AWYjk7L6GvXWDfplqlXL1D6ZvvQ&s',
         None  # Algunos reportes sin imagen
     ]
     
@@ -66,12 +61,17 @@ class Command(BaseCommand):
             "Evento público causa cierre temporal de vías.",
             "Concentración ciudadana en la zona."
         ],
+
         'vehiculo_varado': [
             "Vehículo varado obstruye carril de circulación.",
             "Avería mecánica causa reducción de carriles.",
             "Vehículo de carga averiado en la vía principal.",
             "Auto detenido por falla mecánica en zona crítica."
         ],
+
+        """ 
+        Extras
+        
         'semaforo_dañado': [
             "Semáforo fuera de servicio causa confusión en intersección.",
             "Falla en sistema de semaforización genera caos vehicular.",
@@ -84,6 +84,8 @@ class Command(BaseCommand):
             "Concierto masivo causa desvíos de tráfico.",
             "Feria local modifica patrones de circulación."
         ],
+        """
+
         'otro': [
             "Incidente no categorizado reportado en la zona.",
             "Situación especial afecta el tráfico normal.",
@@ -92,7 +94,6 @@ class Command(BaseCommand):
     }
 
     def add_arguments(self, parser):
-        """Define argumentos del comando (estilo cookbook)"""
         parser.add_argument(
             '--usuario',
             type=str,
@@ -128,7 +129,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        """Método principal del comando (estilo cookbook)"""
         try:
             # Validar y obtener usuario
             usuario = self._obtener_usuario(options['usuario'])
@@ -157,7 +157,6 @@ class Command(BaseCommand):
             raise CommandError(f'Error inesperado: {str(e)}')
 
     def _obtener_usuario(self, username):
-        """Obtiene y valida el usuario (método auxiliar cookbook)"""
         if not username:
             raise CommandError('Debes especificar un usuario con --usuario')
         
@@ -169,7 +168,6 @@ class Command(BaseCommand):
             raise CommandError(f'Usuario "{username}" no encontrado')
 
     def _obtener_coordenadas_zona(self, zona):
-        """Obtiene coordenadas base según la zona (método auxiliar cookbook)"""
         coordenadas_zona = {
             'centro': (-16.3990, -71.5350),
             'norte': (-16.3800, -71.5300),
@@ -181,7 +179,6 @@ class Command(BaseCommand):
         return coordenadas_zona.get(zona, (self.AREQUIPA_LAT_BASE, self.AREQUIPA_LNG_BASE))
 
     def _generar_coordenadas_aleatorias(self, zona):
-        """Genera coordenadas aleatorias según la zona (método auxiliar cookbook)"""
         lat_base, lng_base = self._obtener_coordenadas_zona(zona)
         
         latitud = lat_base + random.uniform(-self.RADIO_VARIACION, self.RADIO_VARIACION)
@@ -190,7 +187,6 @@ class Command(BaseCommand):
         return latitud, longitud
 
     def _generar_descripcion_con_peligro(self, tipo_incidente):
-        """Genera descripción que puede afectar el nivel de peligro automático"""
         plantillas = self.DESCRIPCIONES_PLANTILLA.get(tipo_incidente, self.DESCRIPCIONES_PLANTILLA['otro'])
         descripcion_base = random.choice(plantillas)
         
@@ -233,21 +229,17 @@ class Command(BaseCommand):
         return 1
 
     def _crear_ubicacion(self, latitud, longitud):
-        """Crea objeto Ubicacion (adaptar según tu implementación)"""
-        # Asumiendo que tienes un modelo Ubicacion, si no, ajusta según tu implementación
-        try:
-            ubicacion, created = Ubicacion.objects.get_or_create(
-                latitud=latitud,
-                longitud=longitud,
-                defaults={
-                    'direccion_aproximada': f'Coordenadas: {latitud:.4f}, {longitud:.4f}',
-                    'distrito': 'Arequipa',  # Ajustar según tu lógica
-                }
-            )
-            return ubicacion
-        except Exception:
-            # Si no tienes modelo Ubicacion, return None y maneja en el modelo Reporte
-            return None
+        zonas_arequipa = [
+            "Av. Ejército", "Av. Dolores", "Plaza de Armas", "Yanahuara",
+            "Sachaca", "Tiabaya", "Paucarpata", "Mariano Melgar",
+            "Miraflores", "Selva Alegre", "Cayma", "Cerro Colorado",
+            "Alto Selva Alegre", "José Luis Bustamante y Rivero"
+        ]
+        
+        zona = random.choice(zonas_arequipa)
+        numero = random.randint(100, 999)
+        
+        return f"Cerca de {zona} #{numero}, Arequipa"
 
     def _crear_reportes(self, usuario, cantidad, dias_rango, solo_validados, zona):
         """Crea los reportes de prueba (método principal cookbook)"""
@@ -273,11 +265,12 @@ class Command(BaseCommand):
                 # Generar coordenadas según zona
                 latitud, longitud = self._generar_coordenadas_aleatorias(zona)
                 
-                # Crear ubicación (si tienes modelo Ubicacion)
-                ubicacion = self._crear_ubicacion(latitud, longitud)
+                # Crear descripción de ubicación aproximada
+                ubicacion_texto = self._crear_ubicacion(latitud, longitud)
                 
                 # Generar descripción que puede afectar nivel de peligro
                 descripcion = self._generar_descripcion_con_peligro(tipo_incidente)
+                descripcion += f" Ubicación: {ubicacion_texto}"
                 
                 # Calcular nivel de peligro automático basado en descripción
                 nivel_peligro = self._calcular_nivel_peligro_automatico(descripcion)
@@ -296,24 +289,40 @@ class Command(BaseCommand):
                     votos_positivos = random.randint(0, 10)
                     votos_negativos = random.randint(0, 5)
                 
-                # Crear reporte adaptado a tu ReporteColaborativo
-                reporte = Reporte.objects.create(
-                    titulo=f"Reporte de {tipo_incidente.replace('_', ' ').title()} #{i+1:03d}",
-                    descripcion=descripcion,
-                    usuario_reportador=usuario,
-                    latitud=latitud,
-                    longitud=longitud,
-                    # ubicacion=ubicacion,  # Descomenta si tienes campo ubicacion
-                    tipo_incidente=tipo_incidente,
-                    estado_reporte=estado_reporte,
-                    nivel_peligro=nivel_peligro,  # Calculado automáticamente
-                    imagen_geolocalizada=imagen_geolocalizada,
-                    votos_positivos=votos_positivos,
-                    votos_negativos=votos_negativos,
-                    es_validado=(estado_reporte == 'validado'),
-                    fecha_creacion=fecha_creacion,
-                    fecha_actualizacion=fecha_creacion
-                )
+                # Crear datos para el reporte
+                datos_reporte = {
+                    'titulo': f"Reporte de {tipo_incidente.replace('_', ' ').title()} #{i+1:03d}",
+                    'descripcion': descripcion,
+                    'usuario_reportador': usuario,
+                    'latitud': latitud,
+                    'longitud': longitud,
+                    'tipo_incidente': tipo_incidente,
+                    'estado_reporte': estado_reporte,
+                    'nivel_peligro': nivel_peligro,
+                    'votos_positivos': votos_positivos,
+                    'votos_negativos': votos_negativos,
+                    'es_validado': (estado_reporte == 'validado')
+                }
+                
+                # Agregar campos opcionales solo si existen en tu modelo
+                campos_opcionales = {
+                    'imagen_geolocalizada': imagen_geolocalizada,
+                    'fecha_creacion': fecha_creacion,
+                    'fecha_actualizacion': fecha_creacion
+                }
+                
+                # Agregar solo campos que existen en el modelo
+                for campo, valor in campos_opcionales.items():
+                    if hasattr(Reporte, campo):
+                        datos_reporte[campo] = valor
+                
+                # Crear reporte
+                reporte = Reporte.objects.create(**datos_reporte)
+                
+                # Si no se puede asignar fecha_creacion en create(), hacerlo después
+                if hasattr(reporte, 'fecha_creacion') and 'fecha_creacion' not in datos_reporte:
+                    reporte.fecha_creacion = fecha_creacion
+                    reporte.save()
                 
                 reportes_creados += 1
                 
@@ -330,7 +339,6 @@ class Command(BaseCommand):
         return reportes_creados
 
     def _mostrar_info_inicial(self, username, cantidad, dias_rango, zona):
-        """Muestra información inicial del comando (método auxiliar cookbook)"""
         self.stdout.write(
             self.style.HTTP_INFO('=' * 60)
         )
@@ -347,7 +355,6 @@ class Command(BaseCommand):
         self.stdout.write('')
 
     def _mostrar_resumen_final(self, reportes_creados, username):
-        """Muestra resumen final de la ejecución (método auxiliar cookbook)"""
         self.stdout.write('')
         self.stdout.write(
             self.style.SUCCESS('=' * 60)
