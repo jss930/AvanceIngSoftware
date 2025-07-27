@@ -12,6 +12,12 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from .forms import RegistroUsuarioForm, LoginForm
+# Agregar estas importaciones al archivo app/usuario/views.py existente
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from app.servicios.notificationApplicationService import NotificationApplicationService
+import json
 # from app.reporte.views import ReporteIncidentView
 
 # Create your views here.
@@ -111,3 +117,156 @@ class ReporteIncidentView(CreateView):
 
 class SeeStateView(TemplateView):
     template_name = 'see_state.html'
+
+# === VISTAS PARA API DE NOTIFICACIONES ===
+
+@csrf_exempt
+@login_required
+@require_http_methods(["POST"])
+def actualizar_ubicacion(request):
+    """API endpoint para actualizar la ubicación del usuario"""
+    try:
+        data = json.loads(request.body)
+        latitud = data.get('latitud')
+        longitud = data.get('longitud')
+        
+        if not latitud or not longitud:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Latitud y longitud son requeridos'
+            }, status=400)
+        
+        notification_service = NotificationApplicationService()
+        resultado = notification_service.actualizar_ubicacion_usuario(
+            usuario_id=request.user.id,
+            latitud=latitud,
+            longitud=longitud
+        )
+        
+        return JsonResponse(resultado)
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'JSON inválido'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+
+@login_required
+@require_http_methods(["GET"])
+def obtener_notificaciones_cercanas(request):
+    """API endpoint para obtener notificaciones de zonas cercanas"""
+    try:
+        latitud = request.GET.get('lat')
+        longitud = request.GET.get('lng')
+        
+        if not latitud or not longitud:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Parámetros lat y lng son requeridos'
+            }, status=400)
+        
+        notification_service = NotificationApplicationService()
+        resultado = notification_service.verificar_zonas_congestionadas_cercanas(
+            user=request.user,
+            latitud=float(latitud),
+            longitud=float(longitud)
+        )
+        
+        return JsonResponse(resultado)
+        
+    except ValueError:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Coordenadas inválidas'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+
+@login_required
+@require_http_methods(["GET"])
+def obtener_configuracion_notificaciones(request):
+    """API endpoint para obtener la configuración de notificaciones"""
+    try:
+        notification_service = NotificationApplicationService()
+        resultado = notification_service.obtener_configuracion_notificaciones(
+            usuario_id=request.user.id
+        )
+        
+        return JsonResponse(resultado)
+        
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+
+@csrf_exempt
+@login_required
+@require_http_methods(["POST"])
+def actualizar_configuracion_notificaciones(request):
+    """API endpoint para actualizar la configuración de notificaciones"""
+    try:
+        data = json.loads(request.body)
+        
+        notification_service = NotificationApplicationService()
+        resultado = notification_service.actualizar_configuracion_notificaciones(
+            usuario_id=request.user.id,
+            config=data
+        )
+        
+        return JsonResponse(resultado)
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'JSON inválido'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+
+@login_required
+@require_http_methods(["GET"])
+def obtener_estadisticas_notificaciones(request):
+    """API endpoint para obtener estadísticas de notificaciones"""
+    try:
+        notification_service = NotificationApplicationService()
+        resultado = notification_service.obtener_estadisticas_notificaciones(
+            usuario_id=request.user.id
+        )
+        
+        return JsonResponse(resultado)
+        
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+
+# Vista para la página de configuración de notificaciones
+@login_required
+def configuracion_notificaciones(request):
+    """Vista para la página de configuración de notificaciones"""
+    from app.usuario.models import PerfilUsuario
+    from app.reporte.models import ReporteColaborativo
+    
+    perfil = PerfilUsuario.get_or_create_for_user(request.user)
+    tipos_incidentes = ReporteColaborativo.INCIDENT_TYPES
+    
+    context = {
+        'perfil': perfil,
+        'tipos_incidentes': tipos_incidentes,
+        'tipos_seleccionados': perfil.tipos_incidentes_notificar
+    }
+    
+    return render(request, 'configuracion_notificaciones.html', context)
