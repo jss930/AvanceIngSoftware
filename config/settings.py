@@ -28,6 +28,8 @@ INSTALLED_APPS = [
     'app.usuario',
     'app.reporte',
     'app.admin_custom',
+    # extensiones
+    'django_extensions',
 ]
 
 # Middleware
