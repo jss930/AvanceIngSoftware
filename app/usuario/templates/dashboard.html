@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | Traffic Pulse</title>
     
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     {% load static %}
     
     <style>
@@ -148,7 +148,7 @@
                                     <p class="text-muted mb-0">Sistema de monitoreo y control - Arequipa</p>
                                 </div>
                                 <div class="col-auto">
-                                    <img src="{% static 'images/user-icon.webp' %}" class="img-fluid rounded-circle" style="max-width: 60px" alt="user-icon" />
+                                    <img src="{% static 'images/user-icon.webp' %}" class="img-fluid rounded-circle" style="max-width: 60px" alt="user-icon">
                                 </div>
                             </div>
                         </div>
@@ -168,76 +168,75 @@
                             </div>
 
                             <!-- Módulos principales -->
-<div class="row g-4">
-  <div class="col-md-6 col-lg-3">
-      <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
-          <div class="card-body text-center p-4">
-              <div class="mb-3">
-                  <i class="bi bi-exclamation-triangle-fill display-4 text-warning"></i>
-              </div>
-              <h5 class="card-title text-dark mb-2">Reportar Incidente</h5>
-              <p class="card-text text-muted mb-3">
-                  Informa sobre accidentes, bloqueos o construcciones.
-              </p>
-              <a href="{% url 'report_incident' %}" class="btn btn-warning btn-sm px-4 rounded-pill">
-                  <i class="bi bi-plus-circle me-2"></i>Reportar
-              </a>
-          </div>
-      </div>
-  </div>
+                            <div class="row g-4">
+                                <div class="col-md-6 col-lg-3">
+                                    <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
+                                        <div class="card-body text-center p-4">
+                                            <div class="mb-3">
+                                                <i class="bi bi-exclamation-triangle-fill display-4 text-warning"></i>
+                                            </div>
+                                            <h5 class="card-title text-dark mb-2">Reportar Incidente</h5>
+                                            <p class="card-text text-muted mb-3">
+                                                Informa sobre accidentes, bloqueos o construcciones.
+                                            </p>
+                                            <a href="{% url 'report_incident' %}" class="btn btn-warning btn-sm px-4 rounded-pill">
+                                                <i class="bi bi-plus-circle me-2"></i>Reportar
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
 
-  <div class="col-md-6 col-lg-3">
-      <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
-          <div class="card-body text-center p-4">
-              <div class="mb-3">
-                  <i class="bi bi-graph-up display-4 text-primary"></i>
-              </div>
-              <h5 class="card-title text-dark mb-2">Estado del Tráfico</h5>
-              <p class="card-text text-muted mb-3">
-                  Monitorea el tráfico en tiempo real en toda la ciudad.
-              </p>
-              <a href="{% url 'see_state' %}" class="btn btn-primary btn-sm px-4 rounded-pill">
-                  <i class="bi bi-eye me-2"></i>Ver Estado
-              </a>
-          </div>
-      </div>
-  </div>
+                                <div class="col-md-6 col-lg-3">
+                                    <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
+                                        <div class="card-body text-center p-4">
+                                            <div class="mb-3">
+                                                <i class="bi bi-graph-up display-4 text-primary"></i>
+                                            </div>
+                                            <h5 class="card-title text-dark mb-2">Estado del Tráfico</h5>
+                                            <p class="card-text text-muted mb-3">
+                                                Monitorea el tráfico en tiempo real en toda la ciudad.
+                                            </p>
+                                            <a href="{% url 'see_state' %}" class="btn btn-primary btn-sm px-4 rounded-pill">
+                                                <i class="bi bi-eye me-2"></i>Ver Estado
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
 
-  <div class="col-md-6 col-lg-3">
-      <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
-          <div class="card-body text-center p-4">
-              <div class="mb-3">
-                  <i class="bi bi-thermometer-half display-4 text-danger"></i>
-              </div>
-              <h5 class="card-title text-dark mb-2">Mapa de Calor</h5>
-              <p class="card-text text-muted mb-3">
-                  Visualiza las zonas con mayor densidad de tráfico.
-              </p>
-              <a href="{% url 'mapa_calor' %}" class="btn btn-danger btn-sm px-4 rounded-pill">
-                  <i class="bi bi-map me-2"></i>Ver Mapa
-              </a>
-          </div>
-      </div>
-  </div>
+                                <div class="col-md-6 col-lg-3">
+                                    <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
+                                        <div class="card-body text-center p-4">
+                                            <div class="mb-3">
+                                                <i class="bi bi-thermometer-half display-4 text-danger"></i>
+                                            </div>
+                                            <h5 class="card-title text-dark mb-2">Mapa de Calor</h5>
+                                            <p class="card-text text-muted mb-3">
+                                                Visualiza las zonas con mayor densidad de tráfico.
+                                            </p>
+                                            <a href="{% url 'mapa_calor' %}" class="btn btn-danger btn-sm px-4 rounded-pill">
+                                                <i class="bi bi-map me-2"></i>Ver Mapa
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
 
-  <div class="col-md-6 col-lg-3">
-      <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
-          <div class="card-body text-center p-4">
-              <div class="mb-3">
-                  <i class="bi bi-geo-alt-fill display-4 text-success"></i>
-              </div>
-              <h5 class="card-title text-dark mb-2">Planificar Ruta</h5>
-              <p class="card-text text-muted mb-3">
-                  Encuentra la mejor ruta evitando congestión y bloqueos.
-              </p>
-              <a href="{% url 'plan_route' %}" class="btn btn-success btn-sm px-4 rounded-pill">
-                  <i class="bi bi-arrow-right me-2"></i>Comenzar
-              </a>
-          </div>
-      </div>
-  </div>
-</div>
-
+                                <div class="col-md-6 col-lg-3">
+                                    <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
+                                        <div class="card-body text-center p-4">
+                                            <div class="mb-3">
+                                                <i class="bi bi-geo-alt-fill display-4 text-success"></i>
+                                            </div>
+                                            <h5 class="card-title text-dark mb-2">Planificar Ruta</h5>
+                                            <p class="card-text text-muted mb-3">
+                                                Encuentra la mejor ruta evitando congestión y bloqueos.
+                                            </p>
+                                            <a href="{% url 'plan_route' %}" class="btn btn-success btn-sm px-4 rounded-pill">
+                                                <i class="bi bi-arrow-right me-2"></i>Comenzar
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                             <!-- Sección de alertas recientes -->
                             <div class="mt-5">
@@ -778,5 +777,3 @@
     </script>
 </body>
 </html>
-        
-dame este archivo completo, damelo no cambies nada
