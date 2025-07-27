@@ -4,30 +4,62 @@
 <head>
   <meta charset="UTF-8">
   <title>Eliminar Alerta | Traffic Pulse</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+    }
+
+    .delete-card {
+      background: rgba(255, 255, 255, 0.95);
+      border: 2px solid #f44336;
+      border-radius: 1rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 700px;
+      margin-top: 70px;
+    }
+
+    .btn-danger {
+      background: linear-gradient(45deg, #e53935, #d32f2f);
+      border: none;
+    }
+
+    .btn-danger:hover {
+      background: linear-gradient(45deg, #c62828, #b71c1c);
+    }
+  </style>
 </head>
-<body class="bg-light">
-  <div class="container mt-5">
-    <div class="card shadow rounded-4 border-danger">
-      <div class="card-header bg-danger text-white d-flex align-items-center">
-        <i class="bi bi-trash fs-4 me-2"></i>
-        <h4 class="mb-0">Eliminar Alerta</h4>
+<body>
+  <div class="container">
+    <div class="delete-card">
+      <div class="d-flex align-items-center mb-3">
+        <i class="bi bi-trash fs-3 text-danger me-2"></i>
+        <h3 class="mb-0 text-danger">Eliminar Alerta</h3>
       </div>
-      <div class="card-body">
-        <p class="fs-5">¿Estás seguro de que deseas eliminar la alerta <strong>{{ alerta.titulo }}</strong>?</p>
-        <form method="post">
-          {% csrf_token %}
-          <div class="text-end">
-            <button type="submit" class="btn btn-danger">
-              <i class="bi bi-trash3 me-2"></i>Sí, eliminar
-            </button>
-            <a href="{% url 'gestionar_alertas' %}" class="btn btn-secondary ms-2">
-              <i class="bi bi-arrow-left me-2"></i>Cancelar
-            </a>
-          </div>
-        </form>
-      </div>
+
+      <p class="fs-5">
+        ¿Estás seguro de que deseas eliminar la alerta <strong>{{ alerta.titulo }}</strong>?
+      </p>
+
+      <form method="post">
+        {% csrf_token %}
+        <div class="text-end mt-4">
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash3 me-2"></i>Sí, eliminar
+          </button>
+          <a href="{% url 'gestionar_alertas' %}" class="btn btn-outline-dark ms-2">
+            <i class="bi bi-arrow-left me-2"></i>Cancelar
+          </a>
+        </div>
+      </form>
     </div>
   </div>
 </body>
