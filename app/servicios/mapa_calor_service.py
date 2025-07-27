@@ -1,40 +1,25 @@
-from pathlib import Path
-import folium
 from app.reporte.models import ReporteColaborativo
+import folium
+from folium.plugins import HeatMap
+from django.conf import settings
+import os
 
 class MapaCalorService:
     def generar_mapa(self):
-        # Crear un mapa base
-        mapa = folium.Map(location=[-16.409, -71.537], zoom_start=13)
-
-        # Tomamos los reportes de la BD
-        reportes = ReporteColaborativo.objects.all()
-
-        # Añadir marcadores simples
-        for r in reportes:
+        # Datos de los reportes
+        heat_data = []
+        for r in ReporteColaborativo.objects.all():
             try:
-                lat = float(r.latitud)
-                lon = float(r.longitud)
+                heat_data.append([float(r.latitud), float(r.longitud)])
+            except Exception:
+                pass  # Ignorar si hay coordenadas inválidas
 
-                # Añadimos marcador al mapa
-                folium.CircleMarker(
-                    location=[lat, lon],
-                    radius=6,
-                    popup=f"{r.titulo} - {r.tipo_incidente}",
-                    color="red",
-                    fill=True,
-                    fill_color="red",
-                ).add_to(mapa)
-            except Exception as e:
-                print(f"Error al agregar reporte {r.id}: {e}")
+        # Crear mapa centrado
+        m = folium.Map(location=[-16.3989, -71.535], zoom_start=13)
+        if heat_data:
+            HeatMap(heat_data).add_to(m)
 
-        # Ruta de salida
-        output_dir = Path("app/usuario/templates")
-        output_dir.mkdir(parents=True, exist_ok=True)
-        ruta_html = output_dir / "mapa_embebido.html"
-
-        # Guardamos el HTML
-        mapa.save(str(ruta_html))
-
-        # RETORNAMOS la ruta
+        # Guardar mapa en HTML
+        ruta_html = os.path.join(settings.BASE_DIR, "app/usuario/templates/mapa_generado.html")
+        m.save(ruta_html)
         return ruta_html

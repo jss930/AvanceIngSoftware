@@ -96,14 +96,11 @@ def vista_mapa_calor(request):
     servicio = MapaCalorService()
     ruta_html = servicio.generar_mapa()
 
-    mapa_html = ""
-    if ruta_html and ruta_html.exists():
-        with open(ruta_html, "r", encoding="utf-8") as f:
-            mapa_html = f.read()
+    with open(ruta_html, "r", encoding="utf-8") as f:
+        mapa_html = f.read()
 
-    return render(request, "mapa_calor_page.html", {
-        "mapa_html": mapa_html
-    })
+    return render(request, "mapa_calor_page.html", {"mapa_html": mapa_html})
+
 
 
 def mapa_embebido_view(request):
