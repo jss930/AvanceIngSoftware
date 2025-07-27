@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.cache import never_cache
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
+from django.contrib.auth.models import User
 from functools import wraps
 import logging
 from app.presentation.controladores.reporteColaborativoController import ReporteColaborativoController
@@ -52,6 +53,18 @@ def validar_longitud(valor, campo, min=1, max=255):
 
 def is_superuser(user):
     return user.is_authenticated and user.is_superuser
+
+
+def gestion_usuarios(request):
+    """
+    Vista para gestionar usuarios.
+    """
+    if not request.user.is_superuser:
+        messages.error(request, 'Acceso restringido a administradores')
+        return redirect('custom_login')
+
+    usuarios = User.objects.all()
+    return render(request, 'partials/gestion_usuarios.html', {'usuarios': usuarios})
 
 
 # Vistas
@@ -108,31 +121,50 @@ def admin_reportes(request):
     - Estado
     - Fecha
     - Distrito/Nombre de vía
+    - Tipo de incidente
+    - Nivel de peligro
     """
     controlador = ReporteColaborativoController()
 
-    # Sanitiza parámetros de búsqueda
-    estado = sanitizar_input(request.GET.get("estado"))
-    fecha = sanitizar_input(request.GET.get("fecha"))
-    filtro_ubicacion = sanitizar_input(request.GET.get("ubicacion"))  # Mantenemos 'ubicacion' para compatibilidad con el template
+    # Obtener parámetros de filtrado (POST o GET)
+    if request.method == 'POST':
+        estado = sanitizar_input(request.POST.get("estado"))
+        fecha = sanitizar_input(request.POST.get("fecha"))
+        filtro_ubicacion = sanitizar_input(request.POST.get("ubicacion"))
+        tipo_incidente = sanitizar_input(request.POST.get("tipo_incidente"))
+        nivel_peligro = sanitizar_input(request.POST.get("nivel_peligro"))
+    else:
+        # Para compatibilidad con GET (primera carga)
+        estado = sanitizar_input(request.GET.get("estado"))
+        fecha = sanitizar_input(request.GET.get("fecha"))
+        filtro_ubicacion = sanitizar_input(request.GET.get("ubicacion"))
+        tipo_incidente = sanitizar_input(request.GET.get("tipo_incidente"))
+        nivel_peligro = sanitizar_input(request.GET.get("nivel_peligro"))
 
     try:
         reportes = controlador.obtener_todos()
         
-        # Filtrado seguro
+        # Filtrado mejorado
         if estado:
             reportes = [r for r in reportes if r.estado_reporte.lower() == estado.lower()]
         if fecha:
-            reportes = [r for r in reportes if str(r.fecha_creacion) == fecha]
+            # Filtrar por fecha (formato YYYY-MM-DD)
+            reportes = [r for r in reportes if str(r.fecha_creacion.date()) == fecha]
         if filtro_ubicacion:
             reportes = [r for r in reportes if filtro_ubicacion.lower() in (r.nombre_via or '').lower() or filtro_ubicacion.lower() in (r.distrito or '').lower()]
+        if tipo_incidente:
+            reportes = [r for r in reportes if r.tipo_incidente.lower() == tipo_incidente.lower()]
+        if nivel_peligro:
+            reportes = [r for r in reportes if str(r.nivel_peligro) == nivel_peligro]
 
         context = {
             "titulo": "Control de Reportes",
             "reportes": reportes,
             "estado_actual": estado,
             "fecha_actual": fecha,
-            "ubicacion_actual": filtro_ubicacion
+            "ubicacion_actual": filtro_ubicacion,
+            "tipo_incidente_actual": tipo_incidente,
+            "nivel_peligro_actual": nivel_peligro
         }
         
         return render(request, 'partials/admin_reportes.html', context)
@@ -175,12 +207,14 @@ def editar_reporte(request, id):
         is_active = request.POST.get("is_active") == "on"
         nueva_foto = request.FILES.get("foto")
 
-        # Validación
+        # Validación mejorada
         if not titulo or not descripcion or not tipo_incidente or not estado_reporte:
             messages.error(request, "Los campos título, descripción, tipo de incidente y estado son obligatorios.")
+        elif estado_reporte not in ['pendiente', 'probado', 'rechazado']:
+            messages.error(request, "El estado del reporte no es válido.")
         else:
             try:
-                # Actualiza atributos básicos
+                # Actualizar directamente el objeto del modelo
                 reporte.titulo = titulo
                 reporte.descripcion = descripcion
                 reporte.nombre_via = nombre_via
@@ -191,10 +225,31 @@ def editar_reporte(request, id):
                 reporte.is_active = is_active
                 
                 # Actualizar coordenadas si se proporcionan
-                if latitud and longitud:
+                try:
                     from decimal import Decimal
-                    reporte.latitud = Decimal(str(latitud))
-                    reporte.longitud = Decimal(str(longitud))
+                    # Validar que las coordenadas no estén vacías
+                    lat_str = str(latitud).strip() if latitud else ''
+                    lng_str = str(longitud).strip() if longitud else ''
+                    
+                    # Solo actualizar si ambas coordenadas tienen valores válidos
+                    if lat_str and lng_str and lat_str != '' and lng_str != '' and lat_str != 'None' and lng_str != 'None':
+                        try:
+                            lat_decimal = Decimal(lat_str)
+                            lng_decimal = Decimal(lng_str)
+                            
+                            # Validar que las coordenadas estén en rangos razonables
+                            if -90 <= lat_decimal <= 90 and -180 <= lng_decimal <= 180:
+                                reporte.latitud = lat_decimal
+                                reporte.longitud = lng_decimal
+                                logger.info(f"Coordenadas actualizadas: {lat_decimal}, {lng_decimal}")
+                            else:
+                                logger.warning(f"Coordenadas fuera de rango: lat={lat_decimal}, lng={lng_decimal}")
+                        except (ValueError, TypeError, Exception) as coord_error:
+                            logger.warning(f"Error al procesar coordenadas: lat='{lat_str}', lng='{lng_str}' - {str(coord_error)}")
+                    else:
+                        logger.info(f"Coordenadas no válidas o vacías, manteniendo existentes: lat='{lat_str}', lng='{lng_str}'")
+                except Exception as e:
+                    logger.error(f"Error general en procesamiento de coordenadas: {str(e)}")
                 
                 # Manejar nueva imagen si se proporciona
                 if nueva_foto:
@@ -209,16 +264,17 @@ def editar_reporte(request, id):
                             import os
                             if os.path.exists(reporte.foto.path):
                                 os.remove(reporte.foto.path)
-                        except:
+                        except Exception:
                             pass  # Si hay error eliminando, continuar
                     
                     # Asignar nueva imagen
                     reporte.foto = nueva_foto
 
-                # Guarda cambios usando el nuevo método
-                controlador.actualizar_reporte_completo(id, reporte)
+                # Guardar directamente el modelo para asegurar que los cambios se persistan
+                reporte.save()
+                
                 messages.success(request, "Reporte actualizado correctamente.")
-                logger.info(f"Reporte {id} actualizado por admin {request.user}")
+                logger.info(f"Reporte {id} actualizado por admin {request.user} - Estado: {estado_reporte}, Activo: {is_active}")
                 return redirect("admin_reportes")
                 
             except Exception as e:
@@ -241,7 +297,7 @@ def cambiar_estado_reporte(request, id):
         data = json.loads(request.body)
         nuevo_estado = data.get('estado')
         
-        if nuevo_estado not in ['probado', 'rechazado']:
+        if nuevo_estado not in ['pendiente', 'probado', 'rechazado']:
             return JsonResponse({'success': False, 'error': 'Estado no válido'})
         
         controlador = ReporteColaborativoController()
@@ -250,9 +306,9 @@ def cambiar_estado_reporte(request, id):
         if not reporte:
             return JsonResponse({'success': False, 'error': 'Reporte no encontrado'})
         
-        # Actualizar estado
+        # Actualizar estado directamente
         reporte.estado_reporte = nuevo_estado
-        controlador.actualizar_reporte_completo(id, reporte)
+        reporte.save()
         
         logger.info(f"Estado cambiado para reporte {id}: {nuevo_estado} por {request.user}")
         return JsonResponse({'success': True, 'mensaje': 'Estado actualizado correctamente'})
