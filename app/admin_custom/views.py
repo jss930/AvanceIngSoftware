@@ -1,16 +1,20 @@
 # views.py
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.cache import never_cache
+from django.contrib.auth.decorators import user_passes_test  
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 from functools import wraps
 import logging
 from app.presentation.controladores.reporteColaborativoController import ReporteColaborativoController
-
+from .forms import AlertaForm
+from .models import Alerta
+from app.presentation.controladores.alertaController import obtener_alertas_usuario
 
 # Configuración de logging
 logger = logging.getLogger(__name__)
@@ -260,3 +264,53 @@ def cambiar_estado_reporte(request, id):
     except Exception as e:
         logger.error(f"Error cambiando estado reporte {id}: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required(login_url='/loginadmin/')
+@user_passes_test(is_superuser, login_url='/loginadmin/')
+def gestionar_alertas(request):
+    alertas = Alerta.objects.all().order_by('-fecha_envio')
+    return render(request, 'panel/gestionar_alertas.html', {'alertas': alertas})
+
+@login_required(login_url='/loginadmin/')
+@user_passes_test(is_superuser, login_url='/loginadmin/')
+def crear_alerta(request):
+    if request.method == 'POST':
+        form = AlertaForm(request.POST)
+        if form.is_valid():
+            titulo = form.cleaned_data['titulo']
+            mensaje = form.cleaned_data['mensaje']
+            ubicacion = form.cleaned_data['ubicacion']
+            if request.POST.get("enviar_a_todos"):
+                destinatarios = User.objects.filter(is_active=True)
+            else:
+                destinatarios_ids = request.POST.getlist("destinatarios")
+                destinatarios = User.objects.filter(id__in=destinatarios_ids)
+            from app.presentation.controladores.alertaController import emitir_alerta
+            emitir_alerta(titulo, mensaje, request.user, destinatarios, ubicacion)
+            messages.success(request, 'Alerta enviada con éxito.')
+            return redirect('crear_alerta')
+    else:
+        form = AlertaForm()
+    return render(request, 'panel/crear_alerta.html', {'form': form, 'titulo': 'Crear Alerta'})
+
+@login_required(login_url='/loginadmin/')
+@user_passes_test(is_superuser, login_url='/loginadmin/')
+def editar_alerta(request, alerta_id):
+    alerta = get_object_or_404(Alerta, pk=alerta_id)
+    if request.method == 'POST':
+        form = AlertaForm(request.POST, instance=alerta)
+        if form.is_valid():
+            form.save()
+            return redirect('gestionar_alertas')
+    else:
+        form = AlertaForm(instance=alerta)
+    return render(request, 'panel/editar_alerta.html', {'form': form, 'alerta': alerta})
+
+@login_required(login_url='/loginadmin/')
+@user_passes_test(is_superuser, login_url='/loginadmin/')
+def eliminar_alerta(request, alerta_id):
+    alerta = get_object_or_404(Alerta, pk=alerta_id)
+    if request.method == 'POST':
+        alerta.delete()
+        return redirect('gestionar_alertas')
+    return render(request, 'panel/eliminar_alerta.html', {'alerta': alerta})

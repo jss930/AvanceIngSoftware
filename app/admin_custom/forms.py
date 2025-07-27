@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
-from app.reporte.models import Alerta
+from app.admin_custom.models import Alerta
 
 FORM_CONTROL = 'form-control'
 

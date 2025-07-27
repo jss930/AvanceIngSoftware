@@ -1,4 +1,4 @@
-from app.reporte.models import Alerta as AlertaModel
+from app.admin_custom.models import Alerta as AlertaModel
 from django.contrib.auth.models import User
 from app.dominio.alerta.iAlertaRepository import IAlertaRepository
 
