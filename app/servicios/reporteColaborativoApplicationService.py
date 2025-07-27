@@ -10,7 +10,7 @@ class ReporteColaborativoApplicationService:
         self.servicio_validacion = None
         self.mapa_calor_service = None
 
-    def registrar_nuevo_reporte(self, descripcion, usuario_id, ubicacion, imagen_url, tipo_incidente):
+    def registrar_nuevo_reporte(self, descripcion, usuario_id, distrito, nombre_via, imagen_url, tipo_incidente):
         # Metodo pendiente de implementación (Registro de nuevo reporte)
         pass
 
@@ -49,7 +49,23 @@ class ReporteColaborativoApplicationService:
         if existente:
             existente.titulo = nuevo_reporte.titulo
             existente.descripcion = nuevo_reporte.descripcion
-            existente.ubicacion = nuevo_reporte.ubicacion
-            existente.tipo_incidente = nuevo_reporte.tipo_incidente
-            existente.estado_reporte = nuevo_reporte.estado_reporte
+            # Usar distrito y nombre_via en lugar de ubicacion
+            if hasattr(nuevo_reporte, 'nombre_via'):
+                existente.nombre_via = nuevo_reporte.nombre_via
+            if hasattr(nuevo_reporte, 'distrito'):
+                existente.distrito = nuevo_reporte.distrito
+            if hasattr(nuevo_reporte, 'tipo_incidente'):
+                existente.tipo_incidente = nuevo_reporte.tipo_incidente
+            if hasattr(nuevo_reporte, 'estado_reporte'):
+                existente.estado_reporte = nuevo_reporte.estado_reporte
+            if hasattr(nuevo_reporte, 'nivel_peligro'):
+                existente.nivel_peligro = nuevo_reporte.nivel_peligro
+            if hasattr(nuevo_reporte, 'is_active'):
+                existente.is_active = nuevo_reporte.is_active
+            if hasattr(nuevo_reporte, 'latitud'):
+                existente.latitud = nuevo_reporte.latitud
+            if hasattr(nuevo_reporte, 'longitud'):
+                existente.longitud = nuevo_reporte.longitud
+            if hasattr(nuevo_reporte, 'foto'):
+                existente.foto = nuevo_reporte.foto
             self.reporte_repository.actualizar(existente)
