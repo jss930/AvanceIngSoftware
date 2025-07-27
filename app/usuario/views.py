@@ -13,6 +13,11 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from .forms import RegistroUsuarioForm, LoginForm
 # from app.reporte.views import ReporteIncidentView
+from django.conf import settings
+from app.servicios.mapa_calor_service import MapaCalorService
+from django.shortcuts import render
+from django.views.generic import TemplateView
+from django.utils.safestring import mark_safe
 
 # Create your views here.
 class RegistroUsuarioView(FormView):
@@ -86,12 +91,28 @@ def register(request):
 def test(request):
     return render(request, 'test.html')
 
-class MapaCalorView(TemplateView):
-    template_name = "mapa_calor.html"
+# Vista funcional para generar el mapa de calor y mostrar la página
+def vista_mapa_calor(request):
+    servicio = MapaCalorService()
+    ruta_html = servicio.generar_mapa()
+
+    mapa_html = ""
+    if ruta_html and ruta_html.exists():
+        with open(ruta_html, "r", encoding="utf-8") as f:
+            mapa_html = f.read()
+
+    return render(request, "mapa_calor_page.html", {
+        "mapa_html": mapa_html
+    })
+
+
+def mapa_embebido_view(request):
+    return render(request, "mapa_embebido.html")
 
 # Vistas para botones del home
 class PlanRouteView(TemplateView):
     template_name = 'plan_route.html'
+
 
 class ReporteIncidentView(CreateView):
     model = ReporteColaborativo

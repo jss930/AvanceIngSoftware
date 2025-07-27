@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Mapa de Calor{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">Mapa de Calor de Reportes</h5>
+    </div>
+    <div class="card-body p-0">
+      <div style="height: 75vh; width: 100%; border-radius: 0 0 0.25rem 0.25rem; overflow: hidden;">
+        {{ mapa_html|safe }}
+      </div>
+    </div>
+    <div class="card-footer text-center">
+      <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left-circle"></i> Volver al Dashboard
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
