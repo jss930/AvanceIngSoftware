@@ -21,4 +21,11 @@ urlpatterns = [
     path("plan-route/", views.PlanRouteView.as_view(), name="plan_route"),
     path("report-incident/", views.ReporteIncidentView.as_view(), name="report_incident"),
     path("see-state/", views.SeeStateView.as_view(), name="see_state"),
+
+    #path('login/', LoginView.as_view(), name='login'), 
+    #path('loginadmin/', custom_login, name='custom_login'), 
+    path('logout_admin/', views.logout_admin, name='logout_admin'),
+    #path('panel/reportes/', admin_reportes, name='admin_reportes'), 
+    path('test/', views.test, name='test'),  
+    path('plan_route/', views.PlanRouteView.as_view(), name='plan_route'),
 ]
