@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.utils import timezone
 from datetime import timedelta
-from web.models import ReporteColaborativo, ConfiguracionUsuario, InteraccionUsuario
+from app.reporte.models import ReporteColaborativo, ConfiguracionUsuario, InteraccionUsuario
 
 
 

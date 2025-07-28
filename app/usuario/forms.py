@@ -1,10 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
-<<<<<<< HEAD:web/forms.py
-from web.models import ReporteColaborativo
-=======
->>>>>>> origin/GODinez:app/usuario/forms.py
 
 FORM_CONTROL = 'form-control'
 FORM_CONTROL_PASSWORD_INPUT = 'form-control password-input'

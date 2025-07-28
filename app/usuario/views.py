@@ -4,7 +4,7 @@ from app.reporte.models import ReporteColaborativo
 from app.reporte.forms import ReporteColaborativoForm
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from app.repositorio.alerta.alertaRepositoryImpl import AlertaRepositoryImpl
 from django.shortcuts import render, redirect
 from django.views.generic import FormView, TemplateView
@@ -29,16 +29,15 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from web.forms import ReporteColaborativoForm
-from web.models import ReporteColaborativo
+from app.reporte.forms import ReporteColaborativoForm
+from app.reporte.models import ReporteColaborativo
 from web.services.reportes_usuario_service import (
     ReportesUsuarioService, 
     UsuarioSinReportesError, 
     UsuarioReporteError
 )
-from .forms import RegistroUsuarioForm, LoginForm, ReporteColaborativoForm
+from .forms import RegistroUsuarioForm, LoginForm
 from app.presentation.controladores.reporteColaborativoController import ReporteColaborativoController
-from web.models import ReporteColaborativo
 from io import StringIO
 import json
 import csv
