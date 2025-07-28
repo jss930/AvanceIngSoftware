@@ -1,0 +1,365 @@
+{% load l10n %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Editar Reporte | Traffic Pulse</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <style>
+    body {
+      background: white;
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .main-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    .form-control, .form-select {
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      padding: 10px;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    .btn-primary {
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      border: none;
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-weight: 600;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+    .page-title {
+      color: #333;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    #map {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      height: 350px;
+      width: 100%;
+    }
+    .img-preview {
+      max-width: 300px;
+      max-height: 200px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      object-fit: cover;
+    }
+    .imagen-error {
+      background-color: #f8f9fa;
+      border: 2px dashed #dee2e6;
+      border-radius: 8px;
+      padding: 2rem;
+      text-align: center;
+      color: #6c757d;
+    }
+  </style>
+</head>
+<body>
+  <div class="container py-4">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <h1 class="page-title">
+          <i class="bi bi-pencil-square me-2"></i>Editar Reporte #{{ reporte.id }}
+        </h1>
+        
+        <!-- Botón volver -->
+        <div class="mb-3">
+          <a href="{% url 'admin_reportes' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Volver a Reportes
+          </a>
+        </div>
+
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" class="main-card p-4">
+          {% csrf_token %}
+          
+          <div class="row">
+            <!-- Información básica -->
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label"><i class="bi bi-card-text me-1"></i>Título</label>
+                <input type="text" name="titulo" value="{{ reporte.titulo }}" class="form-control" required>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label"><i class="bi bi-list-ul me-1"></i>Tipo de Incidente</label>
+                <select name="tipo_incidente" class="form-select" required>
+                  <option value="accidente" {% if reporte.tipo_incidente == 'accidente' %}selected{% endif %}>🚗 Accidente</option>
+                  <option value="construccion" {% if reporte.tipo_incidente == 'construccion' %}selected{% endif %}>🚧 Construcción</option>
+                  <option value="embotellamiento" {% if reporte.tipo_incidente == 'embotellamiento' %}selected{% endif %}>🚦 Embotellamiento</option>
+                  <option value="cierre_via" {% if reporte.tipo_incidente == 'cierre_via' %}selected{% endif %}>🚫 Cierre de vía</option>
+                  <option value="control_policial" {% if reporte.tipo_incidente == 'control_policial' %}selected{% endif %}>👮 Control policial</option>
+                  <option value="semaforo_danado" {% if reporte.tipo_incidente == 'semaforo_danado' %}selected{% endif %}>🔴 Semáforo dañado</option>
+                  <option value="bache" {% if reporte.tipo_incidente == 'bache' %}selected{% endif %}>🕳️ Bache</option>
+                  <option value="inundacion" {% if reporte.tipo_incidente == 'inundacion' %}selected{% endif %}>💧 Inundación</option>
+                  <option value="vehiculo_averiado" {% if reporte.tipo_incidente == 'vehiculo_averiado' %}selected{% endif %}>🔧 Vehículo averiado</option>
+                  <option value="manifestacion" {% if reporte.tipo_incidente == 'manifestacion' %}selected{% endif %}>✊ Manifestación</option>
+                  <option value="otro" {% if reporte.tipo_incidente == 'otro' %}selected{% endif %}>❓ Otro</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label"><i class="bi bi-exclamation-triangle me-1"></i>Nivel de Peligro</label>
+                <select name="nivel_peligro" class="form-select" required>
+                  <option value="1" {% if reporte.nivel_peligro == 1 %}selected{% endif %}>🟢 Bajo (1)</option>
+                  <option value="2" {% if reporte.nivel_peligro == 2 %}selected{% endif %}>🟡 Medio (2)</option>
+                  <option value="3" {% if reporte.nivel_peligro == 3 %}selected{% endif %}>🔴 Alto (3)</option>
+                  <option value="4" {% if reporte.nivel_peligro == 4 %}selected{% endif %}>🚨 Crítico (4)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Estado y controles -->
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label"><i class="bi bi-flag me-1"></i>Estado del Reporte</label>
+                <select name="estado_reporte" class="form-select" required>
+                  <option value="pendiente" {% if reporte.estado_reporte == 'pendiente' %}selected{% endif %}>⏳ Pendiente</option>
+                  <option value="probado" {% if reporte.estado_reporte == 'probado' %}selected{% endif %}>✅ Probado</option>
+                  <option value="rechazado" {% if reporte.estado_reporte == 'rechazado' %}selected{% endif %}>❌ Rechazado</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label"><i class="bi bi-toggle-on me-1"></i>Reporte Activo</label>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" name="is_active" {% if reporte.is_active %}checked{% endif %}>
+                  <label class="form-check-label">
+                    El reporte está activo y visible
+                  </label>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label"><i class="bi bi-person me-1"></i>Usuario Reportador</label>
+                <input type="text" value="{{ reporte.usuario_reportador.username }}" class="form-control" readonly>
+                <small class="text-muted">Este campo no se puede modificar</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Descripción -->
+          <div class="mb-3">
+            <label class="form-label"><i class="bi bi-card-text me-1"></i>Descripción</label>
+            <textarea name="descripcion" class="form-control" rows="4" required>{{ reporte.descripcion }}</textarea>
+          </div>
+
+          <!-- Ubicación con mapa -->
+          <div class="mb-3">
+            <label class="form-label"><i class="bi bi-geo-alt me-1"></i>Ubicación</label>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Nombre de la vía</label>
+                <input type="text" name="nombre_via" value="{{ reporte.nombre_via }}" class="form-control">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Distrito</label>
+                <input type="text" name="distrito" value="{{ reporte.distrito }}" class="form-control">
+              </div>
+            </div>
+            
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="modificarUbicacion">
+              <label class="form-check-label" for="modificarUbicacion">
+                <i class="bi bi-map me-1"></i>Modificar ubicación en el mapa
+              </label>
+            </div>
+            
+            <div id="map" style="display: none;"></div>
+            <div id="location-info" class="mt-2"></div>
+            
+            <input type="hidden" id="latitud" name="latitud" value="{{ reporte.latitud|unlocalize }}">
+            <input type="hidden" id="longitud" name="longitud" value="{{ reporte.longitud|unlocalize }}">
+          </div>
+
+          <!-- Imagen -->
+          <div class="mb-3">
+            <label class="form-label"><i class="bi bi-image me-1"></i>Imagen del Reporte</label>
+            
+            {% if reporte.foto %}
+              <div class="mb-3">
+                <p><strong>Imagen actual:</strong></p>
+                <img src="{{ reporte.foto.url }}" alt="Imagen actual" class="img-preview">
+              </div>
+            {% endif %}
+            
+            <div class="mb-2">
+              <input type="file" class="form-control" id="foto" name="foto" accept="image/*">
+              <div class="form-text">Seleccione una nueva imagen para reemplazar la actual (opcional)</div>
+            </div>
+            
+            <div id="foto-preview" class="mt-2"></div>
+          </div>
+
+          <!-- Botones de acción -->
+          <div class="d-flex justify-content-between">
+            <a href="{% url 'admin_reportes' %}" class="btn btn-secondary">
+              <i class="bi bi-x-circle me-1"></i>Cancelar
+            </a>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-circle me-1"></i>Guardar Cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script>
+    let map;
+    let marker;
+    
+    // Función para parsear números que pueden venir con coma o punto
+    function parseCoordinate(value) {
+      if (!value) return 0;
+      // Reemplazar coma por punto si es necesario
+      return parseFloat(value.toString().replace(',', '.'));
+    }
+    
+    // Usar directamente las coordenadas de la base de datos
+    let latValue = document.getElementById('latitud').value;
+    let lngValue = document.getElementById('longitud').value;
+    let currentLat = parseCoordinate(latValue);
+    let currentLng = parseCoordinate(lngValue);
+    
+    console.log('Valores originales:', latValue, lngValue);
+    console.log('Coordenadas parseadas:', currentLat, currentLng);
+
+    // Inicializar mapa
+    function initMap() {
+      map = L.map('map').setView([currentLat, currentLng], 13);
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Agregar marcador en la posición actual
+      marker = L.marker([currentLat, currentLng]).addTo(map);
+      
+      // Click en el mapa para cambiar ubicación
+      map.on('click', function(e) {
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
+        
+        // Actualizar marcador
+        if (marker) {
+          map.removeLayer(marker);
+        }
+        marker = L.marker([lat, lng]).addTo(map);
+        
+        // Actualizar campos ocultos
+        document.getElementById('latitud').value = lat;
+        document.getElementById('longitud').value = lng;
+        
+        // Mostrar coordenadas
+        document.getElementById('location-info').innerHTML = `
+          <small class="text-success">
+            <i class="bi bi-check-circle me-1"></i>
+            Ubicación seleccionada: ${lat.toFixed(6)}, ${lng.toFixed(6)}
+          </small>
+        `;
+        
+        // Geocodificación inversa (opcional)
+        reverseGeocode(lat, lng);
+      });
+      
+      // Mostrar ubicación actual
+      document.getElementById('location-info').innerHTML = `
+        <small class="text-info">
+          <i class="bi bi-info-circle me-1"></i>
+          Ubicación actual: ${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}
+        </small>
+      `;
+    }
+
+    // Función de geocodificación inversa
+    function reverseGeocode(lat, lng) {
+      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.display_name) {
+            // Actualizar campos de ubicación
+            const road = data.address?.road || '';
+            const suburb = data.address?.suburb || data.address?.neighbourhood || '';
+            
+            if (road) {
+              document.querySelector('input[name="nombre_via"]').value = road;
+            }
+            if (suburb) {
+              document.querySelector('input[name="distrito"]').value = suburb;
+            }
+          }
+        })
+        .catch(error => console.error('Error en geocodificación:', error));
+    }
+
+    // Mostrar/ocultar mapa
+    document.getElementById('modificarUbicacion').addEventListener('change', function() {
+      const mapDiv = document.getElementById('map');
+      if (this.checked) {
+        mapDiv.style.display = 'block';
+        setTimeout(() => {
+          if (!map) {
+            initMap();
+          } else {
+            map.invalidateSize();
+          }
+        }, 100);
+      } else {
+        mapDiv.style.display = 'none';
+      }
+    });
+
+    // Preview de imagen
+    document.getElementById('foto').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      const preview = document.getElementById('foto-preview');
+      
+      if (file) {
+        if (file.size > 5 * 1024 * 1024) {
+          alert('La imagen no puede ser mayor a 5MB');
+          this.value = '';
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          preview.innerHTML = `
+            <div class="mt-2">
+              <p><strong>Nueva imagen:</strong></p>
+              <img src="${e.target.result}" class="img-preview" alt="Preview">
+            </div>
+          `;
+        };
+        reader.readAsDataURL(file);
+      } else {
+        preview.innerHTML = '';
+      }
+    });
+  </script>
+</body>
+</html>

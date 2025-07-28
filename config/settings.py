@@ -25,7 +25,8 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 
 # Load secret key
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY') or 'django-insecure-fhk38#qgkd$z3&c88%4hwd_4qe%!@o9n1zv45)3=-31pv)_zlt'
+ORS_API_KEY = os.getenv('ORS_API_KEY')
 
 DEBUG=True
 
@@ -52,6 +53,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'web',
+    'app.usuario',
+    'app.reporte',
+    'app.admin_custom',
 ]
 
 MIDDLEWARE = [
@@ -139,7 +143,11 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # directorio para archivos estaticos como imagenes, css o js
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'web/static')]
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'app/usuario/static'),
+    os.path.join(BASE_DIR, 'app/admin_custom/static'),
+    os.path.join(BASE_DIR, 'app/reporte/static')
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

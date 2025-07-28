@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ titulo }} | Traffic Pulse</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    .nivel-peligro-1 { background-color: #d4edda; color: #155724; }
+    .nivel-peligro-2 { background-color: #fff3cd; color: #856404; }
+    .nivel-peligro-3 { background-color: #f8d7da; color: #721c24; }
+    .nivel-peligro-4 { background-color: #dc3545; color: #ffffff; }
+    .badge-votos { font-size: 0.75rem; }
+    .modal-img { 
+      max-width: 100%; 
+      height: auto; 
+      max-height: 400px; 
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .imagen-error {
+      background-color: #f8f9fa;
+      border: 2px dashed #dee2e6;
+      border-radius: 8px;
+      padding: 2rem;
+      text-align: center;
+      color: #6c757d;
+    }
+    .has-image {
+      color: #28a745;
+    }
+    .no-image {
+      color: #6c757d;
+    }
+    
+    /* Colores para filas según estado */
+    .fila-pendiente {
+      background-color: #fff3cd !important;
+    }
+    .fila-probado {
+      background-color: #d4edda !important;
+    }
+    .fila-rechazado {
+      background-color: #f8d7da !important;
+    }
+    
+    /* Botones de acción horizontales con colores enteros */
+    .btn-action-accept {
+      background-color: #28a745;
+      border-color: #28a745;
+      color: white;
+      width: 40px;
+      height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      margin-right: 2px;
+    }
+    .btn-action-accept:hover {
+      background-color: #218838;
+      border-color: #1e7e34;
+      color: white;
+    }
+    
+    .btn-action-reject {
+      background-color: #dc3545;
+      border-color: #dc3545;
+      color: white;
+      width: 40px;
+      height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      margin-right: 2px;
+    }
+    .btn-action-reject:hover {
+      background-color: #c82333;
+      border-color: #bd2130;
+      color: white;
+    }
+    
+    .btn-action-view {
+      background-color: #0d6efd;
+      border-color: #0d6efd;
+      color: white;
+      width: 40px;
+      height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      margin-right: 2px;
+    }
+    .btn-action-view:hover {
+      background-color: #0b5ed7;
+      border-color: #0a58ca;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="container-fluid py-4">
+    <div class="card shadow-sm border-0 rounded-4">
+      <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Control de Reportes</h5>
+        <a href="/panel/" class="btn btn-light btn-sm">
+          <i class="bi bi-arrow-left me-1"></i>Volver al Panel
+        </a>
+      </div>
+
+      <div class="card-body">
+<form method="post" class="row g-3 mb-4">
+          {% csrf_token %}
+          <div class="col-md-2">
+            <label class="form-label">Fecha</label>
+            <input type="date" name="fecha" value="{{ fecha_actual }}" class="form-control">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Ubicación</label>
+            <input type="text" name="ubicacion" value="{{ ubicacion_actual }}" placeholder="Ej. Arequipa" class="form-control">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Estado</label>
+            <select name="estado" class="form-select">
+              <option value="">-- Todos --</option>
+              <option value="pendiente" {% if estado_actual == 'pendiente' %}selected{% endif %}>Pendiente</option>
+              <option value="probado" {% if estado_actual == 'probado' %}selected{% endif %}>Probado</option>
+              <option value="rechazado" {% if estado_actual == 'rechazado' %}selected{% endif %}>Rechazado</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Tipo Incidente</label>
+            <select name="tipo_incidente" class="form-select">
+              <option value="">-- Todos --</option>
+              <option value="accidente">🚗 Accidente</option>
+              <option value="construccion">🚧 Construcción</option>
+              <option value="embotellamiento">🚦 Embotellamiento</option>
+              <option value="cierre_via">🚫 Cierre de vía</option>
+              <option value="control_policial">👮 Control policial</option>
+              <option value="semaforo_danado">🔴 Semáforo dañado</option>
+              <option value="bache">🕳️ Bache</option>
+              <option value="inundacion">💧 Inundación</option>
+              <option value="vehiculo_averiado">🔧 Vehículo averiado</option>
+              <option value="manifestacion">✊ Manifestación</option>
+              <option value="otro">❓ Otro</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Nivel Peligro</label>
+            <select name="nivel_peligro" class="form-select">
+              <option value="">-- Todos --</option>
+              <option value="1">Bajo (1)</option>
+              <option value="2">Medio (2)</option>
+              <option value="3">Alto (3)</option>
+              <option value="4">Crítico (4)</option>
+            </select>
+          </div>
+          <div class="col-md-2 d-flex align-items-end">
+            <button class="btn btn-outline-primary w-100">
+              <i class="bi bi-filter me-1"></i>Filtrar
+            </button>
+          </div>
+        </form>
+
+        {% if reportes %}
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped table-hover">
+              <thead class="table-dark">
+                <tr>
+                  <th style="width: 50px;">#</th>
+                  <th style="width: 150px;">Título</th>
+                  <th style="width: 200px;">Descripción</th>
+                  <th style="width: 120px;">Tipo</th>
+                  <th style="width: 120px;">Ubicación</th>
+                  <th style="width: 100px;">Usuario</th>
+                  <th style="width: 130px;">Fecha</th>
+                  <th style="width: 80px;">Peligro</th>
+                  <th style="width: 100px;">Votos</th>
+                  <th style="width: 100px;">Estado</th>
+                  <th style="width: 60px;">Imagen</th>
+                  <th style="width: 80px;">Activo</th>
+                  <th style="width: 120px;">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for r in reportes %}
+                <tr class="fila-{{ r.estado_reporte }}">
+                  <td class="text-center">{{ r.id }}</td>
+                  <td><strong>{{ r.titulo|truncatechars:20 }}</strong></td>
+                  <td><small class="text-muted">{{ r.descripcion|truncatechars:40 }}</small></td>
+                  <td><span class="badge bg-info text-dark">{{ r.tipo_incidente|capfirst }}</span></td>
+                  <td>{{ r.nombre_via|default:r.distrito|default:"Ubicación no especificada" }}</td>
+                  <td><small><i class="bi bi-person-circle"></i> {{ r.usuario_reportador.username }}</small></td>
+                  <td><small>{{ r.fecha_creacion|date:"d/m/Y" }}<br>{{ r.fecha_creacion|date:"H:i" }}</small></td>
+                  <td class="text-center"><span class="badge nivel-peligro-{{ r.nivel_peligro }}">Nivel {{ r.nivel_peligro }}</span></td>
+                  <td class="text-center">
+                    <span class="badge bg-success badge-votos me-1"><i class="bi bi-hand-thumbs-up"></i> {{ r.votos_positivos }}</span>
+                    <span class="badge bg-danger badge-votos"><i class="bi bi-hand-thumbs-down"></i> {{ r.votos_negativos }}</span>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge {% if r.estado_reporte == 'pendiente' %}bg-warning text-dark{% elif r.estado_reporte == 'probado' %}bg-success{% elif r.estado_reporte == 'rechazado' %}bg-danger{% else %}bg-secondary{% endif %}">
+                      {{ r.estado_reporte|capfirst }}
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    {% if r.foto %}
+                      <i class="bi bi-image-fill has-image" title="Con imagen"></i>
+                    {% else %}
+                      <i class="bi bi-image no-image" title="Sin imagen"></i>
+                    {% endif %}
+                  </td>
+                  <td class="text-center">
+                    {% if r.is_active %}
+                      <i class="bi bi-check-circle-fill text-success" title="Activo"></i>
+                    {% else %}
+                      <i class="bi bi-x-circle text-danger" title="Inactivo"></i>
+                    {% endif %}
+                  </td>
+                  <td class="text-center">
+                    <div class="d-flex justify-content-center align-items-center">
+                      <button class="btn btn-action-view" onclick="verDetalle({{ r.id }}, '{{ r.titulo|escapejs }}', '{{ r.descripcion|escapejs }}', '{{ r.tipo_incidente|escapejs }}', '{{ r.nombre_via|default:r.distrito|default:'Ubicación no especificada'|escapejs }}', '{{ r.usuario_reportador.username|escapejs }}', '{{ r.fecha_creacion|date:"d/m/Y H:i" }}', {{ r.nivel_peligro }}, {{ r.votos_positivos }}, {{ r.votos_negativos }}, '{{ r.estado_reporte|escapejs }}', {{ r.is_active|yesno:"true,false" }}, '{% if r.foto %}{{ r.foto.url }}{% endif %}')" title="Ver detalles">
+                        <i class="bi bi-eye"></i>
+                      </button>
+                      {% if r.estado_reporte == 'pendiente' %}
+                        <button class="btn btn-action-accept" onclick="cambiarEstado({{ r.id }}, 'probado')" title="Aceptar">
+                          <i class="bi bi-check"></i>
+                        </button>
+                        <button class="btn btn-action-reject" onclick="cambiarEstado({{ r.id }}, 'rechazado')" title="Rechazar">
+                          <i class="bi bi-x"></i>
+                        </button>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-center py-5">
+            <i class="bi bi-inbox display-4 text-muted"></i>
+            <p class="text-muted mt-3">No hay reportes disponibles con los filtros seleccionados.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalDetalle" tabindex="-1" aria-labelledby="modalDetalleLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="modalDetalleLabel">
+            <i class="bi bi-info-circle me-2"></i>Detalles del Reporte
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6">
+              <h6 class="text-primary">Información General</h6>
+              <table class="table table-sm">
+                <tr><td><strong>ID:</strong></td><td id="detalle-id"></td></tr>
+                <tr><td><strong>Título:</strong></td><td id="detalle-titulo"></td></tr>
+                <tr><td><strong>Tipo:</strong></td><td id="detalle-tipo"></td></tr>
+                <tr><td><strong>Ubicación:</strong></td><td id="detalle-ubicacion"></td></tr>
+                <tr><td><strong>Usuario:</strong></td><td id="detalle-usuario"></td></tr>
+                <tr><td><strong>Fecha:</strong></td><td id="detalle-fecha"></td></tr>
+              </table>
+            </div>
+            <div class="col-md-6">
+              <h6 class="text-primary">Estado y Validación</h6>
+              <table class="table table-sm">
+                <tr><td><strong>Estado:</strong></td><td id="detalle-estado"></td></tr>
+                <tr><td><strong>Nivel Peligro:</strong></td><td id="detalle-peligro"></td></tr>
+                <tr><td><strong>Activo:</strong></td><td id="detalle-validado"></td></tr>
+                <tr><td><strong>Votos +:</strong></td><td id="detalle-votos-pos"></td></tr>
+                <tr><td><strong>Votos -:</strong></td><td id="detalle-votos-neg"></td></tr>
+              </table>
+            </div>
+          </div>
+          <div class="mt-3">
+            <h6 class="text-primary">Descripción</h6>
+            <p class="border p-3 bg-light rounded" id="detalle-descripcion"></p>
+          </div>
+          <div class="mt-3" id="imagen-container">
+            <h6 class="text-primary">Imagen del Reporte</h6>
+            <div class="text-center" id="imagen-content">
+              <img id="detalle-imagen" class="modal-img" alt="Imagen del reporte" style="display: none;">
+              <div id="imagen-error" class="imagen-error" style="display: none;">
+                <i class="bi bi-image display-6"></i>
+                <p class="mt-2 mb-0">No se encontró imagen para este reporte</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <a id="btn-editar-reporte" class="btn btn-secondary" href="#">
+            <i class="bi bi-pen me-1"></i>Editar
+          </a>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i>Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function verDetalle(id, titulo, descripcion, tipo, ubicacion, usuario, fecha, peligro, votosPos, votosNeg, estado, validado, imagenUrl) {
+      document.getElementById('detalle-id').textContent = id;
+      document.getElementById('detalle-titulo').textContent = titulo;
+      document.getElementById('detalle-tipo').innerHTML = `<span class="badge bg-info text-dark">${tipo}</span>`;
+      document.getElementById('detalle-ubicacion').textContent = ubicacion;
+      document.getElementById('detalle-usuario').innerHTML = `<i class="bi bi-person-circle"></i> ${usuario}`;
+      document.getElementById('detalle-fecha').textContent = fecha;
+      document.getElementById('detalle-descripcion').textContent = descripcion;
+      document.getElementById('btn-editar-reporte').href = `/panel/editar/${id}/`;
+
+      let estadoBadge = '';
+      if (estado === 'pendiente') estadoBadge = '<span class="badge bg-warning">Pendiente</span>';
+      else if (estado === 'probado') estadoBadge = '<span class="badge bg-success">Probado</span>';
+      else if (estado === 'rechazado') estadoBadge = '<span class="badge bg-danger">Rechazado</span>';
+      else estadoBadge = '<span class="badge bg-secondary">Otro</span>';
+      document.getElementById('detalle-estado').innerHTML = estadoBadge;
+
+      document.getElementById('detalle-peligro').innerHTML = `<span class="badge nivel-peligro-${peligro}">Nivel ${peligro}</span>`;
+      document.getElementById('detalle-validado').innerHTML = validado === 'true'
+        ? '<i class="bi bi-check-circle-fill text-success"></i> Sí'
+        : '<i class="bi bi-clock text-warning"></i> No';
+
+      document.getElementById('detalle-votos-pos').innerHTML = `<span class="badge bg-success"><i class="bi bi-hand-thumbs-up"></i> ${votosPos}</span>`;
+      document.getElementById('detalle-votos-neg').innerHTML = `<span class="badge bg-danger"><i class="bi bi-hand-thumbs-down"></i> ${votosNeg}</span>`;
+
+      const imagenElement = document.getElementById('detalle-imagen');
+      const imagenError = document.getElementById('imagen-error');
+
+      if (imagenUrl && imagenUrl.trim() !== '') {
+        console.log('URL original recibida:', imagenUrl);
+        
+        let urlLimpia = imagenUrl.trim();
+        
+        // Si no empieza con http, https o /, agregar /
+        if (!urlLimpia.startsWith('http') && !urlLimpia.startsWith('/')) {
+          urlLimpia = '/' + urlLimpia;
+        }
+        
+        console.log('URL limpia:', urlLimpia);
+        
+        imagenElement.src = urlLimpia;
+        imagenElement.style.display = 'block';
+        imagenError.style.display = 'none';
+
+        imagenElement.onerror = function() {
+          console.log('Error cargando imagen desde:', this.src);
+          
+          const filename = urlLimpia.split('/').pop();
+          console.log('Nombre de archivo extraído:', filename);
+          
+          const rutasAIntentar = [
+            `/media/reportes/${filename}`,
+            `/media/${filename}`,
+            `/${filename}`,
+            `/static/reportes/${filename}`
+          ];
+          
+          let intentoActual = 0;
+          
+          const intentarSiguienteRuta = () => {
+            if (intentoActual < rutasAIntentar.length) {
+              console.log(`Intentando ruta ${intentoActual + 1}:`, rutasAIntentar[intentoActual]);
+              this.src = rutasAIntentar[intentoActual];
+              intentoActual++;
+            } else {
+              console.log('Todas las rutas fallaron, mostrando error');
+              this.style.display = 'none';
+              imagenError.style.display = 'block';
+              document.getElementById('imagen-error').innerHTML = `
+                <i class="bi bi-exclamation-triangle display-6 text-warning"></i>
+                <p class="mt-2 mb-0">No se pudo cargar la imagen</p>
+                <small class="text-muted">Archivo: ${filename}</small>
+              `;
+            }
+          };
+          
+          this.onerror = intentarSiguienteRuta;
+          intentarSiguienteRuta();
+        };
+
+        imagenElement.onload = function() {
+          console.log('Imagen cargada exitosamente desde:', this.src);
+          this.style.display = 'block';
+          imagenError.style.display = 'none';
+        };
+      } else {
+        console.log('No hay URL de imagen proporcionada');
+        imagenElement.style.display = 'none';
+        imagenError.style.display = 'block';
+        document.getElementById('imagen-error').innerHTML = `
+          <i class="bi bi-image display-6"></i>
+          <p class="mt-2 mb-0">Este reporte no tiene imagen</p>
+        `;
+      }
+
+      // Mostrar modal
+      const modal = new bootstrap.Modal(document.getElementById('modalDetalle'));
+      modal.show();
+    }
+
+    function cambiarEstado(id, nuevoEstado) {
+      if (confirm(`¿Está seguro de que desea ${nuevoEstado === 'probado' ? 'aceptar' : 'rechazar'} este reporte?`)) {
+        fetch(`/panel/cambiar-estado/${id}/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            estado: nuevoEstado
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            location.reload(); // Recargar página para mostrar cambios
+          } else {
+            alert('Error al cambiar estado: ' + data.error);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error al procesar la solicitud');
+        });
+      }
+    }
+  </script>
+</body>
+</html>

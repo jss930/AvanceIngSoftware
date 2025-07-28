@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Planificar Ruta | Traffic Pulse</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'dashboard' %}">
+                <i class="bi bi-arrow-left me-2"></i>Volver al Dashboard
+            </a>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Planificador de Rutas</h4>
+            </div>
+            <div class="card-body">
+                <form class="mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <label class="form-label">Origen</label>
+                            <input type="text" class="form-control" placeholder="Ingresa el punto de partida">
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label">Destino</label>
+                            <input type="text" class="form-control" placeholder="Ingresa el destino">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="bi bi-search me-2"></i>Buscar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Área del mapa -->
+                <div style="height: 400px; background-color: #f8f9fa; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <p class="text-muted">
+                        <i class="bi bi-map me-2"></i>
+                        Mapa de rutas en desarrollo
+                    </p>
+                </div>
+
+                <div class="alert alert-success mt-4">
+                    <i class="bi bi-info-circle me-2"></i>
+                    El planificador de rutas está en desarrollo. Pronto podrás encontrar la mejor ruta evitando el tráfico.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
