@@ -15,7 +15,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 from django.views.generic import FormView, TemplateView
-from django.views.generic.edit import CreateView, UpdateView
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -310,32 +310,6 @@ def vista_configuracion_usuario(request):
     return render(request, 'configuracion_usuario.html', context)
 
 
-"""
-class ReportIncidentView(LoginRequiredMixin, TemplateView):
-    template_name = 'report_incident.html'
-    login_url = 'login'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        
-        context['tipos_incidente'] = [
-            ('accidente', 'Accidente'),
-            ('congestion', 'Congestión'),
-            ('obra', 'Obra en construcción'),
-            ('manifestacion', 'Manifestación'),
-            ('vehiculo_varado', 'Vehículo varado'),
-            ('otro', 'Otro'),
-        ]
-        
-        context['niveles_peligro'] = [
-            (1, 'Bajo'),
-            (2, 'Medio'),
-            (3, 'Alto'),
-        ]
-        
-        return context
-"""
-
 # Tus vistas existentes (mantenidas)
 def home(request):
     return render(request, 'home.html')
@@ -421,6 +395,17 @@ class EditarReporteView(LoginRequiredMixin, UpdateView):
     def form_invalid(self, form):
         form.add_error(None, "Revisa los datos del formulario.")
         return super().form_invalid(form)
+
+
+class EliminarReporteView(LoginRequiredMixin, DeleteView):
+    model = ReporteColaborativo
+    template_name = 'eliminar_reporte.html'
+    success_url = reverse_lazy('mis_reportes')
+    login_url = 'login'
+
+    def get_queryset(self):
+        return ReporteColaborativo.objects.filter(usuario_reportador=self.request.user)
+
 
 
 class SeeStateView(TemplateView):
