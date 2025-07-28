@@ -15,12 +15,13 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 from django.views.generic import FormView, TemplateView
-from django.views.generic.edit import CreateView
+from django.views.generic.edit import CreateView, UpdateView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from web.models import Reporte
+from web.forms import ReporteColaborativoForm
+from web.models import ReporteColaborativo
 from web.services.reportes_usuario_service import (
     ReportesUsuarioService, 
     UsuarioSinReportesError, 
@@ -28,7 +29,7 @@ from web.services.reportes_usuario_service import (
 )
 from .forms import RegistroUsuarioForm, LoginForm, ReporteColaborativoForm
 from app.presentation.controladores.reporteColaborativoController import ReporteColaborativoController
-from .models import ReporteColaborativo
+from web.models import ReporteColaborativo
 from io import StringIO
 import json
 import csv
@@ -233,7 +234,9 @@ class MisReportesView(LoginRequiredMixin, TemplateView):
                 'reportes_pendientes': 0,
                 'tasa_validacion': 0,
             }
-            
+        
+        print("Reportes en contexto:", context.get("reportes"))
+
         return context
 
 
@@ -248,7 +251,7 @@ class DetalleReporteView(LoginRequiredMixin, TemplateView):
         
         try:
             # Obtener el reporte específico
-            reporte = get_object_or_404(Reporte, id=reporte_id)
+            reporte = get_object_or_404(ReporteColaborativo, id=reporte_id)
             
             # Verificar permisos
             if reporte.usuario_reportador != user and not user.is_superuser:
@@ -262,6 +265,9 @@ class DetalleReporteView(LoginRequiredMixin, TemplateView):
                     reporte.credibilidad_porcentaje = 0
                 
                 context['reporte'] = reporte
+                context['credibilidad'] = reporte.credibilidad_porcentaje
+                context['angulo_grafico'] = reporte.credibilidad_porcentaje * 3.6
+
                 
         except Exception as e:
             context['error'] = "Error al cargar el reporte"
@@ -304,7 +310,7 @@ def vista_configuracion_usuario(request):
     return render(request, 'configuracion_usuario.html', context)
 
 
-# Vista adicional para crear reportes (si no la tienes)
+"""
 class ReportIncidentView(LoginRequiredMixin, TemplateView):
     template_name = 'report_incident.html'
     login_url = 'login'
@@ -328,7 +334,7 @@ class ReportIncidentView(LoginRequiredMixin, TemplateView):
         ]
         
         return context
-
+"""
 
 # Tus vistas existentes (mantenidas)
 def home(request):
@@ -399,6 +405,22 @@ class ReporteIncidentView(CreateView):
             form.add_error(None, "Debes iniciar sesión para enviar un reporte.")
             return self.form_invalid(form)
         return super().form_valid(form)
+
+
+class EditarReporteView(LoginRequiredMixin, UpdateView):
+    model = ReporteColaborativo
+    form_class = ReporteColaborativoForm
+    template_name = 'editar_reporte.html'
+    success_url = reverse_lazy('mis_reportes')
+    login_url = 'login'
+
+    def get_queryset(self):
+        # Solo permite editar reportes del usuario actual
+        return ReporteColaborativo.objects.filter(usuario_reportador=self.request.user)
+
+    def form_invalid(self, form):
+        form.add_error(None, "Revisa los datos del formulario.")
+        return super().form_invalid(form)
 
 
 class SeeStateView(TemplateView):

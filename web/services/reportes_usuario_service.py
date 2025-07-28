@@ -5,7 +5,8 @@ from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.utils import timezone
 from datetime import timedelta
-from web.models import Reporte, ConfiguracionUsuario, InteraccionUsuario
+from web.models import ReporteColaborativo, ConfiguracionUsuario, InteraccionUsuario
+
 
 
 # Excepciones personalizadas
@@ -54,7 +55,7 @@ class EstadisticasUsuarioService:
         }
     
     def _obtener_reportes_usuario(self):
-        return Reporte.objects.filter(usuario_reportador_id=self.usuario_id)
+        return ReporteColaborativo.objects.filter(usuario_reportador_id=self.usuario_id)
     
     def _contar_reportes_totales(self, reportes):
         return reportes.count()
@@ -225,7 +226,7 @@ class ReportesUsuarioService:
     
     def _cargar_reportes_recientes(self, datos: dict):
         limite = datos.get('limite', 5)
-        reportes = Reporte.objects.filter(
+        reportes = ReporteColaborativo.objects.filter(
             usuario_reportador_id=datos['usuario_id']
         ).select_related('usuario_reportador').order_by('-fecha_creacion')[:limite]
         
@@ -238,7 +239,7 @@ class ReportesUsuarioService:
         return datos
     
     def _cargar_reportes_usuario(self, datos: dict):
-        reportes = Reporte.objects.filter(
+        reportes = ReporteColaborativo.objects.filter(
             usuario_reportador_id=datos['usuario_id']
         ).select_related('usuario_reportador').order_by('-fecha_creacion')
         
