@@ -2,7 +2,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth.models import User
 from django.utils import timezone
-from web.models import Reporte #, Ubicacion  
+from web.models import ReporteColaborativo as Reporte #, Ubicacion  
 from datetime import datetime, timedelta
 import random
 
@@ -69,29 +69,30 @@ class Command(BaseCommand):
             "Auto detenido por falla mecánica en zona crítica."
         ],
 
-        """ 
-        Extras
-        
-        'semaforo_dañado': [
-            "Semáforo fuera de servicio causa confusión en intersección.",
-            "Falla en sistema de semaforización genera caos vehicular.",
-            "Semáforo con intermitencias afecta fluidez del tráfico.",
-            "Sistema de semáforos colapsado por corte eléctrico."
-        ],
-        'evento_especial': [
-            "Evento deportivo genera alta concentración vehicular.",
-            "Celebración religiosa afecta rutas principales.",
-            "Concierto masivo causa desvíos de tráfico.",
-            "Feria local modifica patrones de circulación."
-        ],
-        """
-
         'otro': [
             "Incidente no categorizado reportado en la zona.",
             "Situación especial afecta el tráfico normal.",
             "Evento imprevisto causa alteración vial."
         ]
     }
+
+        #Extras
+        #
+        #'semaforo_dañado': [
+        #   "Semáforo fuera de servicio causa confusión en intersección.",
+        #    "Falla en sistema de semaforización genera caos vehicular.",
+        #    "Semáforo con intermitencias afecta fluidez del tráfico.",
+        #    "Sistema de semáforos colapsado por corte eléctrico."
+        #],
+        #'evento_especial': [
+        #    "Evento deportivo genera alta concentración vehicular.",
+        #    "Celebración religiosa afecta rutas principales.",
+        #    "Concierto masivo causa desvíos de tráfico.",
+        #    "Feria local modifica patrones de circulación."
+        #],
+
+
+
 
     def add_arguments(self, parser):
         parser.add_argument(

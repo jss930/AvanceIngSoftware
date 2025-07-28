@@ -25,7 +25,7 @@ class ReporteColaborativo(models.Model):
     votos_negativos = models.IntegerField(default=0)
     usuarios_votantes = models.ManyToManyField(User, related_name='votos_emitidos', blank=True)
     es_validado = models.BooleanField(default=False)
-
+    
     def __str__(self):
         return f"{self.titulo} ({self.estado_reporte})"
     
