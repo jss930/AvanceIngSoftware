@@ -1,0 +1,536 @@
+<!-- app/usuario/templates/configuracion_notificaciones.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración de Notificaciones | Traffic Pulse</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    {% load static %}
+    
+    <style>
+        .config-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .feature-card {
+            transition: transform 0.2s;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+        
+        .custom-range {
+            background: linear-gradient(to right, #28a745 0%, #ffc107 50%, #dc3545 100%);
+            height: 8px;
+            border-radius: 4px;
+        }
+        
+        .notification-preview {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'dashboard' %}">
+                <i class="bi bi-arrow-left me-2"></i>Volver al Dashboard
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3 text-white">
+                    <i class="bi bi-person-circle me-2"></i>{{ user.username }}
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card config-card border-0 shadow-lg">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-bell-fill display-1 mb-3"></i>
+                        <h1 class="mb-3">Configuración de Notificaciones</h1>
+                        <p class="lead mb-0">
+                            Personaliza cómo y cuándo recibir alertas de tráfico en tiempo real
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Configuración Principal -->
+            <div class="col-lg-8">
+                <div class="card feature-card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-toggles me-2 text-primary"></i>Configuración Principal
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="notification-config-form">
+                            <!-- Activar/Desactivar Notificaciones -->
+                            <div class="row mb-4">
+                                <div class="col-md-8">
+                                    <h6 class="fw-bold">Notificaciones de Tráfico</h6>
+                                    <p class="text-muted mb-0">
+                                        Recibe alertas cuando te acerques a zonas con congestión o incidentes
+                                    </p>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <div class="form-check form-switch fs-4">
+                                        <input class="form-check-input" type="checkbox" id="notificaciones-activas" 
+                                               {% if perfil.notificaciones_activas %}checked{% endif %}>
+                                        <label class="form-check-label" for="notificaciones-activas"></label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Radio de Notificación -->
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="fw-bold mb-0">Radio de Notificación</h6>
+                                    <span class="badge bg-primary fs-6" id="radio-display">{{ perfil.radio_notificacion }} km</span>
+                                </div>
+                                <p class="text-muted mb-3">
+                                    Distancia máxima para recibir notificaciones de incidentes cercanos
+                                </p>
+                                <input type="range" class="form-range custom-range" id="radio-notificacion" 
+                                       min="0.5" max="10" step="0.5" value="{{ perfil.radio_notificacion }}">
+                                <div class="d-flex justify-content-between">
+                                    <small class="text-muted">0.5 km</small>
+                                    <small class="text-muted">5 km</small>
+                                    <small class="text-muted">10 km</small>
+                                </div>
+                            </div>
+
+                            <!-- Frecuencia de Actualización -->
+                            <div class="mb-4">
+                                <h6 class="fw-bold">Frecuencia de Actualización</h6>
+                                <p class="text-muted mb-3">
+                                    Cada cuánto tiempo actualizar tu ubicación y verificar nuevos incidentes
+                                </p>
+                                <select class="form-select" id="frecuencia-actualizacion">
+                                    <option value="10" {% if perfil.frecuencia_actualizacion == 10 %}selected{% endif %}>
+                                        10 segundos (Muy frecuente - Mayor consumo de batería)
+                                    </option>
+                                    <option value="30" {% if perfil.frecuencia_actualizacion == 30 %}selected{% endif %}>
+                                        30 segundos (Recomendado)
+                                    </option>
+                                    <option value="60" {% if perfil.frecuencia_actualizacion == 60 %}selected{% endif %}>
+                                        1 minuto (Equilibrado)
+                                    </option>
+                                    <option value="120" {% if perfil.frecuencia_actualizacion == 120 %}selected{% endif %}>
+                                        2 minutos (Ahorro de batería)
+                                    </option>
+                                    <option value="300" {% if perfil.frecuencia_actualizacion == 300 %}selected{% endif %}>
+                                        5 minutos (Máximo ahorro)
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- Tipos de Incidentes -->
+                            <div class="mb-4">
+                                <h6 class="fw-bold">Tipos de Incidentes a Notificar</h6>
+                                <p class="text-muted mb-3">
+                                    Selecciona qué tipos de incidentes quieres recibir como notificación
+                                </p>
+                                
+                                <div class="row" id="tipos-incidentes">
+                                    {% for tipo_codigo, tipo_nombre in tipos_incidentes %}
+                                    <div class="col-md-6 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   value="{{ tipo_codigo }}" id="tipo-{{ tipo_codigo }}"
+                                                   {% if tipo_codigo in tipos_seleccionados %}checked{% endif %}>
+                                            <label class="form-check-label" for="tipo-{{ tipo_codigo }}">
+                                                {{ tipo_nombre }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="selectAllIncidents()">
+                                        <i class="bi bi-check-all me-1"></i>Seleccionar Todos
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="clearAllIncidents()">
+                                        <i class="bi bi-x-circle me-1"></i>Limpiar Selección
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Botones de Acción -->
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button type="button" class="btn btn-outline-secondary" onclick="resetToDefaults()">
+                                    <i class="bi bi-arrow-clockwise me-2"></i>Restaurar Valores Por Defecto
+                                </button>
+                                <button type="button" class="btn btn-primary" onclick="saveConfiguration()">
+                                    <i class="bi bi-check-circle me-2"></i>Guardar Configuración
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Vista Previa de Notificaciones -->
+                <div class="card feature-card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-eye me-2 text-success"></i>Vista Previa de Notificaciones
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">
+                            Así es como se verán las notificaciones que recibas:
+                        </p>
+                        
+                        <div class="notification-preview">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0 text-danger">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Alerta de Tráfico
+                                </h6>
+                                <small class="text-muted">1.2km</small>
+                            </div>
+                            <strong>🚦 Embotellamiento en Av. Ejército</strong><br>
+                            <small class="text-muted">Av. Ejército, Yanahuara</small><br>
+                            🚦 Embotellamiento detectado a 1.2km. Nivel: Alto. Considera una ruta alternativa.
+                        </div>
+
+                        <div class="notification-preview">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0 text-warning">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Alerta de Tráfico
+                                </h6>
+                                <small class="text-muted">0.8km</small>
+                            </div>
+                            <strong>🚧 Construcción en Av. Dolores</strong><br>
+                            <small class="text-muted">Av. Dolores, José Luis Bustamante y Rivero</small><br>
+                            🚧 Construcción detectada a 0.8km. Nivel: Medio. Considera una ruta alternativa.
+                        </div>
+
+                        <button type="button" class="btn btn-outline-primary btn-sm mt-3" onclick="testNotification()">
+                            <i class="bi bi-bell me-2"></i>Probar Notificación
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel Lateral con Información -->
+            <div class="col-lg-4">
+                <!-- Estado Actual -->
+                <div class="card feature-card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0">
+                            <i class="bi bi-info-circle me-2"></i>Estado Actual
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Estado:</span>
+                            <span id="estado-notificaciones" class="fw-bold">
+                                {% if perfil.notificaciones_activas %}
+                                    <span class="text-success">✅ Activo</span>
+                                {% else %}
+                                    <span class="text-danger">❌ Inactivo</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Radio:</span>
+                            <span class="fw-bold">{{ perfil.radio_notificacion }} km</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Frecuencia:</span>
+                            <span class="fw-bold">{{ perfil.frecuencia_actualizacion }}s</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Tipos:</span>
+                            <span class="fw-bold">{{ perfil.get_tipos_incidentes_display|truncatechars:15 }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Consejos -->
+                <div class="card feature-card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0">
+                            <i class="bi bi-lightbulb me-2"></i>Consejos
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <small>Un radio de 2-3km es ideal para la mayoría de situaciones</small>
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <small>Frecuencias altas consumen más batería</small>
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <small>Selecciona solo los tipos de incidentes relevantes para ti</small>
+                            </li>
+                            <li>
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <small>Puedes cambiar la configuración en cualquier momento</small>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Estadísticas -->
+                <div class="card feature-card">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">
+                            <i class="bi bi-graph-up me-2"></i>Estadísticas
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center">
+                            <div class="mb-3">
+                                <h3 class="text-primary mb-0" id="reportes-hoy">-</h3>
+                                <small class="text-muted">Reportes cerca de ti hoy</small>
+                            </div>
+                            <div class="mb-3">
+                                <h3 class="text-warning mb-0" id="notificaciones-enviadas">-</h3>
+                                <small class="text-muted">Notificaciones enviadas esta semana</small>
+                            </div>
+                            <button class="btn btn-outline-info btn-sm" onclick="loadStatistics()">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div id="success-toast" class="toast" role="alert">
+            <div class="toast-header bg-success text-white">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <strong class="me-auto">Éxito</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="success-message"></div>
+        </div>
+        
+        <div id="error-toast" class="toast" role="alert">
+            <div class="toast-header bg-danger text-white">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <strong class="me-auto">Error</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="error-message"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Variables globales
+        let currentConfig = {
+            notificaciones_activas: {{ perfil.notificaciones_activas|yesno:"true,false" }},
+            radio_notificacion: {{ perfil.radio_notificacion }},
+            frecuencia_actualizacion: {{ perfil.frecuencia_actualizacion }},
+            tipos_incidentes_notificar: {{ tipos_seleccionados|safe }}
+        };
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            loadStatistics();
+        });
+
+        function setupEventListeners() {
+            // Radio slider
+            document.getElementById('radio-notificacion').addEventListener('input', function() {
+                document.getElementById('radio-display').textContent = this.value + ' km';
+            });
+
+            // Switch de notificaciones
+            document.getElementById('notificaciones-activas').addEventListener('change', function() {
+                const estado = document.getElementById('estado-notificaciones');
+                if (this.checked) {
+                    estado.innerHTML = '<span class="text-success">✅ Activo</span>';
+                } else {
+                    estado.innerHTML = '<span class="text-danger">❌ Inactivo</span>';
+                }
+            });
+        }
+
+        function selectAllIncidents() {
+            const checkboxes = document.querySelectorAll('#tipos-incidentes input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = true);
+        }
+
+        function clearAllIncidents() {
+            const checkboxes = document.querySelectorAll('#tipos-incidentes input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = false);
+        }
+
+        function resetToDefaults() {
+            if (confirm('¿Estás seguro de que quieres restaurar la configuración por defecto?')) {
+                document.getElementById('notificaciones-activas').checked = true;
+                document.getElementById('radio-notificacion').value = 2.0;
+                document.getElementById('frecuencia-actualizacion').value = 30;
+                document.getElementById('radio-display').textContent = '2 km';
+                
+                // Seleccionar tipos por defecto
+                clearAllIncidents();
+                ['embotellamiento', 'accidente', 'construccion'].forEach(tipo => {
+                    const checkbox = document.getElementById('tipo-' + tipo);
+                    if (checkbox) checkbox.checked = true;
+                });
+                
+                document.getElementById('estado-notificaciones').innerHTML = '<span class="text-success">✅ Activo</span>';
+            }
+        }
+
+        function saveConfiguration() {
+            const config = {
+                notificaciones_activas: document.getElementById('notificaciones-activas').checked,
+                radio_notificacion: parseFloat(document.getElementById('radio-notificacion').value),
+                frecuencia_actualizacion: parseInt(document.getElementById('frecuencia-actualizacion').value),
+                tipos_incidentes_notificar: Array.from(document.querySelectorAll('#tipos-incidentes input:checked')).map(cb => cb.value)
+            };
+
+            // Mostrar loading
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Guardando...';
+            btn.disabled = true;
+
+            fetch('/api/notificaciones/config/actualizar/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(config)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    currentConfig = config;
+                    showSuccessToast('Configuración guardada correctamente');
+                } else {
+                    showErrorToast('Error guardando configuración: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showErrorToast('Error de conexión. Inténtalo de nuevo.');
+            })
+            .finally(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        }
+
+        function testNotification() {
+            // Simular una notificación de prueba
+            const notification = {
+                tipo: 'embotellamiento',
+                titulo: '🚦 Embotellamiento de Prueba',
+                mensaje: 'Esta es una notificación de prueba del sistema.',
+                distancia: 1.5,
+                ubicacion: 'Tu ubicación actual',
+                nivel_peligro: 2
+            };
+
+            showTestNotification(notification);
+        }
+
+        function showTestNotification(notification) {
+            const toast = document.createElement('div');
+            toast.className = 'toast show position-fixed';
+            toast.style.cssText = 'top: 100px; right: 20px; z-index: 9999; min-width: 300px;';
+            
+            toast.innerHTML = `
+                <div class="toast-header bg-warning text-dark">
+                    <i class="bi bi-bell-fill me-2"></i>
+                    <strong class="me-auto">Notificación de Prueba</strong>
+                    <small class="text-muted">${notification.distancia}km</small>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">
+                    <strong>${notification.titulo}</strong><br>
+                    <small class="text-muted">${notification.ubicacion}</small><br>
+                    ${notification.mensaje}
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+
+        function loadStatistics() {
+            fetch('/api/notificaciones/estadisticas/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const stats = data.stats;
+                    document.getElementById('reportes-hoy').textContent = stats.reportes_cercanos || 0;
+                    // Simular notificaciones enviadas (esto se podría implementar con un modelo real)
+                    document.getElementById('notificaciones-enviadas').textContent = Math.floor(Math.random() * 20) + 5;
+                }
+            })
+            .catch(error => {
+                console.error('Error cargando estadísticas:', error);
+            });
+
+            setTimeout(loadStatistics, 30000); // Actualizar cada 30 segundos
+        }
+
+        function showSuccessToast(message) {
+            document.getElementById('success-message').textContent = message;
+            const toast = new bootstrap.Toast(document.getElementById('success-toast'));
+            toast.show();
+        }
+
+        function showErrorToast(message) {
+            document.getElementById('error-message').textContent = message;
+            const toast = new bootstrap.Toast(document.getElementById('error-toast'));
+            toast.show();
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>

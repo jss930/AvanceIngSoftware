@@ -1,0 +1,71 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Eliminar Alerta | Traffic Pulse</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .confirm-card {
+      background: #ffffff;
+      padding: 2.5rem;
+      border-radius: 1rem;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .btn-danger {
+      background-color: #e53935;
+      border: none;
+    }
+
+    .btn-danger:hover {
+      background-color: #c62828;
+    }
+
+    .btn-secondary {
+      background-color: #6c757d;
+      border: none;
+    }
+
+    .btn-secondary:hover {
+      background-color: #5a6268;
+    }
+
+    .icon-alert {
+      font-size: 2.5rem;
+      color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+  <div class="confirm-card">
+    <i class="bi bi-exclamation-triangle-fill icon-alert mb-3"></i>
+    <h3 class="text-danger mb-3">¿Eliminar esta alerta?</h3>
+    <p class="mb-4">¿Estás seguro de que deseas eliminar la alerta: <strong>{{ alerta.titulo }}</strong>?</p>
+
+    <form method="POST" class="d-flex justify-content-center gap-3">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger px-4">
+        <i class="bi bi-trash3 me-1"></i> Sí, eliminar
+      </button>
+      <a href="{% url 'gestionar_alertas' %}" class="btn btn-secondary px-4">
+        <i class="bi bi-x-circle me-1"></i> Cancelar
+      </a>
+    </form>
+  </div>
+</body>
+</html>

@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estado del Tráfico | Traffic Pulse</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            min-height: 100vh;
+        }
+
+        .traffic-status-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .traffic-status-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .status-indicator {
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 5px solid;
+        }
+
+        .status-good { 
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); 
+            color: #155724; 
+            border-left-color: #28a745;
+        }
+        .status-warning { 
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%); 
+            color: #856404; 
+            border-left-color: #ffc107;
+        }
+        .status-danger { 
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); 
+            color: #721c24; 
+            border-left-color: #dc3545;
+        }
+
+        .real-time-indicator {
+            position: relative;
+            display: inline-block;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #28a745;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { 
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+            }
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+            }
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+            }
+        }
+
+        .traffic-metric {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .incident-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .incident-high { border-left-color: #dc3545; }
+        .incident-medium { border-left-color: #ffc107; }
+        .incident-low { border-left-color: #28a745; }
+
+        .update-button {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            padding: 10px 25px;
+            transition: all 0.3s ease;
+        }
+
+        .update-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+            color: white;
+        }
+
+        .back-button {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            padding: 8px 20px;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4);
+            color: white;
+        }
+
+        .traffic-map-placeholder {
+            background: linear-gradient(135deg, #e9ecef 0%, #f8f9fa 100%);
+            border: 2px dashed #dee2e6;
+            border-radius: 15px;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-transparent shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="bi bi-traffic-cone me-2"></i>Traffic Pulse
+            </a>
+            <div class="navbar-nav ms-auto d-flex align-items-center">
+                <span class="navbar-text me-3 text-white">
+                    <i class="bi bi-person-circle me-2"></i>{{ user.username }}
+                </span>
+                <a href="{% url 'dashboard' %}" class="back-button me-2">
+                    <i class="bi bi-arrow-left me-2"></i>Volver
+                </a>
+                <a class="btn btn-outline-light btn-sm" href="{% url 'logout' %}">
+                    <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido principal -->
+    <div class="container py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="traffic-status-card">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2 class="text-primary mb-2">
+                                    <i class="bi bi-graph-up me-2"></i>Estado del Tráfico en Tiempo Real
+                                </h2>
+                                <div class="real-time-indicator">
+                                    <span class="pulse-dot"></span>
+                                    <span class="text-muted">Actualización en vivo - Arequipa</span>
+                                </div>
+                            </div>
+                            <button class="update-button" onclick="updateTrafficData()">
+                                <i class="bi bi-arrow-clockwise me-2"></i>Actualizar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estado General del Tráfico -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="traffic-status-card">
+                    <div class="card-header bg-primary text-white py-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-speedometer2 me-2"></i>Estado General de la Ciudad
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div id="general-status" class="status-indicator status-warning">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-exclamation-triangle-fill me-3 fs-3"></i>
+                                <div>
+                                    <h5 class="mb-1">Tráfico Moderado</h5>
+                                    <p class="mb-0">Se detecta congestión en algunas vías principales. Tiempo de viaje aumentado en un 25%.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Métricas del Tráfico -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="traffic-metric">
+                    <div class="metric-value text-primary" id="avg-speed">35</div>
+                    <div class="metric-label">Velocidad Promedio (km/h)</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="traffic-metric">
+                    <div class="metric-value text-warning" id="congestion-level">65%</div>
+                    <div class="metric-label">Nivel de Congestión</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="traffic-metric">
+                    <div class="metric-value text-danger" id="incidents-count">7</div>
+                    <div class="metric-label">Incidentes Activos</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="traffic-metric">
+                    <div class="metric-value text-success" id="travel-index">+25%</div>
+                    <div class="metric-label">Índice de Viaje</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mapa Simulado y Incidentes -->
+        <div class="row">
+            <!-- Mapa de Tráfico -->
+            <div class="col-lg-8 mb-4">
+                <div class="traffic-status-card">
+                    <div class="card-header bg-info text-white py-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-map me-2"></i>Mapa de Tráfico de Arequipa
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="traffic-map-placeholder">
+                            <div class="text-center">
+                                <i class="bi bi-map display-1 mb-3"></i>
+                                <h5>Mapa de Tráfico Interactivo</h5>
+                                <p class="text-muted">Visualización en tiempo real del estado de las vías</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Leyenda -->
+                        <div class="mt-3">
+                            <h6 class="mb-3">Leyenda del Tráfico:</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background: #28a745;"></div>
+                                        <span>Fluido (0-30%)</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background: #ffc107;"></div>
+                                        <span>Moderado (30-70%)</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background: #dc3545;"></div>
+                                        <span>Congestionado (70%+)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Incidentes Actuales -->
+            <div class="col-lg-4 mb-4">
+                <div class="traffic-status-card">
+                    <div class="card-header bg-warning text-dark py-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>Incidentes Actuales
+                        </h5>
+                    </div>
+                    <div class="card-body p-3" style="max-height: 400px; overflow-y: auto;">
+                        <div class="incident-card incident-high">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="text-danger mb-0">Accidente Vehicular</h6>
+                                <small class="text-muted">11:30 AM</small>
+                            </div>
+                            <p class="mb-1 small">Colisión múltiple en intersección</p>
+                            <small class="text-muted"><i class="bi bi-geo-alt-fill me-1"></i>Av. Ejército con Av. Dolores</small>
+                        </div>
+
+                        <div class="incident-card incident-medium">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="text-warning mb-0">Obra en Vía</h6>
+                                <small class="text-muted">09:00 AM</small>
+                            </div>
+                            <p class="mb-1 small">Reparación de pavimento, un carril cerrado</p>
+                            <small class="text-muted"><i class="bi bi-geo-alt-fill me-1"></i>Av. Parra con Calle Mercaderes</small>
+                        </div>
+
+                        <div class="incident-card incident-high">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="text-danger mb-0">Vehículo Averiado</h6>
+                                <small class="text-muted">10:45 AM</small>
+                            </div>
+                            <p class="mb-1 small">Vehículo pesado detenido en carril derecho</p>
+                            <small class="text-muted"><i class="bi bi-geo-alt-fill me-1"></i>Av. Kennedy altura del Óvalo</small>
+                        </div>
+
+                        <div class="incident-card incident-low">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="text-success mb-0">Evento Programado</h6>
+                                <small class="text-muted">08:30 AM</small>
+                            </div>
+                            <p class="mb-1 small">Mantenimiento de semáforos completado</p>
+                            <small class="text-muted"><i class="bi bi-geo-alt-fill me-1"></i>Plaza de Armas - Centro</small>
+                        </div>
+
+                        <div class="incident-card incident-medium">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="text-warning mb-0">Congestión</h6>
+                                <small class="text-muted">Continuo</small>
+                            </div>
+                            <p class="mb-1 small">Alto volumen vehicular en hora punta</p>
+                            <small class="text-muted"><i class="bi bi-geo-alt-fill me-1"></i>Av. Bolognesi - Distrito Cercado</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas por Distrito -->
+        <div class="row">
+            <div class="col-12">
+                <div class="traffic-status-card">
+                    <div class="card-header bg-success text-white py-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-bar-chart-fill me-2"></i>Estado por Distritos
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="status-indicator status-warning">
+                                    <h6 class="mb-2">Cercado de Arequipa</h6>
+                                    <div class="d-flex justify-content-between">
+                                        <span>Congestión: <strong>70%</strong></span>
+                                        <span class="text-warning"><i class="bi bi-exclamation-triangle-fill"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="status-indicator status-good">
+                                    <h6 class="mb-2">Paucarpata</h6>
+                                    <div class="d-flex justify-content-between">
+                                        <span>Congestión: <strong>25%</strong></span>
+                                        <span class="text-success"><i class="bi bi-check-circle-fill"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="status-indicator status-danger">
+                                    <h6 class="mb-2">Miraflores</h6>
+                                    <div class="d-flex justify-content-between">
+                                        <span>Congestión: <strong>85%</strong></span>
+                                        <span class="text-danger"><i class="bi bi-x-circle-fill"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Datos simulados del tráfico
+        let trafficData = {
+            avgSpeed: 35,
+            congestionLevel: 65,
+            incidentsCount: 7,
+            travelIndex: 25
+        };
+
+        function updateTrafficData() {
+            // Simular actualización de datos
+            const button = document.querySelector('.update-button');
+            const originalContent = button.innerHTML;
+            
+            button.innerHTML = '<i class="bi bi-arrow-clockwise me-2 spinner-border spinner-border-sm"></i>Actualizando...';
+            button.disabled = true;
+
+            setTimeout(() => {
+                // Simular cambios en los datos
+                trafficData.avgSpeed = Math.floor(Math.random() * 20) + 25; // 25-45 km/h
+                trafficData.congestionLevel = Math.floor(Math.random() * 40) + 40; // 40-80%
+                trafficData.incidentsCount = Math.floor(Math.random() * 10) + 3; // 3-13
+                trafficData.travelIndex = Math.floor(Math.random() * 30) + 10; // 10-40%
+
+                // Actualizar la UI
+                document.getElementById('avg-speed').textContent = trafficData.avgSpeed;
+                document.getElementById('congestion-level').textContent = trafficData.congestionLevel + '%';
+                document.getElementById('incidents-count').textContent = trafficData.incidentsCount;
+                document.getElementById('travel-index').textContent = '+' + trafficData.travelIndex + '%';
+
+                // Actualizar estado general
+                updateGeneralStatus();
+
+                button.innerHTML = originalContent;
+                button.disabled = false;
+
+                // Mostrar mensaje de éxito
+                showStatusMessage('Datos de tráfico actualizados correctamente', 'success');
+            }, 2000);
+        }
+
+        function updateGeneralStatus() {
+            const statusElement = document.getElementById('general-status');
+            const congestion = trafficData.congestionLevel;
+
+            if (congestion < 40) {
+                statusElement.className = 'status-indicator status-good';
+                statusElement.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-check-circle-fill me-3 fs-3"></i>
+                        <div>
+                            <h5 class="mb-1">Tráfico Fluido</h5>
+                            <p class="mb-0">Condiciones favorables en la mayoría de vías. Tiempo de viaje normal.</p>
+                        </div>
+                    </div>
+                `;
+            } else if (congestion < 70) {
+                statusElement.className = 'status-indicator status-warning';
+                statusElement.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill me-3 fs-3"></i>
+                        <div>
+                            <h5 class="mb-1">Tráfico Moderado</h5>
+                            <p class="mb-0">Se detecta congestión en algunas vías principales. Tiempo de viaje aumentado en un ${trafficData.travelIndex}%.</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                statusElement.className = 'status-indicator status-danger';
+                statusElement.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-x-circle-fill me-3 fs-3"></i>
+                        <div>
+                            <h5 class="mb-1">Tráfico Congestionado</h5>
+                            <p class="mb-0">Congestión severa en múltiples vías. Se recomienda usar rutas alternativas.</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function showStatusMessage(message, type = 'info') {
+            const alertClass = {
+                'success': 'alert-success',
+                'error': 'alert-danger', 
+                'warning': 'alert-warning',
+                'info': 'alert-info'
+            }[type] || 'alert-info';
+
+            const toast = document.createElement('div');
+            toast.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+            toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            
+            toast.innerHTML = `
+                <i class="bi bi-info-circle-fill me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 4000);
+        }
+
+        // Actualización automática cada 2 minutos
+        setInterval(() => {
+            // Solo actualizar si la página está visible
+            if (!document.hidden) {
+                updateTrafficData();
+            }
+        }, 120000);
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            showStatusMessage('Estado del tráfico cargado correctamente. Datos en tiempo real.', 'success');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,282 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Historial de Notificaciones | Traffic Pulse</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .main-card {
+      background: rgba(255, 255, 255, 0.96);
+      border-radius: 1rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+    }
+
+    .stats-card {
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      color: white;
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .table thead th {
+      background-color: #e8ecf7;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      letter-spacing: 0.03rem;
+      text-align: center;
+    }
+
+    .table tbody td {
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .badge {
+      font-size: 0.8rem;
+      padding: 0.45em 0.65em;
+      border-radius: 0.5rem;
+    }
+
+    .filter-section {
+      background: #f8f9ff;
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      border: none;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(45deg, #5a6fd8, #6a4190);
+    }
+
+    .table-responsive {
+      border-radius: 0.6rem;
+      overflow: hidden;
+    }
+
+    .message-preview {
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="container my-5">
+    <div class="main-card">
+      <div class="d-flex align-items-center mb-4">
+        <i class="bi bi-clock-history fs-3 text-primary me-2"></i>
+        <h3 class="mb-0">Historial de Notificaciones</h3>
+      </div>
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} rounded-3 shadow-sm">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+
+      <!-- Estadísticas -->
+      <div class="row mb-4">
+        <div class="col-md-4">
+          <div class="stats-card">
+            <h4 class="mb-1">{{ total_envios }}</h4>
+            <small>Total Envíos</small>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="stats-card">
+            <h4 class="mb-1">{{ envios_exitosos }}</h4>
+            <small>Exitosos</small>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="stats-card">
+            <h4 class="mb-1">{{ envios_fallidos }}</h4>
+            <small>Fallidos</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="filter-section">
+        <form method="get" class="row g-3">
+          <div class="col-md-3">
+            <label for="busqueda" class="form-label">Buscar</label>
+            <input type="text" class="form-control" id="busqueda" name="busqueda" 
+                   value="{{ filtros.busqueda }}" placeholder="Título, mensaje, zona...">
+          </div>
+          <div class="col-md-2">
+            <label for="zona" class="form-label">Zona</label>
+            <select class="form-select" id="zona" name="zona">
+              <option value="">Todas</option>
+              {% for zona in zonas_disponibles %}
+                <option value="{{ zona }}" {% if filtros.zona == zona %}selected{% endif %}>
+                  {{ zona }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label for="estado" class="form-label">Estado</label>
+            <select class="form-select" id="estado" name="estado">
+              <option value="">Todos</option>
+              <option value="enviado" {% if filtros.estado == 'enviado' %}selected{% endif %}>Enviado</option>
+              <option value="fallido" {% if filtros.estado == 'fallido' %}selected{% endif %}>Fallido</option>
+              <option value="pendiente" {% if filtros.estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label for="fecha_desde" class="form-label">Desde</label>
+            <input type="date" class="form-control" id="fecha_desde" name="fecha_desde" 
+                   value="{{ filtros.fecha_desde }}">
+          </div>
+          <div class="col-md-2">
+            <label for="fecha_hasta" class="form-label">Hasta</label>
+            <input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta" 
+                   value="{{ filtros.fecha_hasta }}">
+          </div>
+          <div class="col-md-1 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="bi bi-search"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Tabla de historial -->
+      {% if historiales %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle table-bordered">
+            <thead class="table-light">
+              <tr>
+                <th>Fecha de Envío</th>
+                <th>Título</th>
+                <th>Mensaje</th>
+                <th>Zona</th>
+                <th>Destinatario</th>
+                <th>Estado</th>
+                <th>Tipo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for historial in historiales %}
+              <tr>
+                <td>
+                  <strong>{{ historial.fecha_envio_real|date:"d/m/Y" }}</strong><br>
+                  <small class="text-muted">{{ historial.fecha_envio_real|date:"H:i" }}</small>
+                </td>
+                <td>
+                  <strong>{{ historial.alerta.titulo }}</strong>
+                  {% if historial.alerta.prioridad == 'alta' %}
+                    <i class="bi bi-exclamation-triangle text-danger ms-1"></i>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="message-preview" title="{{ historial.alerta.mensaje }}">
+                    {{ historial.alerta.mensaje|truncatewords:8 }}
+                  </div>
+                </td>
+                <td>
+                  <span class="badge bg-info">{{ historial.zona }}</span>
+                </td>
+                <td>
+                  {% if historial.usuario_destinatario %}
+                    {{ historial.usuario_destinatario.username }}
+                  {% else %}
+                    <em class="text-primary">Todos los usuarios</em>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if historial.estado_entrega == 'enviado' %}
+                    <span class="badge bg-success">Enviado</span>
+                  {% elif historial.estado_entrega == 'fallido' %}
+                    <span class="badge bg-danger">Fallido</span>
+                  {% else %}
+                    <span class="badge bg-warning text-dark">Pendiente</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="badge bg-secondary">{{ historial.get_tipo_notificacion_display }}</span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Paginación -->
+        {% if historiales.has_other_pages %}
+          <nav aria-label="Navegación del historial">
+            <ul class="pagination justify-content-center mt-4">
+              {% if historiales.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ historiales.previous_page_number }}{% for key, value in filtros.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Anterior</a>
+                </li>
+              {% endif %}
+              
+              {% for num in historiales.paginator.page_range %}
+                {% if historiales.number == num %}
+                  <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                  </li>
+                {% else %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}{% for key, value in filtros.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                  </li>
+                {% endif %}
+              {% endfor %}
+              
+              {% if historiales.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ historiales.next_page_number }}{% for key, value in filtros.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Siguiente</a>
+                </li>
+              {% endif %}
+            </ul>
+          </nav>
+        {% endif %}
+
+      {% else %}
+        <div class="alert alert-info text-center mt-4">
+          <i class="bi bi-info-circle me-2"></i>No se encontraron notificaciones en el historial.
+        </div>
+      {% endif %}
+
+      <div class="d-flex justify-content-between mt-4">
+        <div>
+          {% if historiales %}
+            <a href="{% url 'exportar_historial_csv' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" 
+               class="btn btn-success">
+              <i class="bi bi-download me-2"></i>Exportar a CSV
+            </a>
+          {% endif %}
+        </div>
+
+        <div>
+            <a href="{% url 'panel_personalizado' %}" class="btn btn-outline-dark">
+            <i class="bi bi-arrow-left me-2"></i>Volver al Panel
+            </a>
+        </div>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
