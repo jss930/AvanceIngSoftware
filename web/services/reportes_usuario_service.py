@@ -105,7 +105,7 @@ class FiltroReportesService:
     def aplicar_filtros(self, filtros: dict):
         reportes_filtrados = self.reportes
         
-        reportes_filtrados = self._filtrar_por_estado(reportes_filtrados, filtros.get('estado'))
+        reportes_filtrados = self._filtrar_por_estado(reportes_filtrados, filtros.get('estado_reporte'))
         reportes_filtrados = self._filtrar_por_tipo(reportes_filtrados, filtros.get('tipo_incidente'))
         reportes_filtrados = self._filtrar_por_fecha(reportes_filtrados, filtros.get('fecha_desde'))
         reportes_filtrados = self._filtrar_por_nivel_peligro(reportes_filtrados, filtros.get('nivel_peligro'))

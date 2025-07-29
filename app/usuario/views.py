@@ -115,22 +115,19 @@ def logout_view(request):
 
 @method_decorator(login_required(login_url='/login/'), name='dispatch')
 @method_decorator(never_cache, name='dispatch')
-# FormView
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'dashboard.html'
     login_url = 'login'
     
-    def get(self, request, *args, **kwargs):
-        alerta_repository = AlertaRepositoryImpl()
-        alertas = alerta_repository.obtener_por_usuario(request.user.id)  
-        return render(request, self.template_name, {
-            'user': request.user,
-            'alertas': alertas
-        })
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
+        
+        # Obtener alertas
+        alerta_repository = AlertaRepositoryImpl()
+        alertas = alerta_repository.obtener_por_usuario(user.id)
+        context['alertas'] = alertas
+        context['user'] = user
         
         try:
             # Usar el servicio para obtener datos del dashboard
@@ -148,7 +145,8 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                     'total_reportes': 0,
                     'reportes_validados': 0,
                     'reportes_pendientes': 0,
-                    'tasa_validacion': 0
+                    'tasa_validacion': 0,
+                    'promedio_credibilidad': 0
                 }
             
             context['user_stats'] = {
@@ -160,8 +158,9 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             
             context['recent_reports'] = recent_reports
             
-        except (UsuarioSinReportesError, UsuarioReporteError):
+        except (UsuarioSinReportesError, UsuarioReporteError) as e:
             # En caso de error o sin reportes, usar valores por defecto
+            print(f"Error en DashboardView: {e}")  # Para debug
             context['user_stats'] = {
                 'total_reportes': 0,
                 'validados': 0,
