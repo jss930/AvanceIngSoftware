@@ -1,501 +1,624 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard | Traffic Pulse</title>
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+
     <style>
-        body {
-            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-            min-height: 100vh;
+      .card-hover {
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+      .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+      }
+      .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0% {
+          opacity: 1;
         }
-
-        /* Estilos para notificaciones */
-        .notification-toast {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            z-index: 9999;
-            min-width: 300px;
-            max-width: 400px;
+        50% {
+          opacity: 0.5;
         }
-        
-        .traffic-status {
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            transition: all 0.3s ease;
-            border: 1px solid transparent;
+        100% {
+          opacity: 1;
         }
-        
-        .status-good { 
-            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); 
-            color: #155724; 
-            border-color: #c3e6cb;
-        }
-        .status-warning { 
-            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); 
-            color: #856404; 
-            border-color: #ffeaa7;
-        }
-        .status-danger { 
-            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); 
-            color: #721c24; 
-            border-color: #f5c6cb;
-        }
-        
-        .location-indicator {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0,0,0,0.85);
-            color: white;
-            padding: 12px 18px;
-            border-radius: 25px;
-            font-size: 0.9em;
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-        
-        .notification-panel {
-            background: white;
-            border: 1px solid #dee2e6;
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-        
-        .pulse-animation {
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); }
-        }
-
-        .notification-bell {
-            position: relative;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            color: white;
-            font-size: 1.2rem;
-        }
-
-        .notification-bell:hover {
-            transform: scale(1.1);
-        }
-
-        .notification-bell.active {
-            color: #28a745 !important;
-        }
-
-        .notification-bell.inactive {
-            color: #dc3545 !important;
-        }
-
-        .traffic-stats {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: 10px;
-            padding: 20px;
-        }
-
-        .stat-item {
-            text-align: center;
-            padding: 10px;
-        }
-
-        .stat-number {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            font-size: 0.85rem;
-            color: #6c757d;
-        }
-
-        .config-button {
-            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            padding: 8px 15px;
-            transition: all 0.3s ease;
-        }
-
-        .config-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,123,255,0.4);
-            color: white;
-        }
-
-        .card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-
-        .module-card {
-            border: 0;
-            border-radius: 15px;
-            overflow: hidden;
-            background: white;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        .btn-custom {
-            border-radius: 25px;
-            padding: 8px 20px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .btn-custom:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-
-        .alert-custom {
-            border: 0;
-            border-radius: 15px;
-            padding: 20px;
-        }
+      }
+      .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+      .feature-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+      }
     </style>
-</head>
-<body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-transparent shadow-sm">
+  </head>
+  <body>
+    <div class="container-fluid gradient-bg" style="min-height: 100vh">
+      <!-- Navigation -->
+      <nav class="navbar navbar-expand-lg navbar-dark bg-transparent shadow-sm">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="#">
-                <i class="bi bi-traffic-cone me-2"></i>Traffic Pulse
+          <a class="navbar-brand fw-bold" href="#">
+            <i class="bi bi-traffic-cone me-2"></i>Traffic Pulse
+          </a>
+          <div class="navbar-nav ms-auto">
+            <span class="navbar-text me-3 text-white">
+              <i class="bi bi-person-circle me-2"></i>{{ user.username }}
+            </span>
+            <!-- CORREGIDO: Usar sintaxis de Django templates -->
+            <a class="btn btn-outline-light btn-sm" href="/logout/">
+              <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
             </a>
-            <div class="navbar-nav ms-auto d-flex align-items-center">
-                <span class="navbar-text me-3 text-white">
-                    <i class="bi bi-person-circle me-2"></i>{{ user.username }}
-                </span>
-                <div class="notification-bell me-3" onclick="toggleNotifications()" title="Alternar notificaciones">
-                    <i class="bi bi-bell" id="notification-icon"></i>
-                    <span id="notification-badge" class="badge bg-danger ms-1" style="display: none; position: absolute; top: -8px; right: -8px;">0</span>
-                </div>
-                <a class="btn btn-outline-light btn-sm" href="{% url 'logout' %}">
-                    <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
-                </a>
-            </div>
+          </div>
         </div>
-    </nav>
+      </nav>
 
-    <!-- Contenido principal -->
-    <div class="container py-4">
+      <div class="container py-4">
+        <!-- Messages Area - CORREGIDO: Agregar sistema de mensajes de Django -->
+        <div id="messages-area">
+          <!-- Mensajes dinámicos de Django -->
+          {% if messages %} {% for message in messages %}
+          <div
+            class="alert alert-{{ message.tags }} alert-dismissible fade show"
+            role="alert"
+          >
+            {{ message }}
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="alert"
+            ></button>
+          </div>
+          {% endfor %} {% endif %}
+        </div>
 
-        <!-- Tarjeta principal -->
         <div class="row justify-content-center">
-            <div class="col-12 col-lg-10">
-                <div class="card shadow-lg border-0 rounded-4">
-                    <div class="card-header bg-white border-0 py-4">
-                        <div class="row align-items-center">
-                            <div class="col">
-                                <h2 class="text-primary mb-0">
-                                    <i class="bi bi-speedometer2 me-2"></i>Dashboard de Tráfico
-                                </h2>
-                                <p class="text-muted mb-0">Sistema de monitoreo y control - Arequipa</p>
-                            </div>
-                            <div class="col-auto">
-                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                                    <i class="bi bi-person-fill text-white fs-4"></i>
-                                </div>
-                            </div>
-                        </div>
+          <div class="col-12 col-lg-11">
+            <!-- Main Dashboard Card -->
+            <div class="card shadow-lg border-0 rounded-4 mb-4">
+              <div class="card-header bg-white border-0 py-4">
+                <div class="row align-items-center">
+                  <div class="col">
+                    <h2 class="text-primary mb-0">
+                      <i class="bi bi-speedometer2 me-2"></i>Dashboard de
+                      Tráfico
+                    </h2>
+                    <p class="text-muted mb-0">
+                      Sistema de monitoreo y control - Arequipa
+                    </p>
+                  </div>
+                  <div class="col-auto">
+                    <div class="feature-icon" style="width: 60px; height: 60px">
+                      <i class="bi bi-person-fill text-white fs-4"></i>
                     </div>
-                    
-                    <div class="card-body p-4">
-                        <!-- Bienvenida -->
-                        <div class="alert-custom alert-primary mb-4" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-info-circle-fill fs-4 me-3 text-primary"></i>
-                                <div>
-                                    <h5 class="text-primary mb-1">¡Bienvenido!</h5>
-                                    <p class="text-primary mb-0">
-                                        Gestiona el tráfico de Arequipa con notificaciones en tiempo real. 
-                                        <strong>Las notificaciones están activas</strong> y te alertarán sobre congestión cercana.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Módulos principales -->
-                        <div class="row g-4">
-                            <div class="col-md-6 col-lg-3">
-                                <div class="module-card card h-100">
-                                    <div class="card-body text-center p-4">
-                                        <div class="mb-3">
-                                            <i class="bi bi-exclamation-triangle-fill display-4 text-warning"></i>
-                                        </div>
-                                        <h5 class="card-title text-dark mb-2">Reportar Incidente</h5>
-                                        <p class="card-text text-muted mb-3">
-                                            Informa sobre accidentes, bloqueos o construcciones.
-                                        </p>
-                                        <a href="{% url 'report_incident' %}" class="btn btn-warning btn-custom">
-                                            <i class="bi bi-plus-circle me-2"></i>Reportar
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6 col-lg-3">
-                                <div class="module-card card h-100">
-                                    <div class="card-body text-center p-4">
-                                        <div class="mb-3">
-                                            <i class="bi bi-graph-up display-4 text-primary"></i>
-                                        </div>
-                                        <h5 class="card-title text-dark mb-2">Estado del Tráfico</h5>
-                                        <p class="card-text text-muted mb-3">
-                                            Monitorea el tráfico en tiempo real en toda la ciudad.
-                                        </p>
-                                        <a href="{% url 'estado_trafico' %}" class="btn btn-primary btn-custom">
-                                            <i class="bi bi-eye me-2"></i>Ver Estado
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6 col-lg-3">
-                                <div class="module-card card h-100">
-                                    <div class="card-body text-center p-4">
-                                        <div class="mb-3">
-                                            <i class="bi bi-thermometer-half display-4 text-danger"></i>
-                                        </div>
-                                        <h5 class="card-title text-dark mb-2">Mapa de Calor</h5>
-                                        <p class="card-text text-muted mb-3">
-                                            Visualiza las zonas con mayor densidad de tráfico.
-                                        </p>
-                                        <a href="{% url 'mapa_calor' %}" class="btn btn-danger btn-custom">
-                                            <i class="bi bi-map me-2"></i>Ver Mapa
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6 col-lg-3">
-                                <div class="module-card card h-100">
-                                    <div class="card-body text-center p-4">
-                                        <div class="mb-3">
-                                            <i class="bi bi-geo-alt-fill display-4 text-success"></i>
-                                        </div>
-                                        <h5 class="card-title text-dark mb-2">Planificar Ruta</h5>
-                                        <p class="card-text text-muted mb-3">
-                                            Encuentra la mejor ruta evitando congestión y bloqueos.
-                                        </p>
-                                        <a href="{% url 'plan_route' %}" class="btn btn-success btn-custom">
-                                            <i class="bi bi-arrow-right me-2"></i>Comenzar
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Sección de alertas recientes -->
-                        <div class="mt-5">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h4 class="text-primary mb-0">
-                                    <i class="bi bi-bell-fill me-2"></i>Alertas Recientes
-                                </h4>
-                                <a href="{% url 'configuracion_notificaciones' %}" class="btn btn-outline-secondary btn-sm">
-                                    <i class="bi bi-gear-fill me-1"></i> Configuración de Notificaciones
-                                </a>
-                            </div>
-                            
-                            {% if alertas %}
-                                <div class="row g-3">
-                                    {% for alerta in alertas %}
-                                        <div class="col-md-6 col-lg-4">
-                                            <div class="card border-0 shadow-sm rounded-3 h-100">
-                                                <div class="card-body">
-                                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                                        <h6 class="card-title text-danger mb-0">
-                                                            <i class="bi bi-exclamation-circle-fill me-2"></i>{{ alerta.titulo }}
-                                                        </h6>
-                                                        <small class="text-muted">{{ alerta.fecha_creacion|date:"d/m/Y H:i" }}</small>
-                                                    </div>
-                                                    <p class="card-text text-muted mb-2">{{ alerta.mensaje }}</p>
-                                                    <p class="mb-0">
-                                                        <span class="text-info fw-semibold">Ubicación:</span> {{ alerta.ubicacion }}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                <div class="alert alert-light border-0 rounded-3 mt-3">
-                                    <div class="d-flex align-items-center">
-                                        <i class="bi bi-info-circle-fill me-2 text-primary"></i>
-                                        <span>No hay alertas recientes para mostrar.</span>
-                                    </div>
-                                </div>
-                            {% endif %}
-
-                        <!-- Estadísticas del sistema -->
-                        <div class="row mt-4">
-                            <div class="col-12">
-                                <div class="card border-0 rounded-3" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
-                                    <div class="card-body p-4">
-                                        <h6 class="text-muted mb-3">
-                                            <i class="bi bi-clock-history me-2"></i>Estado Actual del Sistema
-                                        </h6>
-                                        <div class="row text-center">
-                                            <div class="col-md-3">
-                                                <div class="d-flex align-items-center justify-content-center">
-                                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                                    <span class="text-muted">Sistema Activo</span>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="d-flex align-items-center justify-content-center">
-                                                    <i class="bi bi-broadcast text-warning me-2"></i>
-                                                    <span class="text-muted">Monitoreo en Tiempo Real</span>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="d-flex align-items-center justify-content-center">
-                                                    <i class="bi bi-geo-alt text-info me-2"></i>
-                                                    <span class="text-muted">Tracking GPS Activo</span>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="d-flex align-items-center justify-content-center">
-                                                    <i class="bi bi-shield-check text-success me-2"></i>
-                                                    <span class="text-muted">Conexión Segura</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                  </div>
                 </div>
+              </div>
+
+              <div class="card-body p-4">
+                <!-- Welcome Alert -->
+                <div
+                  class="alert alert-primary border-0 rounded-3 mb-4"
+                  style="
+                    background: linear-gradient(
+                      135deg,
+                      #e3f2fd 0%,
+                      #bbdefb 100%
+                    );
+                  "
+                >
+                  <div class="d-flex align-items-center">
+                    <i
+                      class="bi bi-info-circle-fill fs-4 me-3 text-primary"
+                    ></i>
+                    <div>
+                      <h5 class="text-primary mb-1">
+                        ¡Bienvenido, {{ user.username }}!
+                      </h5>
+                      <p class="text-primary mb-0">
+                        Gestiona el tráfico de Arequipa desde tu panel de
+                        control personalizado.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Main Features Grid - CORREGIDO: Enlaces con sintaxis Django -->
+                <div class="row g-4 mb-4">
+                  <!-- Planificar Ruta -->
+                  <div class="col-lg-3 col-md-6">
+                    <div
+                      class="card h-100 border-0 shadow-sm rounded-3 card-hover"
+                    >
+                      <div class="card-body text-center p-4">
+                        <div class="feature-icon text-success">
+                          <i class="bi bi-geo-alt-fill text-white fs-3"></i>
+                        </div>
+                        <h5 class="card-title text-dark mb-2">
+                          Planificar Ruta
+                        </h5>
+                        <p class="card-text text-muted mb-3">
+                          Encuentra la mejor ruta evitando congestión y
+                          bloqueos.
+                        </p>
+                        <!-- CORREGIDO: URL de Django -->
+                        <a
+                          href="{% url 'plan_route' %}"
+                          class="btn btn-success btn-sm px-4 rounded-pill"
+                        >
+                          <i class="bi bi-arrow-right me-2"></i>Comenzar
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Reportar Incidente -->
+                  <div class="col-lg-3 col-md-6">
+                    <div
+                      class="card h-100 border-0 shadow-sm rounded-3 card-hover"
+                    >
+                      <div class="card-body text-center p-4">
+                        <div class="feature-icon text-warning">
+                          <i
+                            class="bi bi-exclamation-triangle-fill text-white fs-3"
+                          ></i>
+                        </div>
+                        <h5 class="card-title text-dark mb-2">
+                          Reportar Incidente
+                        </h5>
+                        <p class="card-text text-muted mb-3">
+                          Informa sobre accidentes, bloqueos o construcciones.
+                        </p>
+                        <!-- CORREGIDO: URL de Django -->
+                        <a
+                          href="{% url 'report_incident' %}"
+                          class="btn btn-warning btn-sm px-4 rounded-pill"
+                        >
+                          <i class="bi bi-plus-circle me-2"></i>Reportar
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Mis Reportes -->
+                  <div class="col-lg-3 col-md-6">
+                    <div
+                      class="card h-100 border-0 shadow-sm rounded-3 card-hover"
+                    >
+                      <div class="card-body text-center p-4">
+                        <div class="feature-icon text-info">
+                          <i
+                            class="bi bi-file-earmark-text-fill text-white fs-3"
+                          ></i>
+                        </div>
+                        <h5 class="card-title text-dark mb-2">Mis Reportes</h5>
+                        <p class="card-text text-muted mb-3">
+                          Consulta y gestiona todos tus reportes de tráfico.
+                        </p>
+                        <a
+                          href="{% url 'mis_reportes' %}"
+                          class="btn btn-info btn-sm px-4 rounded-pill"
+                        >
+                          <i class="bi bi-list-ul me-2"></i>
+                          Ver Reportes
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Estado del Tráfico -->
+                  <div class="col-lg-3 col-md-6">
+                    <div
+                      class="card h-100 border-0 shadow-sm rounded-3 card-hover"
+                    >
+                      <div class="card-body text-center p-4">
+                        <div class="feature-icon text-primary">
+                          <i class="bi bi-graph-up text-white fs-3"></i>
+                        </div>
+                        <h5 class="card-title text-dark mb-2">
+                          Estado del Tráfico
+                        </h5>
+                        <p class="card-text text-muted mb-3">
+                          Monitorea el tráfico en tiempo real en toda la ciudad.
+                        </p>
+                        <!-- CORREGIDO: URL de Django -->
+                        <a
+                          href="{% url 'see_state' %}"
+                          class="btn btn-primary btn-sm px-4 rounded-pill"
+                        >
+                          <i class="bi bi-eye me-2"></i>Ver Estado
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Mapa de Calor -->
+                  <div class="col-lg-3 col-md-6">
+                    <div class="card h-100 border-0 shadow-sm rounded-3 card-hover">
+                      <div class="card-body text-center p-4">
+                        <div class="feature-icon text-danger">
+                          <i class="bi bi-thermometer-half text-white fs-3"></i>
+                        </div>
+                        <h5 class="card-title text-dark mb-2">Mapa de Calor</h5>
+                        <p class="card-text text-muted mb-3">
+                          Visualiza las zonas con mayor densidad de tráfico.
+                        </p>
+                        <a href="{% url 'mapa_calor' %}" class="btn btn-danger btn-sm px-4 rounded-pill">
+                          <i class="bi bi-map me-2"></i>Ver Mapa
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
+
+            <!-- 🔔 Sección de alertas recientes -->
+            {% if notificaciones_activas %}
+            <div class="card border-0 rounded-3 shadow-sm mt-5 mb-5">
+              <div class="card-header bg-white border-0 py-3">
+                <h5 class="mb-0 text-primary">
+                  <i class="bi bi-bell-fill me-2"></i>Alertas Recientes
+                </h5>
+              </div>
+              <div class="card-body">
+                {% if alertas %}
+                  <div class="row g-3">
+                    {% for alerta in alertas %}
+                      <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 shadow-sm border-0 rounded-4 card-hover">
+                          <div class="card-body">
+                            <h5 class="card-title text-danger mb-2">
+                              <i class="bi bi-exclamation-circle-fill me-2"></i>{{ alerta.titulo }}
+                            </h5>
+                            <p class="text-muted mb-1">{{ alerta.mensaje }}</p>
+                            <p class="mb-0">
+                              <span class="text-info fw-semibold">Ubicación:</span> {{ alerta.ubicacion }}
+                            </p>
+                            <small class="text-muted d-block mt-2">
+                              <i class="bi bi-clock me-1"></i>{{ alerta.fecha_creacion|date:"d/m/Y H:i" }}
+                            </small>
+                          </div>
+                        </div>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  <p class="text-muted mb-0">No hay alertas recientes para ti.</p>
+                {% endif %}
+              </div>
+            </div>
+            {% endif %}
+
+            {% if mostrar_estadisticas and user_stats %}
+            <!-- Quick Stats Row -->
+            <div class="row g-4 mb-4">
+              <!-- Estadísticas Rápidas -->
+              <div class="col-md-6 col-lg-3">
+                <div class="card border-0 rounded-3 shadow-sm">
+                  <div class="card-body text-center p-3">
+                    <div
+                      class="d-flex align-items-center justify-content-between"
+                    >
+                      <div>
+                        <h6 class="text-muted mb-1">Mis Reportes</h6>
+                        <h4 class="text-primary mb-0">
+                          {{ user_stats.total_reportes|default:'0' }}
+                        </h4>
+                      </div>
+                      <i class="bi bi-file-text text-primary fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6 col-lg-3">
+                <div class="card border-0 rounded-3 shadow-sm">
+                  <div class="card-body text-center p-3">
+                    <div
+                      class="d-flex align-items-center justify-content-between"
+                    >
+                      <div>
+                        <h6 class="text-muted mb-1">Aprobados</h6>
+                        <h4 class="text-success mb-0">
+                          {{ user_stats.validados|default:'0' }}
+                        </h4>
+                      </div>
+                      <i class="bi bi-check-circle text-success fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6 col-lg-3">
+                <div class="card border-0 rounded-3 shadow-sm">
+                  <div class="card-body text-center p-3">
+                    <div
+                      class="d-flex align-items-center justify-content-between"
+                    >
+                      <div>
+                        <h6 class="text-muted mb-1">Pendientes</h6>
+                        <h4 class="text-warning mb-0">
+                          {{ user_stats.pendientes|default:'0' }}
+                        </h4>
+                      </div>
+                      <i class="bi bi-clock text-warning fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6 col-lg-3">
+                <div class="card border-0 rounded-3 shadow-sm">
+                  <div class="card-body text-center p-3">
+                    <div
+                      class="d-flex align-items-center justify-content-between"
+                    >
+                      <div>
+                        <h6 class="text-muted mb-1">Credibilidad</h6>
+                        <h4 class="text-info mb-0">
+                          {{ user_stats.credibilidad|default:'0' }}%
+                        </h4>
+                      </div>
+                      <i class="bi bi-star text-info fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- Recent Activity -->
+            <div class="row">
+              <div class="col-md-8">
+                <div class="card border-0 rounded-3 shadow-sm">
+                  <div class="card-header bg-white border-0 py-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                      <h6 class="mb-0">
+                        <i class="bi bi-activity me-2"></i>Actividad Reciente
+                      </h6>
+                      <a href="{% url 'mis_reportes' %}" class="btn btn-sm btn-outline-primary">
+                        Ver todos
+                      </a>
+                    </div>
+                  </div>
+                  <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                      <!-- Reportes reales del usuario -->
+                      {% if recent_reports %}
+                        {% for report in recent_reports %}
+                        <a href="{% url 'detalle_reporte' report.id %}" 
+                          class="list-group-item list-group-item-action d-flex align-items-center py-3 text-decoration-none">
+                          <div class="me-3">
+                            <div class="{% if report.tipo_incidente == 'accidente' %}bg-danger{% elif report.tipo_incidente == 'embotellamiento' or report.tipo_incidente == 'congestion' %}bg-warning{% elif report.tipo_incidente == 'construccion' or report.tipo_incidente == 'obra' %}bg-info{% elif report.tipo_incidente == 'cierre_via' %}bg-dark{% elif report.tipo_incidente == 'control_policial' %}bg-primary{% elif report.tipo_incidente == 'semaforo_danado' %}bg-danger{% elif report.tipo_incidente == 'bache' %}bg-secondary{% elif report.tipo_incidente == 'inundacion' %}bg-info{% elif report.tipo_incidente == 'vehiculo_averiado' %}bg-warning{% elif report.tipo_incidente == 'manifestacion' %}bg-warning{% else %}bg-secondary{% endif %} rounded-circle p-2">
+                              {% if report.tipo_incidente == 'accidente' %}
+                                <i class="bi bi-car-front text-white"></i>
+                              {% elif report.tipo_incidente == 'embotellamiento' or report.tipo_incidente == 'congestion' %}
+                                <i class="bi bi-exclamation-triangle text-white"></i>
+                              {% elif report.tipo_incidente == 'construccion' or report.tipo_incidente == 'obra' %}
+                                <i class="bi bi-tools text-white"></i>
+                              {% elif report.tipo_incidente == 'cierre_via' %}
+                                <i class="bi bi-x-circle text-white"></i>
+                              {% elif report.tipo_incidente == 'control_policial' %}
+                                <i class="bi bi-shield text-white"></i>
+                              {% elif report.tipo_incidente == 'semaforo_danado' %}
+                                <i class="bi bi-traffic-light text-white"></i>
+                              {% elif report.tipo_incidente == 'bache' %}
+                                <i class="bi bi-cone-striped text-white"></i>
+                              {% elif report.tipo_incidente == 'inundacion' %}
+                                <i class="bi bi-water text-white"></i>
+                              {% elif report.tipo_incidente == 'vehiculo_averiado' %}
+                                <i class="bi bi-wrench text-white"></i>
+                              {% elif report.tipo_incidente == 'manifestacion' %}
+                                <i class="bi bi-people text-white"></i>
+                              {% else %}
+                                <i class="bi bi-exclamation-circle text-white"></i>
+                              {% endif %}
+                            </div>
+                          </div>
+                          <div class="flex-grow-1">
+                            <h6 class="mb-1 text-dark">
+                              <!-- Usar get_FOO_display si existe, sino mostrar el valor directo -->
+                              {% if report.get_tipo_incidente_display %}
+                                {{ report.get_tipo_incidente_display }} - {{ report.titulo }}
+                              {% else %}
+                                {{ report.tipo_incidente|title }} - {{ report.titulo }}
+                              {% endif %}
+                            </h6>
+                            <small class="text-muted">
+                              <!-- Usar método personalizado si existe, sino usar timesince -->
+                              {% if report.get_age_display %}
+                                {{ report.get_age_display }}
+                              {% else %}
+                                {{ report.fecha_creacion|timesince }} atrás
+                              {% endif %}
+                              
+                              <!-- Estado del reporte -->
+                              {% if report.get_estado_reporte_display %}
+                                • {{ report.get_estado_reporte_display }}
+                              {% elif report.estado_reporte %}
+                                • {{ report.estado_reporte|title }}
+                              {% endif %}
+                              
+                              <!-- Ubicación si existe -->
+                              {% if report.nombre_via %}
+                                • {{ report.nombre_via }}
+                              {% elif report.distrito %}
+                                • {{ report.distrito }}
+                              {% elif report.ubicacion %}
+                                • {{ report.ubicacion }}
+                              {% endif %}
+                            </small>
+                          </div>
+                          <span class="badge bg-{% if report.estado_reporte == 'aprobado' %}success{% elif report.estado_reporte == 'pendiente' %}warning{% elif report.estado_reporte == 'rechazado' %}danger{% else %}secondary{% endif %}">
+                            {% if report.get_estado_reporte_display %}
+                              {{ report.get_estado_reporte_display }}
+                            {% else %}
+                              {{ report.estado_reporte|title|default:"Pendiente" }}
+                            {% endif %}
+                          </span>
+                        </a>
+                        {% endfor %}
+                      {% else %}
+                        <!-- Sin reportes -->
+                        <div class="list-group-item d-flex align-items-center py-3">
+                          <div class="me-3">
+                            <div class="bg-info rounded-circle p-2">
+                              <i class="bi bi-info-circle text-white"></i>
+                            </div>
+                          </div>
+                          <div class="flex-grow-1">
+                            <h6 class="mb-1">No tienes reportes recientes</h6>
+                            <small class="text-muted">
+                              Crea tu primer reporte para ver la actividad aquí
+                            </small>
+                          </div>
+                          <a href="{% url 'report_incident' %}" class="btn btn-sm btn-primary">
+                            Crear Reporte
+                          </a>
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-4">
+                <div class="card border-0 rounded-3 shadow-sm">
+                  <div class="card-header bg-white border-0 py-3">
+                    <h6 class="mb-0">
+                      <i class="bi bi-shield-check me-2"></i>Estado del Sistema
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                      <span class="status-indicator bg-success me-2"></span>
+                      <span class="text-muted">Sistema Activo</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                      <span class="status-indicator bg-success me-2"></span>
+                      <span class="text-muted">Datos en Tiempo Real</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                      <span class="status-indicator bg-success me-2"></span>
+                      <span class="text-muted">Conexión Segura</span>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-top">
+                      <small class="text-muted">
+                        <i class="bi bi-clock me-1"></i>
+                        Última actualización: Hace 2 min
+                      </small>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tarjeta de acceso rápido a configuración -->
+                <div class="card border-0 rounded-3 shadow-sm mt-3">
+                  <div class="card-header bg-white border-0 py-3">
+                    <h6 class="mb-0">
+                      <i class="bi bi-gear me-2"></i>Acceso Rápido
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="d-grid gap-2">
+                      <a href="{% url 'mis_reportes' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-list-ul me-2"></i>Ver Mis Reportes
+                      </a>
+                      <a href="{% url 'report_incident' %}" class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-plus-circle me-2"></i>Crear Reporte
+                      </a>
+                      <a href="{% url 'configuracion_usuario' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-gear me-2"></i>Configuración
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
 
-    <!-- Indicador de ubicación -->
-    <div class="location-indicator" id="location-status">
-        <i class="bi bi-geo-alt me-2"></i>
-        <span id="location-text">Arequipa, Perú - GPS Activo</span>
-    </div>
-
-    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <script>
-        // Simulación de funciones del sistema
-        let notificationsActive = true;
-        
-        function toggleNotifications() {
-            notificationsActive = !notificationsActive;
-            updateNotificationStatus(notificationsActive);
-            
-            const message = notificationsActive 
-                ? 'Notificaciones de tráfico activadas'
-                : 'Notificaciones de tráfico desactivadas';
-            
-            const type = notificationsActive ? 'success' : 'warning';
-            showStatusMessage(message, type);
-        }
-
-        function updateNotificationStatus(active) {
-            const bell = document.querySelector('.notification-bell');
-            const icon = document.getElementById('notification-icon');
-            
-            if (active) {
-                bell.classList.remove('inactive');
-                bell.classList.add('active');
-                icon.className = 'bi bi-bell-fill';
-                bell.title = 'Notificaciones activas - Click para desactivar';
-            } else {
-                bell.classList.remove('active');
-                bell.classList.add('inactive');
-                icon.className = 'bi bi-bell-slash';
-                bell.title = 'Notificaciones inactivas - Click para activar';
-            }
-        }
-
-        function updateLocation() {
-            showStatusMessage('Actualizando ubicación...', 'info');
-            
-            // Simular actualización
-            setTimeout(() => {
-                document.getElementById('location-text').textContent = 'Arequipa, Perú - Ubicación actualizada';
-                showStatusMessage('Ubicación actualizada correctamente', 'success');
-            }, 1500);
-        }
-
-        function showStatusMessage(message, type = 'info') {
-            const alertClass = {
-                'success': 'alert-success',
-                'error': 'alert-danger', 
-                'warning': 'alert-warning',
-                'info': 'alert-info'
-            }[type] || 'alert-info';
-
-            const toast = document.createElement('div');
-            toast.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
-            toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-            
-            toast.innerHTML = `
-                <i class="bi bi-info-circle-fill me-2"></i>${message}
+      // Función para mostrar mensajes dinámicos
+      function showMessage(type, message) {
+        const messagesArea = document.getElementById("messages-area");
+        const alertDiv = document.createElement("div");
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+                ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             `;
-            
-            document.body.appendChild(toast);
-            
-            // Auto-remove después de 5 segundos
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.remove();
-                }
-            }, 5000);
-        }
+        messagesArea.appendChild(alertDiv);
 
-        // Inicialización
-        document.addEventListener('DOMContentLoaded', function() {
-            updateNotificationStatus(notificationsActive);
-            
-            // Actualizar stats periódicamente
-            setInterval(() => {
-                const now = new Date();
-                document.getElementById('last-update').textContent = now.toLocaleTimeString('es-PE', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-            }, 30000);
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+          if (alertDiv.parentNode) {
+            alertDiv.remove();
+          }
+        }, 5000);
+      }
 
-            // Mostrar mensaje de bienvenida
-            setTimeout(() => {
-                showStatusMessage('Sistema de notificaciones activado. Monitoreo en tiempo real iniciado.', 'success');
-            }, 1000);
+      // Efectos hover para las tarjetas
+      document.querySelectorAll(".card-hover").forEach((card) => {
+        card.addEventListener("mouseenter", function () {
+          this.style.transform = "translateY(-5px)";
         });
 
-        // Simulación de actualización de reportes
-        let reportCount = 3;
-        setInterval(() => {
-            if (Math.random() > 0.7) {
-                reportCount = Math.floor(Math.random() * 8) + 1;
-                document.getElementById('reportes-count').textContent = reportCount;
+        card.addEventListener("mouseleave", function () {
+          this.style.transform = "translateY(0)";
+        });
+      });
+
+      // Simulación de carga de datos en tiempo real
+      function updateStats() {
+        // Aquí podrías hacer una llamada AJAX para actualizar las estadísticas
+        console.log("Actualizando estadísticas...");
+      }
+
+      // Actualizar cada 30 segundos
+      setInterval(updateStats, 30000);
+
+      // Auto-dismiss de mensajes de Django después de 5 segundos
+      document.addEventListener("DOMContentLoaded", function () {
+        const alerts = document.querySelectorAll(".alert:not([data-manual])");
+        alerts.forEach((alert) => {
+          setTimeout(() => {
+            if (alert.parentNode) {
+              alert.remove();
             }
-        }, 45000);
+          }, 5000);
+        });
+      });
     </script>
-</body>
+  </body>
 </html>
