@@ -141,13 +141,13 @@
                     <label for="estado" class="form-label fw-semibold">Estado</label>
                     <select name="estado" id="estado" class="form-select">
                         <option value="">Todos</option>
-                        <option value="pendiente" {% if filtros_aplicados.estado == 'pendiente' %}selected{% endif %}>
+                        <option value="pendiente" {% if filtros_aplicados.estado_reporte == 'pendiente' %}selected{% endif %}>
                             Pendiente
                         </option>
-                        <option value="aprobado" {% if filtros_aplicados.estado == 'aprobado' %}selected{% endif %}>
+                        <option value="probado" {% if filtros_aplicados.estado_reporte == 'probado' %}selected{% endif %}>
                             Aprobado
                         </option>
-                        <option value="rechazado" {% if filtros_aplicados.estado == 'rechazado' %}selected{% endif %}>
+                        <option value="rechazado" {% if filtros_aplicados.estado_reporte == 'rechazado' %}selected{% endif %}>
                             Rechazado
                         </option>
                     </select>

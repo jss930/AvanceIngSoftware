@@ -187,10 +187,10 @@ class MisReportesView(LoginRequiredMixin, TemplateView):
         try:
             service = ReportesUsuarioService(self.request.user.id)
             filtros = {
-                'estado': self.request.GET.get('estado'),
+                'estado_reporte': self.request.GET.get('estado'),
                 'tipo_incidente': self.request.GET.get('tipo_incidente'),
                 'fecha_desde': self.request.GET.get('fecha_desde'),
-                'nivel_peligro': self.request.GET.get('nivel_peligro'),  # Nuevo filtro
+                'nivel_peligro': self.request.GET.get('nivel_peligro'),
             }
             
             # Limpiar filtros vacíos
@@ -275,7 +275,6 @@ class DetalleReporteView(LoginRequiredMixin, TemplateView):
 
 @login_required
 def vista_configuracion_usuario(request):
-    """Vista para configuración de usuario (función basada)"""
     from web.services.reportes_usuario_service import ConfiguracionUsuarioService, ConfiguracionInvalidaError
     
     config_service = ConfiguracionUsuarioService(request.user.id)
