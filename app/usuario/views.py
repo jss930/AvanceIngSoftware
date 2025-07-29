@@ -230,20 +230,45 @@ class DetalleReporteView(LoginRequiredMixin, TemplateView):
             if reporte.usuario_reportador != user and not user.is_superuser:
                 context['error'] = "No tienes permisos para ver este reporte"
             else:
-                # Calcular datos adicionales del reporte
+                # Incrementar contador de vistas
+                reporte.increment_views()
+                
+                # Calcular credibilidad
                 total_votos = reporte.votos_positivos + reporte.votos_negativos
                 if total_votos > 0:
-                    reporte.credibilidad_porcentaje = round((reporte.votos_positivos * 100) / total_votos)
+                    credibilidad = round((reporte.votos_positivos * 100) / total_votos)
                 else:
-                    reporte.credibilidad_porcentaje = 0
+                    credibilidad = 0
                 
-                context['reporte'] = reporte
-                context['credibilidad'] = reporte.credibilidad_porcentaje
-                context['angulo_grafico'] = reporte.credibilidad_porcentaje * 3.6
-
+                # Verificar si es reciente (usando el método del modelo)
+                es_reciente = reporte.is_recent(hours=24)
+                
+                # Obtener ubicación usando los campos del modelo
+                ubicacion_texto = ""
+                if reporte.nombre_via and reporte.distrito:
+                    ubicacion_texto = f"{reporte.nombre_via}, {reporte.distrito}"
+                elif reporte.nombre_via:
+                    ubicacion_texto = reporte.nombre_via
+                elif reporte.distrito:
+                    ubicacion_texto = reporte.distrito
+                else:
+                    ubicacion_texto = f"Lat: {reporte.latitud}, Lng: {reporte.longitud}"
+                
+                # Verificar si puede editar
+                puede_editar = (reporte.estado_reporte == 'pendiente' and 
+                              reporte.can_be_edited_by(user))
+                
+                context.update({
+                    'reporte': reporte,
+                    'credibilidad': credibilidad,
+                    'angulo_grafico': credibilidad * 3.6,
+                    'es_reciente': es_reciente,
+                    'ubicacion_texto': ubicacion_texto,
+                    'puede_editar': puede_editar,
+                })
                 
         except Exception as e:
-            context['error'] = "Error al cargar el reporte"
+            context['error'] = f"Error al cargar el reporte: {str(e)}"
             
         return context
 

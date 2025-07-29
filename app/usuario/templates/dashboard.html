@@ -465,7 +465,7 @@
                               {% endif %}
                             </small>
                           </div>
-                          <span class="badge bg-{% if report.estado_reporte == 'validado' or report.estado_reporte == 'aprobado' or report.estado_reporte == 'probado' %}success{% elif report.estado_reporte == 'pendiente' %}warning{% elif report.estado_reporte == 'rechazado' %}danger{% else %}secondary{% endif %}">
+                          <span class="badge bg-{% if report.estado_reporte == 'aprobado' %}success{% elif report.estado_reporte == 'pendiente' %}warning{% elif report.estado_reporte == 'rechazado' %}danger{% else %}secondary{% endif %}">
                             {% if report.get_estado_reporte_display %}
                               {{ report.get_estado_reporte_display }}
                             {% else %}

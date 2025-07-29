@@ -52,7 +52,8 @@
         
         .danger-level-1 { border-left: 5px solid #28a745; }
         .danger-level-2 { border-left: 5px solid #ffc107; }
-        .danger-level-3 { border-left: 5px solid #dc3545; }
+        .danger-level-3 { border-left: 5px solid #fd7e14; }
+        .danger-level-4 { border-left: 5px solid #dc3545; }
         
         .map-container {
             height: 300px;
@@ -168,9 +169,9 @@
                             </p>
                         </div>
                         <div class="col-auto">
-                            {% if reporte.estado_reporte == 'validado' %}
+                            {% if reporte.estado_reporte == 'aprobado' %}
                                 <span class="status-badge bg-success text-white">
-                                    <i class="bi bi-check-circle me-1"></i>Validado
+                                    <i class="bi bi-check-circle me-1"></i>Aprobado
                                 </span>
                             {% elif reporte.estado_reporte == 'pendiente' %}
                                 <span class="status-badge bg-warning text-dark">
@@ -182,7 +183,7 @@
                                 </span>
                             {% else %}
                                 <span class="status-badge bg-secondary text-white">
-                                    <i class="bi bi-archive me-1"></i>Archivado
+                                    <i class="bi bi-archive me-1"></i>{{ reporte.get_estado_reporte_display }}
                                 </span>
                             {% endif %}
                         </div>
@@ -214,32 +215,34 @@
                                             <strong>Nivel de Peligro:</strong>
                                             <span class="ms-2">
                                                 {% if reporte.nivel_peligro == 1 %}
-                                                    <span class="badge bg-success">Bajo</span>
+                                                    <span class="badge bg-success">🟢 Bajo</span>
                                                 {% elif reporte.nivel_peligro == 2 %}
-                                                    <span class="badge bg-warning text-dark">Medio</span>
+                                                    <span class="badge bg-warning text-dark">🟡 Medio</span>
+                                                {% elif reporte.nivel_peligro == 3 %}
+                                                    <span class="badge bg-danger">🔴 Alto</span>
                                                 {% else %}
-                                                    <span class="badge bg-danger">Alto</span>
+                                                    <span class="badge bg-dark">🚨 Crítico</span>
                                                 {% endif %}
                                             </span>
                                         </div>
                                     </div>
                                 </div>
 
-                                {% if es_reciente %}
+                                {% if reporte.is_recent %}
                                     <div class="alert alert-info border-0 mt-3">
                                         <i class="bi bi-clock-history me-2"></i>
-                                        <strong>Reporte Reciente:</strong> Este incidente fue reportado hace menos de 24 horas.
+                                        <strong>Reporte Reciente:</strong> Este incidente fue reportado {{ reporte.get_age_display }}.
                                     </div>
                                 {% endif %}
                             </div>
 
                             <!-- Imagen del Reporte -->
-                            {% if reporte.imagen_geolocalizada %}
+                            {% if reporte.foto %}
                                 <div class="mb-4">
                                     <h5 class="text-primary mb-3">
                                         <i class="bi bi-image me-2"></i>Evidencia Fotográfica
                                     </h5>
-                                    <img src="{{ reporte.imagen_geolocalizada.url }}" 
+                                    <img src="{{ reporte.foto.url }}" 
                                          alt="Evidencia del reporte" 
                                          class="img-fluid image-preview w-100">
                                 </div>
@@ -267,7 +270,15 @@
                                             <strong>Ubicación:</strong>
                                         </div>
                                         <div class="text-muted">
-                                            {{ ubicacion_texto }}
+                                            {% if reporte.nombre_via %}
+                                                <i class="bi bi-signpost me-1"></i>{{ reporte.nombre_via }}<br>
+                                            {% endif %}
+                                            {% if reporte.distrito %}
+                                                <i class="bi bi-building me-1"></i>{{ reporte.distrito }}
+                                            {% endif %}
+                                            {% if not reporte.nombre_via and not reporte.distrito %}
+                                                <i class="bi bi-geo-alt me-1"></i>Coordenadas: {{ reporte.latitud|floatformat:4 }}, {{ reporte.longitud|floatformat:4 }}
+                                            {% endif %}
                                         </div>
                                     </div>
                                 </div>
@@ -278,6 +289,10 @@
                                         <i class="bi bi-map display-4 mb-2"></i>
                                         <p class="mb-0">Mapa interactivo próximamente</p>
                                         <small>Lat: {{ reporte.latitud|floatformat:4 }}, Lng: {{ reporte.longitud|floatformat:4 }}</small>
+                                        <br>
+                                        <a href="{{ reporte.get_google_maps_url }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                                            <i class="bi bi-map me-1"></i>Ver en Google Maps
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -358,11 +373,16 @@
                                     <div class="fw-semibold">{{ reporte.get_estado_reporte_display }}</div>
                                 </div>
 
-                                {% if reporte.es_validado %}
+                                <div class="timeline-item">
+                                    <small class="text-muted">Vistas</small>
+                                    <div class="fw-semibold">{{ reporte.views_count|default:0 }}</div>
+                                </div>
+
+                                {% if reporte.estado_reporte == 'aprobado' %}
                                     <div class="timeline-item">
                                         <small class="text-muted">Estado de validación</small>
                                         <div class="fw-semibold text-success">
-                                            <i class="bi bi-patch-check me-1"></i>Validado por la comunidad
+                                            <i class="bi bi-patch-check me-1"></i>Aprobado por el sistema
                                         </div>
                                     </div>
                                 {% endif %}
@@ -370,7 +390,7 @@
 
                             <!-- Acciones -->
                             <div class="d-grid gap-2">
-                                {% if reporte.estado_reporte == 'pendiente' %}
+                                {% if puede_editar %}
                                     <a href="{% url 'editar_reporte' reporte.id %}" 
                                     class="btn btn-outline-warning action-button">
                                         <i class="bi bi-pencil-square me-2"></i>Editar Reporte
@@ -436,6 +456,9 @@
                 setTimeout(animate, 500);
             }
         });
+
+        // Incrementar contador de vistas (si está implementado en el backend)
+        // fetch('/api/reportes/{{ reporte.id }}/increment-views/', { method: 'POST' });
     </script>
 </body>
 </html>
