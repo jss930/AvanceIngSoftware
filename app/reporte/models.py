@@ -105,7 +105,7 @@ class ReporteColaborativo(models.Model):
         max_length=20,
         choices=[
             ('pendiente', 'Pendiente'),
-            ('probado', 'Probado'),
+            ('aprobado', 'Aprobado'),
             ('rechazado', 'Rechazado')
         ],
         default='pendiente'

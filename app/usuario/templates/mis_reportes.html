@@ -19,7 +19,8 @@
         }
         .badge-peligro-1 { background-color: #28a745; }
         .badge-peligro-2 { background-color: #ffc107; color: #000; }
-        .badge-peligro-3 { background-color: #dc3545; }
+        .badge-peligro-3 { background-color: #fd7e14; }
+        .badge-peligro-4 { background-color: #dc3545; }
         .credibilidad-bar {
             height: 6px;
             border-radius: 3px;
@@ -81,6 +82,8 @@
             </div>
         </div>
 
+        <!-- Estadísticas del usuario -->
+        {% if estadisticas %}
         <div class="row mb-4">
             <div class="col-md-3">
                 <div class="stats-card card h-100 text-center">
@@ -96,7 +99,7 @@
                     <div class="card-body">
                         <i class="bi bi-check-circle display-4 mb-2"></i>
                         <h3 class="fw-bold">{{ estadisticas.reportes_validados }}</h3>
-                        <p class="mb-0">Validados</p>
+                        <p class="mb-0">Aprobados</p>
                     </div>
                 </div>
             </div>
@@ -119,39 +122,95 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
+        <!-- Sección de filtros actualizada -->
         <div class="filter-section">
             <form method="GET" class="row g-3">
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label for="estado" class="form-label fw-semibold">Estado</label>
                     <select name="estado" id="estado" class="form-select">
-                        <option value="">Todos los estados</option>
-                        {% for value, display in estados_reporte %}
-                            <option value="{{ value }}" {% if filtros_aplicados.estado == value %}selected{% endif %}>
-                                {{ display }}
-                            </option>
-                        {% endfor %}
+                        <option value="">Todos</option>
+                        <option value="pendiente" {% if filtros_aplicados.estado == 'pendiente' %}selected{% endif %}>
+                            Pendiente
+                        </option>
+                        <option value="aprobado" {% if filtros_aplicados.estado == 'aprobado' %}selected{% endif %}>
+                            Aprobado
+                        </option>
+                        <option value="rechazado" {% if filtros_aplicados.estado == 'rechazado' %}selected{% endif %}>
+                            Rechazado
+                        </option>
                     </select>
                 </div>
+
                 <div class="col-md-3">
-                    <label for="tipo" class="form-label fw-semibold">Tipo de Incidente</label>
-                    <select name="tipo" id="tipo" class="form-select">
-                        <option value="">Todos los tipos</option>
-                        {% for value, display in tipos_incidente %}
-                            <option value="{{ value }}" {% if filtros_aplicados.tipo_incidente == value %}selected{% endif %}>
-                                {{ display }}
-                            </option>
-                        {% endfor %}
+                    <label for="tipo_incidente" class="form-label fw-semibold">Tipo de Incidente</label>
+                    <select name="tipo_incidente" id="tipo_incidente" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="accidente" {% if filtros_aplicados.tipo_incidente == 'accidente' %}selected{% endif %}>
+                            🚗 Accidente
+                        </option>
+                        <option value="construccion" {% if filtros_aplicados.tipo_incidente == 'construccion' %}selected{% endif %}>
+                            🚧 Construcción
+                        </option>
+                        <option value="embotellamiento" {% if filtros_aplicados.tipo_incidente == 'embotellamiento' %}selected{% endif %}>
+                            🚦 Embotellamiento
+                        </option>
+                        <option value="cierre_via" {% if filtros_aplicados.tipo_incidente == 'cierre_via' %}selected{% endif %}>
+                            🚫 Cierre de vía
+                        </option>
+                        <option value="control_policial" {% if filtros_aplicados.tipo_incidente == 'control_policial' %}selected{% endif %}>
+                            👮 Control policial
+                        </option>
+                        <option value="semaforo_danado" {% if filtros_aplicados.tipo_incidente == 'semaforo_danado' %}selected{% endif %}>
+                            🔴 Semáforo dañado
+                        </option>
+                        <option value="bache" {% if filtros_aplicados.tipo_incidente == 'bache' %}selected{% endif %}>
+                            🕳️ Bache
+                        </option>
+                        <option value="inundacion" {% if filtros_aplicados.tipo_incidente == 'inundacion' %}selected{% endif %}>
+                            💧 Inundación
+                        </option>
+                        <option value="vehiculo_averiado" {% if filtros_aplicados.tipo_incidente == 'vehiculo_averiado' %}selected{% endif %}>
+                            🔧 Vehículo averiado
+                        </option>
+                        <option value="manifestacion" {% if filtros_aplicados.tipo_incidente == 'manifestacion' %}selected{% endif %}>
+                            ✊ Manifestación
+                        </option>
+                        <option value="otro" {% if filtros_aplicados.tipo_incidente == 'otro' %}selected{% endif %}>
+                            ❓ Otro
+                        </option>
                     </select>
                 </div>
+
+                <div class="col-md-2">
+                    <label for="nivel_peligro" class="form-label fw-semibold">Nivel de Peligro</label>
+                    <select name="nivel_peligro" id="nivel_peligro" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="1" {% if filtros_aplicados.nivel_peligro == '1' %}selected{% endif %}>
+                            🟢 Bajo
+                        </option>
+                        <option value="2" {% if filtros_aplicados.nivel_peligro == '2' %}selected{% endif %}>
+                            🟡 Medio
+                        </option>
+                        <option value="3" {% if filtros_aplicados.nivel_peligro == '3' %}selected{% endif %}>
+                            🔴 Alto
+                        </option>
+                        <option value="4" {% if filtros_aplicados.nivel_peligro == '4' %}selected{% endif %}>
+                            🚨 Crítico
+                        </option>
+                    </select>
+                </div>
+
                 <div class="col-md-3">
                     <label for="fecha_desde" class="form-label fw-semibold">Desde</label>
                     <input type="date" name="fecha_desde" id="fecha_desde" class="form-control" 
                            value="{{ filtros_aplicados.fecha_desde }}">
                 </div>
-                <div class="col-md-3">
-                    <div class="d-flex align-items-end h-100">
-                        <button type="submit" class="btn btn-primary me-2">
+
+                <div class="col-md-2">
+                    <div class="d-flex flex-column align-items-stretch h-100">
+                        <button type="submit" class="btn btn-primary mb-2">
                             <i class="bi bi-funnel me-2"></i>Filtrar
                         </button>
                         <a href="{% url 'mis_reportes' %}" class="btn btn-outline-secondary">
@@ -159,9 +218,11 @@
                         </a>
                     </div>
                 </div>
+
             </form>
         </div>
 
+        <!-- Lista de reportes -->
         <div class="row">
             {% if reportes %}
                 {% for reporte in reportes %}
@@ -178,11 +239,13 @@
                                     </div>
                                     <div class="ms-2">
                                         {% if reporte.nivel_peligro == 1 %}
-                                            <span class="badge badge-peligro-1">Bajo</span>
+                                            <span class="badge badge-peligro-1">🟢 Bajo</span>
                                         {% elif reporte.nivel_peligro == 2 %}
-                                            <span class="badge badge-peligro-2">Medio</span>
+                                            <span class="badge badge-peligro-2">🟡 Medio</span>
+                                        {% elif reporte.nivel_peligro == 3 %}
+                                            <span class="badge badge-peligro-3">🔴 Alto</span>
                                         {% else %}
-                                            <span class="badge badge-peligro-3">Alto</span>
+                                            <span class="badge badge-peligro-4">🚨 Crítico</span>
                                         {% endif %}
                                     </div>
                                 </div>
@@ -193,9 +256,9 @@
                                     <span class="badge bg-secondary mb-2">
                                         <i class="bi bi-tag me-1"></i>{{ reporte.get_tipo_incidente_display }}
                                     </span>
-                                    {% if reporte.estado_reporte == 'validado' %}
+                                    {% if reporte.estado_reporte == 'aprobado' %}
                                         <span class="badge bg-success mb-2">
-                                            <i class="bi bi-check-circle me-1"></i>Validado
+                                            <i class="bi bi-check-circle me-1"></i>Aprobado
                                         </span>
                                     {% elif reporte.estado_reporte == 'pendiente' %}
                                         <span class="badge bg-warning text-dark mb-2">
@@ -212,46 +275,62 @@
                                     {{ reporte.descripcion|truncatechars:80 }}
                                 </p>
 
+                                <!-- Información de ubicación actualizada -->
+                                <div class="mb-2">
+                                    <small class="text-muted">
+                                        <i class="bi bi-geo-alt me-1"></i>
+                                        {% if reporte.nombre_via %}
+                                            {{ reporte.nombre_via }}
+                                            {% if reporte.distrito %} - {{ reporte.distrito }}{% endif %}
+                                        {% else %}
+                                            Lat: {{ reporte.latitud|floatformat:4 }}, Lng: {{ reporte.longitud|floatformat:4 }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+
+                                <!-- Barra de credibilidad -->
                                 <div class="mb-2">
                                     <div class="d-flex justify-content-between align-items-center mb-1">
                                         <small class="text-muted">Credibilidad</small>
                                         <small class="fw-semibold">
-                                            {% if reporte.total_votos > 0 %}
-                                                {{ reporte.credibilidad_porcentaje }}%
-                                            {% else %}
-                                                Sin votos
-                                            {% endif %}
+                                            {% with total_votes=reporte.votos_positivos|add:reporte.votos_negativos %}
+                                                {% if total_votes > 0 %}
+                                                    {% widthratio reporte.votos_positivos total_votes 100 %}% 
+                                                {% else %}
+                                                    Sin votos
+                                                {% endif %}
+                                            {% endwith %}
                                         </small>
                                     </div>
                                     <div class="credibilidad-bar">
-                                        {% if reporte.total_votos > 0 %}
-                                            <div class="credibilidad-fill" 
-                                                style="width: {{ reporte.credibilidad_width }}%"></div>
-                                        {% else %}
-                                            <div class="credibilidad-fill" style="width: 0%"></div>
-                                        {% endif %}
+                                        {% with total_votes=reporte.votos_positivos|add:reporte.votos_negativos %}
+                                            {% if total_votes > 0 %}
+                                                <div class="credibilidad-fill" style="width: {% widthratio reporte.votos_positivos total_votes 100 %}%;"></div>
+                                            {% else %}
+                                                <div class="credibilidad-fill" style="width: 0%;"></div>
+                                            {% endif %}
+                                        {% endwith %}
                                     </div>
                                 </div>
 
+                                <!-- Votos y imagen -->
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <div class="d-flex align-items-center">
                                         <span class="badge bg-success me-2">
                                             <i class="bi bi-hand-thumbs-up me-1"></i>{{ reporte.votos_positivos }}
                                         </span>
-                                        <span class="badge bg-danger">
+                                        <span class="badge bg-danger me-2">
                                             <i class="bi bi-hand-thumbs-down me-1"></i>{{ reporte.votos_negativos }}
                                         </span>
+                                        {% if reporte.views_count %}
+                                            <span class="badge bg-info">
+                                                <i class="bi bi-eye me-1"></i>{{ reporte.views_count }}
+                                            </span>
+                                        {% endif %}
                                     </div>
-                                    {% if reporte.imagen_geolocalizada %}
+                                    {% if reporte.foto %}
                                         <i class="bi bi-image text-success" title="Con imagen"></i>
                                     {% endif %}
-                                </div>
-
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-muted">
-                                        <i class="bi bi-geo-alt me-1"></i>
-                                        Lat: {{ reporte.latitud|floatformat:4 }}, Lng: {{ reporte.longitud|floatformat:4 }}
-                                    </small>
                                 </div>
                             </div>
 
@@ -263,11 +342,12 @@
                                     </a>
                                     {% if reporte.estado_reporte == 'pendiente' %}
                                         <a href="{% url 'editar_reporte' reporte.id %}" 
-                                           class="btn btn-outline-warning btn-sm">
+                                           class="btn btn-outline-warning btn-sm me-1">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <a href="{% url 'eliminar_reporte' reporte.id %}" 
-                                           class="btn btn-outline-danger btn-sm">
+                                           class="btn btn-outline-danger btn-sm"
+                                           onclick="return confirm('¿Estás seguro de que deseas eliminar este reporte?')">
                                             <i class="bi bi-trash"></i>
                                         </a>
                                     {% endif %}
@@ -298,6 +378,7 @@
             {% endif %}
         </div>
 
+        <!-- Paginación -->
         {% if reportes.has_other_pages %}
             <div class="row mt-4">
                 <div class="col-12">
@@ -305,12 +386,12 @@
                         <ul class="pagination justify-content-center">
                             {% if reportes.has_previous %}
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=1{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.fecha_desde %}&fecha_desde={{ request.GET.fecha_desde }}{% endif %}">
+                                    <a class="page-link" href="?page=1{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}{% if request.GET.tipo_incidente %}&tipo_incidente={{ request.GET.tipo_incidente }}{% endif %}{% if request.GET.nivel_peligro %}&nivel_peligro={{ request.GET.nivel_peligro }}{% endif %}{% if request.GET.fecha_desde %}&fecha_desde={{ request.GET.fecha_desde }}{% endif %}">
                                         <i class="bi bi-chevron-double-left"></i>
                                     </a>
                                 </li>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page={{ reportes.previous_page_number }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.fecha_desde %}&fecha_desde={{ request.GET.fecha_desde }}{% endif %}">
+                                    <a class="page-link" href="?page={{ reportes.previous_page_number }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}{% if request.GET.tipo_incidente %}&tipo_incidente={{ request.GET.tipo_incidente }}{% endif %}{% if request.GET.nivel_peligro %}&nivel_peligro={{ request.GET.nivel_peligro }}{% endif %}{% if request.GET.fecha_desde %}&fecha_desde={{ request.GET.fecha_desde }}{% endif %}">
                                         <i class="bi bi-chevron-left"></i>
                                     </a>
                                 </li>
@@ -323,21 +404,19 @@
                                     </li>
                                 {% elif page_num > reportes.number|add:'-3' and page_num < reportes.number|add:'3' %}
                                     <li class="page-item">
-                                        <a class="page-link" href="?page={{ page_num }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.fecha_desde %}&fecha_desde={{ request.GET.fecha_desde }}{% endif %}">
-                                            {{ page_num }}
-                                        </a>
+                                        <a class="page-link" href="?page={{ page_num }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}{% if request.GET.tipo_incidente %}&tipo_incidente={{ request.GET.tipo_incidente }}{% endif %}{% if request.GET.nivel_peligro %}&nivel_peligro={{ request.GET.nivel_peligro }}{% endif %}{% if request.GET.fecha_desde %}&fecha_desde={{ request.GET.fecha_desde }}{% endif %}">{{ page_num }}</a>
                                     </li>
                                 {% endif %}
                             {% endfor %}
 
                             {% if reportes.has_next %}
                                 <li class="page-item">
-                                    <a class="page-link" href="?page={{ reportes.next_page_number }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.fecha_desde %}&fecha_desde={{ request.GET.fecha_desde }}{% endif %}">
+                                    <a class="page-link" href="?page={{ reportes.next_page_number }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}{% if request.GET.tipo_incidente %}&tipo_incidente={{ request.GET.tipo_incidente }}{% endif %}{% if request.GET.nivel_peligro %}&nivel_peligro={{ request.GET.nivel_peligro }}{% endif %}{% if request.GET.fecha_desde %}&fecha_desde={{ request.GET.fecha_desde }}{% endif %}">
                                         <i class="bi bi-chevron-right"></i>
                                     </a>
                                 </li>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page={{ reportes.paginator.num_pages }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.fecha_desde %}&fecha_desde={{ request.GET.fecha_desde }}{% endif %}">
+                                    <a class="page-link" href="?page={{ reportes.paginator.num_pages }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}{% if request.GET.tipo_incidente %}&tipo_incidente={{ request.GET.tipo_incidente }}{% endif %}{% if request.GET.nivel_peligro %}&nivel_peligro={{ request.GET.nivel_peligro }}{% endif %}{% if request.GET.fecha_desde %}&fecha_desde={{ request.GET.fecha_desde }}{% endif %}">
                                         <i class="bi bi-chevron-double-right"></i>
                                     </a>
                                 </li>
@@ -355,9 +434,10 @@
             const filterForm = document.querySelector('.filter-section form');
             const selects = filterForm.querySelectorAll('select');
             
+            // Opcional: Auto-envío al cambiar filtros
             selects.forEach(select => {
                 select.addEventListener('change', function() {
-                    // Optional: Auto-submit on change
+                    // Descomenta la siguiente línea si quieres auto-envío
                     // filterForm.submit();
                 });
             });

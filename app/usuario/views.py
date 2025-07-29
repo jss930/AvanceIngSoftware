@@ -179,85 +179,38 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 class MisReportesView(LoginRequiredMixin, TemplateView):
     template_name = 'mis_reportes.html'
     login_url = 'login'
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        user = self.request.user
         
         try:
-            service = ReportesUsuarioService(user.id)
-            
-            # Obtener filtros de la URL
+            service = ReportesUsuarioService(self.request.user.id)
             filtros = {
-                'estado': self.request.GET.get("estado", ""),
-                'tipo_incidente': self.request.GET.get("tipo", ""),
-                'fecha_desde': self.request.GET.get("fecha_desde", ""),
-                'nivel_peligro': self.request.GET.get("nivel_peligro", ""),
-                'solo_validados': self.request.GET.get("solo_validados") == 'true'
+                'estado': self.request.GET.get('estado'),
+                'tipo_incidente': self.request.GET.get('tipo_incidente'),
+                'fecha_desde': self.request.GET.get('fecha_desde'),
+                'nivel_peligro': self.request.GET.get('nivel_peligro'),  # Nuevo filtro
             }
             
             # Limpiar filtros vacíos
             filtros = {k: v for k, v in filtros.items() if v}
             
-            # Obtener página actual
             pagina = self.request.GET.get('page', 1)
+            resultado = service.obtener_reportes_usuario(filtros, pagina)
             
-            # Obtener datos usando el servicio
-            resultado = service.obtener_reportes_usuario(filtros=filtros, pagina=pagina)
-            
-            # Actualizar contexto con los resultados
-            context.update(resultado)
-            
-            # Agregar opciones para los filtros
-            context['estados_reporte'] = [
-                ('pendiente', 'Pendiente'),
-                ('validado', 'Validado'),
-                ('rechazado', 'Rechazado'),
-                ('archivado', 'Archivado'),
-            ]
-            
-            context['tipos_incidente'] = [
-                ('accidente', 'Accidente'),
-                ('congestion', 'Congestión'),
-                ('obra', 'Obra en construcción'),
-                ('manifestacion', 'Manifestación'),
-                ('vehiculo_varado', 'Vehículo varado'),
-                ('otro', 'Otro'),
-            ]
-            
-            context['niveles_peligro'] = [
-                (1, 'Bajo'),
-                (2, 'Medio'),
-                (3, 'Alto'),
-            ]
+            context.update({
+                'reportes': resultado['reportes'],
+                'estadisticas': resultado['estadisticas'],
+                'filtros_aplicados': resultado['filtros_aplicados'],
+            })
             
         except UsuarioSinReportesError:
-            # Usuario sin reportes
-            context['reportes'] = []
-            context['estadisticas'] = {
-                'total_reportes': 0,
-                'reportes_validados': 0,
-                'reportes_pendientes': 0,
-                'tasa_validacion': 0,
-            }
-            context['filtros_aplicados'] = {}
-            context['estados_reporte'] = []
-            context['tipos_incidente'] = []
-            context['sin_reportes'] = True
-            
-        except UsuarioReporteError as e:
-            # Error general
-            context['error'] = str(e)
-            context['reportes'] = []
-            context['estadisticas'] = {
-                'total_reportes': 0,
-                'reportes_validados': 0,
-                'reportes_pendientes': 0,
-                'tasa_validacion': 0,
-            }
+            context.update({
+                'reportes': None,
+                'estadisticas': None,
+                'filtros_aplicados': {},
+            })
         
-        print("Reportes en contexto:", context.get("reportes"))
-
         return context
 
 

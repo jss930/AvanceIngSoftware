@@ -61,7 +61,7 @@ class EstadisticasUsuarioService:
         return reportes.count()
     
     def _contar_reportes_validados(self, reportes):
-        return reportes.filter(es_validado=True).count()
+        return reportes.filter(estado_reporte='aprobado').count()
     
     def _contar_reportes_pendientes(self, reportes):
         return reportes.filter(estado_reporte='pendiente').count()
@@ -71,7 +71,7 @@ class EstadisticasUsuarioService:
     
     def _calcular_tasa_validacion(self, reportes):
         total = reportes.count()
-        validados = reportes.filter(es_validado=True).count()
+        validados = reportes.filter(estado_reporte='aprobado').count()
         return (validados / total * 100) if total > 0 else 0.0
     
     def _calcular_promedio_credibilidad(self, reportes):
@@ -97,7 +97,7 @@ class EstadisticasUsuarioService:
 
 
 class FiltroReportesService:    
-    ESTADOS_VALIDOS = ['pendiente', 'validado', 'rechazado', 'archivado']
+    ESTADOS_VALIDOS = ['pendiente', 'aprobado', 'rechazado']
     
     def __init__(self, reportes_queryset):
         self.reportes = reportes_queryset
@@ -135,7 +135,7 @@ class FiltroReportesService:
     
     def _filtrar_por_validacion(self, queryset, solo_validados):
         if solo_validados:
-            return queryset.filter(es_validado=True)
+            return queryset.filter(estado_reporte='aprobado')
         return queryset
 
 
