@@ -57,6 +57,11 @@
             <a href="/" class="list-group-item list-group-item-action">
               <i class="bi bi-house me-2"></i>Volver al sitio
             </a>
+
+            <a href="{% url 'historial_notificaciones' %}" class="list-group-item list-group-item-action">
+              <i class="bi bi-bell me-2"></i>Gestionar Notificaciones
+            </a>
+
           </div>
         </div>
 
@@ -109,6 +114,18 @@
                       <i class="bi bi-broadcast-pin display-4 text-danger"></i>
                       <h5 class="mt-3">Gestionar Alertas</h5>
                       <a href="{% url 'gestionar_alertas' %}" class="btn btn-outline-danger btn-sm mt-3">Ir</a>
+                    </div>
+                  </div>
+                </div>
+
+
+                                <!-- Tarjeta: Gestionar Notificaciones -->
+                <div class="col-md-6 col-lg-4">
+                  <div class="card h-100 text-center shadow-sm border-0">
+                    <div class="card-body">
+                      <i class="bi bi-bell display-4 text-primary"></i>
+                      <h5 class="mt-3">Gestionar Notificaciones</h5>
+                      <a href="{% url 'historial_notificaciones' %}" class="btn btn-outline-primary btn-sm mt-3">Ir</a>
                     </div>
                   </div>
                 </div>

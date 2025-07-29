@@ -16,6 +16,11 @@ from .forms import AlertaForm
 from .models import Alerta
 from app.presentation.controladores.alertaController import obtener_alertas_usuario
 
+
+from .models import HistorialNotificacion
+from django.db.models import Q, Count
+from django.core.paginator import Paginator
+
 # Configuración de logging
 logger = logging.getLogger(__name__)
 
@@ -314,3 +319,179 @@ def eliminar_alerta(request, alerta_id):
         alerta.delete()
         return redirect('gestionar_alertas')
     return render(request, 'panel/eliminar_alerta.html', {'alerta': alerta})
+
+
+
+# -----
+@login_required(login_url='/loginadmin/')
+@user_passes_test(is_superuser, login_url='/loginadmin/')
+def historial_notificaciones(request):
+    historiales = HistorialNotificacion.objects.select_related('alerta', 'usuario_destinatario').order_by('-fecha_envio_real')
+    
+    # Filtros opcionales
+    zona = request.GET.get('zona')
+    if zona:
+        historiales = historiales.filter(zona__icontains=zona)
+    
+    return render(request, 'panel/historial_notificaciones.html', {
+        'historiales': historiales,
+        'zona_actual': zona,
+    })
+    
+    
+    
+# --- A..
+@login_required(login_url='/loginadmin/')
+@user_passes_test(is_superuser, login_url='/loginadmin/')
+def historial_notificaciones(request):
+    # Obtener todos los historiales
+    historiales = HistorialNotificacion.objects.select_related('alerta', 'usuario_destinatario').order_by('-fecha_envio_real')
+    
+    # Filtros
+    zona_filtro = request.GET.get('zona', '')
+    estado_filtro = request.GET.get('estado', '')
+    fecha_desde = request.GET.get('fecha_desde', '')
+    fecha_hasta = request.GET.get('fecha_hasta', '')
+    busqueda = request.GET.get('busqueda', '')
+    
+    # Aplicar filtros
+    if zona_filtro:
+        historiales = historiales.filter(zona__icontains=zona_filtro)
+    
+    if estado_filtro:
+        historiales = historiales.filter(estado_entrega=estado_filtro)
+    
+    if fecha_desde:
+        from datetime import datetime
+        fecha_desde_obj = datetime.strptime(fecha_desde, '%Y-%m-%d')
+        historiales = historiales.filter(fecha_envio_real__date__gte=fecha_desde_obj)
+    
+    if fecha_hasta:
+        from datetime import datetime
+        fecha_hasta_obj = datetime.strptime(fecha_hasta, '%Y-%m-%d')
+        historiales = historiales.filter(fecha_envio_real__date__lte=fecha_hasta_obj)
+    
+    if busqueda:
+        historiales = historiales.filter(
+            Q(alerta__titulo__icontains=busqueda) | 
+            Q(alerta__mensaje__icontains=busqueda) |
+            Q(zona__icontains=busqueda)
+        )
+    
+    
+    # Estadísticas básicas
+    total_envios = historiales.count()
+    envios_exitosos = historiales.filter(estado_entrega='enviado').count()
+    envios_fallidos = historiales.filter(estado_entrega='fallido').count()
+    
+    # Paginación
+    paginator = Paginator(historiales, 20)  # 20 registros por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Obtener zonas únicas para el filtro
+    zonas_disponibles = HistorialNotificacion.objects.values_list('zona', flat=True).distinct().order_by('zona')
+    
+    context = {
+        'historiales': page_obj,
+        'total_envios': total_envios,
+        'envios_exitosos': envios_exitosos,
+        'envios_fallidos': envios_fallidos,
+        'zonas_disponibles': zonas_disponibles,
+        'filtros': {
+            'zona': zona_filtro,
+            'estado': estado_filtro,
+            'fecha_desde': fecha_desde,
+            'fecha_hasta': fecha_hasta,
+            'busqueda': busqueda,
+        }
+    }
+
+    for alerta in Alerta.objects.all():
+        print(f"Título: {alerta.titulo} | Mensaje: {alerta.mensaje}")
+        
+    print(historiales.query)
+
+    return render(request, 'panel/historial_notificaciones.html', context)
+
+
+import csv
+from django.http import HttpResponse
+from datetime import datetime
+
+@login_required(login_url='/loginadmin/')
+@user_passes_test(is_superuser, login_url='/loginadmin/')
+def exportar_historial_csv(request):
+    # Obtener los mismos datos que en la vista del historial
+    historiales = HistorialNotificacion.objects.select_related('alerta', 'usuario_destinatario').order_by('-fecha_envio_real')
+    
+    # Aplicar los mismos filtros que en la vista normal
+    zona_filtro = request.GET.get('zona', '')
+    estado_filtro = request.GET.get('estado', '')
+    fecha_desde = request.GET.get('fecha_desde', '')
+    fecha_hasta = request.GET.get('fecha_hasta', '')
+    busqueda = request.GET.get('busqueda', '')
+    
+    # Aplicar filtros
+    if zona_filtro:
+        historiales = historiales.filter(zona__icontains=zona_filtro)
+    
+    if estado_filtro:
+        historiales = historiales.filter(estado_entrega=estado_filtro)
+    
+    if fecha_desde:
+        fecha_desde_obj = datetime.strptime(fecha_desde, '%Y-%m-%d')
+        historiales = historiales.filter(fecha_envio_real__date__gte=fecha_desde_obj)
+    
+    if fecha_hasta:
+        fecha_hasta_obj = datetime.strptime(fecha_hasta, '%Y-%m-%d')
+        historiales = historiales.filter(fecha_envio_real__date__lte=fecha_hasta_obj)
+    
+    if busqueda:
+        historiales = historiales.filter(
+            Q(alerta__titulo__icontains=busqueda) | 
+            Q(alerta__mensaje__icontains=busqueda) |
+            Q(zona__icontains=busqueda)
+        )
+    
+    # Crear la respuesta HTTP para CSV
+    response = HttpResponse(content_type='text/csv')
+    fecha_actual = datetime.now().strftime('%Y%m%d_%H%M%S')
+    response['Content-Disposition'] = f'attachment; filename="historial_notificaciones_{fecha_actual}.csv"'
+    
+    # Configurar el writer de CSV con codificación UTF-8
+    response.write('\ufeff')  # BOM para UTF-8 (para Excel)
+    writer = csv.writer(response)
+    
+    # Escribir encabezados
+    writer.writerow([
+        'Fecha de Envío',
+        'Hora de Envío', 
+        'Título de la Alerta',
+        'Mensaje',
+        'Zona',
+        'Destinatario',
+        'Estado de Entrega',
+        'Tipo de Notificación',
+        'Prioridad',
+        'Creada por'
+    ])
+    
+    # Escribir datos
+    for historial in historiales:
+        destinatario = historial.usuario_destinatario.username if historial.usuario_destinatario else "Todos los usuarios"
+        
+        writer.writerow([
+            historial.fecha_envio_real.strftime('%d/%m/%Y'),
+            historial.fecha_envio_real.strftime('%H:%M:%S'),
+            historial.alerta.titulo,
+            historial.alerta.mensaje,
+            historial.zona,
+            destinatario,
+            historial.get_estado_entrega_display(),
+            historial.get_tipo_notificacion_display(),
+            historial.alerta.get_prioridad_display(),
+            historial.alerta.enviado_por.username
+        ])
+    
+    return response

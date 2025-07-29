@@ -21,3 +21,37 @@ class Alerta(models.Model):
 
     def __str__(self):
         return self.titulo
+
+
+
+# ----
+class HistorialNotificacion(models.Model):
+    ESTADOS = [
+        ('enviado', 'Enviado'),
+        ('fallido', 'Fallido'), 
+        ('pendiente', 'Pendiente'),
+    ]
+    
+    TIPOS = [
+        ('sistema', 'Sistema'),
+        ('email', 'Email'),
+        ('push', 'Push'),
+        ('sms', 'SMS'),
+    ]
+    
+    alerta = models.ForeignKey(Alerta, on_delete=models.CASCADE, related_name='historiales')
+    usuario_destinatario = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    fecha_envio_real = models.DateTimeField(auto_now_add=True)
+    estado_entrega = models.CharField(max_length=20, choices=ESTADOS, default='enviado')
+    zona = models.CharField(max_length=255, blank=True)
+    tipo_notificacion = models.CharField(max_length=50, choices=TIPOS, default='sistema')
+    mensaje_error = models.TextField(blank=True, null=True)  # Para errores de entrega
+    
+    class Meta:
+        verbose_name = "Historial de Notificación"
+        verbose_name_plural = "Historiales de Notificaciones"
+        ordering = ['-fecha_envio_real']
+    
+    def __str__(self):
+        destinatario = self.usuario_destinatario.username if self.usuario_destinatario else "Todos"
+        return f"{self.alerta.titulo} → {destinatario} ({self.fecha_envio_real.strftime('%d/%m/%Y %H:%M')})"

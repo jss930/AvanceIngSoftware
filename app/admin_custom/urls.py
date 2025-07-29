@@ -15,5 +15,8 @@ urlpatterns = [
     path('panel/alertas/crear/', views.crear_alerta, name='crear_alerta'),
     path('panel/alertas/editar/<int:alerta_id>/', views.editar_alerta, name='editar_alerta'),
     path('panel/alertas/eliminar/<int:alerta_id>/', views.eliminar_alerta, name='eliminar_alerta'),
+    
+    path('historial-notificaciones/', views.historial_notificaciones, name='historial_notificaciones'),
+    path('historial-notificaciones/exportar/', views.exportar_historial_csv, name='exportar_historial_csv'),
 ]
 
