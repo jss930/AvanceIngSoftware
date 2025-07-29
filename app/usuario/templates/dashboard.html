@@ -256,56 +256,64 @@
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-              
-              <!-- Módulos principales -->
-              <div class="col-md-6 col-lg-3">
-                <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
-                  <div class="card-body text-center p-4">
-                    <div class="mb-3">
-                      <i class="bi bi-thermometer-half display-4 text-danger"></i>
+
+                  <!-- Mapa de Calor -->
+                  <div class="col-lg-3 col-md-6">
+                    <div class="card h-100 border-0 shadow-sm rounded-3 card-hover">
+                      <div class="card-body text-center p-4">
+                        <div class="feature-icon text-danger">
+                          <i class="bi bi-thermometer-half text-white fs-3"></i>
+                        </div>
+                        <h5 class="card-title text-dark mb-2">Mapa de Calor</h5>
+                        <p class="card-text text-muted mb-3">
+                          Visualiza las zonas con mayor densidad de tráfico.
+                        </p>
+                        <a href="{% url 'mapa_calor' %}" class="btn btn-danger btn-sm px-4 rounded-pill">
+                          <i class="bi bi-map me-2"></i>Ver Mapa
+                        </a>
+                      </div>
                     </div>
-                    <h5 class="card-title text-dark mb-2">Mapa de Calor</h5>
-                    <p class="card-text text-muted mb-3">
-                      Visualiza las zonas con mayor densidad de tráfico.
-                    </p>
-                    <a href="{% url 'mapa_calor' %}" class="btn btn-danger btn-sm px-4 rounded-pill">
-                      <i class="bi bi-map me-2"></i>Ver Mapa
-                    </a>
                   </div>
                 </div>
               </div>
             </div>
 
             <!-- 🔔 Sección de alertas recientes -->
-            <div class="mt-5">
-              <h4 class="text-primary mb-3">
-                <i class="bi bi-bell-fill me-2"></i>Alertas Recientes
-              </h4>
-              {% if alertas %}
-                <div class="row g-3">
-                  {% for alerta in alertas %}
-                    <div class="col-md-6">
-                      <div class="card border-0 shadow-sm rounded-3 h-100">
-                        <div class="card-body">
-                          <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h5 class="card-title text-danger mb-0">
+            {% if notificaciones_activas %}
+            <div class="card border-0 rounded-3 shadow-sm mt-5 mb-5">
+              <div class="card-header bg-white border-0 py-3">
+                <h5 class="mb-0 text-primary">
+                  <i class="bi bi-bell-fill me-2"></i>Alertas Recientes
+                </h5>
+              </div>
+              <div class="card-body">
+                {% if alertas %}
+                  <div class="row g-3">
+                    {% for alerta in alertas %}
+                      <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 shadow-sm border-0 rounded-4 card-hover">
+                          <div class="card-body">
+                            <h5 class="card-title text-danger mb-2">
                               <i class="bi bi-exclamation-circle-fill me-2"></i>{{ alerta.titulo }}
                             </h5>
-                            <small class="text-muted">{{ alerta.fecha_creacion|date:"d/m/Y H:i" }}</small>
+                            <p class="text-muted mb-1">{{ alerta.mensaje }}</p>
+                            <p class="mb-0">
+                              <span class="text-info fw-semibold">Ubicación:</span> {{ alerta.ubicacion }}
+                            </p>
+                            <small class="text-muted d-block mt-2">
+                              <i class="bi bi-clock me-1"></i>{{ alerta.fecha_creacion|date:"d/m/Y H:i" }}
+                            </small>
                           </div>
-                          <p class="card-text text-muted mb-1">{{ alerta.mensaje }}</p>
-                          <p class="mb-0"><span class="text-info fw-semibold">Ubicación:</span> {{ alerta.ubicacion }}</p>
                         </div>
                       </div>
-                    </div>
-                  {% endfor %}
-                </div>
-              {% else %}
-                <p class="text-white-50">No hay alertas recientes para ti.</p>
-              {% endif %}
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  <p class="text-muted mb-0">No hay alertas recientes para ti.</p>
+                {% endif %}
+              </div>
             </div>
+            {% endif %}
 
             {% if mostrar_estadisticas and user_stats %}
             <!-- Quick Stats Row -->
@@ -336,7 +344,7 @@
                       class="d-flex align-items-center justify-content-between"
                     >
                       <div>
-                        <h6 class="text-muted mb-1">Validados</h6>
+                        <h6 class="text-muted mb-1">Aprobados</h6>
                         <h4 class="text-success mb-0">
                           {{ user_stats.validados|default:'0' }}
                         </h4>

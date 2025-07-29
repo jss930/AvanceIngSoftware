@@ -134,8 +134,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         config = config_service.obtener_configuracion()
 
         mostrar_estadisticas = getattr(config, 'mostrar_estadisticas', True)
+        notificaciones_activas = getattr(config, 'notificaciones_activas', True)
 
         context['mostrar_estadisticas'] = mostrar_estadisticas
+        context['notificaciones_activas'] = notificaciones_activas
 
         try:
             service = ReportesUsuarioService(user.id)
