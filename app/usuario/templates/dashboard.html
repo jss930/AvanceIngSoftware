@@ -307,6 +307,7 @@
               {% endif %}
             </div>
 
+            {% if mostrar_estadisticas and user_stats %}
             <!-- Quick Stats Row -->
             <div class="row g-4 mb-4">
               <!-- Estadísticas Rápidas -->
@@ -319,7 +320,7 @@
                       <div>
                         <h6 class="text-muted mb-1">Mis Reportes</h6>
                         <h4 class="text-primary mb-0">
-                          {{ user_stats.total_reportes|default:'12' }}
+                          {{ user_stats.total_reportes|default:'0' }}
                         </h4>
                       </div>
                       <i class="bi bi-file-text text-primary fs-2"></i>
@@ -337,7 +338,7 @@
                       <div>
                         <h6 class="text-muted mb-1">Validados</h6>
                         <h4 class="text-success mb-0">
-                          {{ user_stats.validados|default:'8' }}
+                          {{ user_stats.validados|default:'0' }}
                         </h4>
                       </div>
                       <i class="bi bi-check-circle text-success fs-2"></i>
@@ -355,7 +356,7 @@
                       <div>
                         <h6 class="text-muted mb-1">Pendientes</h6>
                         <h4 class="text-warning mb-0">
-                          {{ user_stats.pendientes|default:'3' }}
+                          {{ user_stats.pendientes|default:'0' }}
                         </h4>
                       </div>
                       <i class="bi bi-clock text-warning fs-2"></i>
@@ -373,7 +374,7 @@
                       <div>
                         <h6 class="text-muted mb-1">Credibilidad</h6>
                         <h4 class="text-info mb-0">
-                          {{ user_stats.credibilidad|default:'85' }}%
+                          {{ user_stats.credibilidad|default:'0' }}%
                         </h4>
                       </div>
                       <i class="bi bi-star text-info fs-2"></i>
@@ -382,6 +383,7 @@
                 </div>
               </div>
             </div>
+            {% endif %}
 
             <!-- Recent Activity -->
             <div class="row">
@@ -511,13 +513,7 @@
                       <span class="text-muted">Sistema Activo</span>
                     </div>
                     <div class="d-flex align-items-center mb-3">
-                      <span class="status-indicator bg-info me-2"></span>
-                      <span class="text-muted">
-                        {{ users_online|default:'1,247' }} Usuarios Online
-                      </span>
-                    </div>
-                    <div class="d-flex align-items-center mb-3">
-                      <span class="status-indicator bg-warning me-2"></span>
+                      <span class="status-indicator bg-success me-2"></span>
                       <span class="text-muted">Datos en Tiempo Real</span>
                     </div>
                     <div class="d-flex align-items-center">

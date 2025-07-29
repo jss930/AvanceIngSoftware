@@ -34,7 +34,8 @@ from app.reporte.models import ReporteColaborativo
 from web.services.reportes_usuario_service import (
     ReportesUsuarioService, 
     UsuarioSinReportesError, 
-    UsuarioReporteError
+    UsuarioReporteError,
+    ConfiguracionUsuarioService
 )
 from .forms import RegistroUsuarioForm, LoginForm
 from app.presentation.controladores.reporteColaborativoController import ReporteColaborativoController
@@ -121,55 +122,55 @@ class DashboardView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        
+
         # Obtener alertas
         alerta_repository = AlertaRepositoryImpl()
         alertas = alerta_repository.obtener_por_usuario(user.id)
         context['alertas'] = alertas
         context['user'] = user
-        
+
+        # Obtener configuración de usuario (puede ser None)
+        config_service = ConfiguracionUsuarioService(user.id)
+        config = config_service.obtener_configuracion()
+
+        mostrar_estadisticas = getattr(config, 'mostrar_estadisticas', True)
+
+        context['mostrar_estadisticas'] = mostrar_estadisticas
+
         try:
-            # Usar el servicio para obtener datos del dashboard
             service = ReportesUsuarioService(user.id)
-            
-            # Obtener reportes recientes para el dashboard
             recent_reports = service.obtener_reportes_recientes(limite=5)
-            
-            # Obtener estadísticas básicas
-            if recent_reports:
-                resultado = service.obtener_reportes_usuario()
-                estadisticas = resultado['estadisticas']
-            else:
-                estadisticas = {
-                    'total_reportes': 0,
-                    'reportes_validados': 0,
-                    'reportes_pendientes': 0,
-                    'tasa_validacion': 0,
-                    'promedio_credibilidad': 0
-                }
-            
-            context['user_stats'] = {
-                'total_reportes': estadisticas['total_reportes'],
-                'validados': estadisticas['reportes_validados'],
-                'pendientes': estadisticas['reportes_pendientes'],
-                'credibilidad': round(estadisticas.get('promedio_credibilidad', 0))
-            }
-            
             context['recent_reports'] = recent_reports
-            
+
+            if mostrar_estadisticas:
+                resultado = service.obtener_reportes_usuario()
+                estadisticas = resultado.get('estadisticas', {})
+
+                context['user_stats'] = {
+                    'total_reportes': estadisticas.get('total_reportes', 0),
+                    'validados': estadisticas.get('reportes_validados', 0),
+                    'pendientes': estadisticas.get('reportes_pendientes', 0),
+                    'credibilidad': round(estadisticas.get('promedio_credibilidad', 0))
+                }
+            else:
+                context['user_stats'] = {
+                    'total_reportes': 0,
+                    'validados': 0,
+                    'pendientes': 0,
+                    'credibilidad': 0
+                }
+
         except (UsuarioSinReportesError, UsuarioReporteError) as e:
-            # En caso de error o sin reportes, usar valores por defecto
-            print(f"Error en DashboardView: {e}")  # Para debug
+            context['recent_reports'] = []
             context['user_stats'] = {
                 'total_reportes': 0,
                 'validados': 0,
                 'pendientes': 0,
                 'credibilidad': 0
             }
-            context['recent_reports'] = []
-        
+
         # Simular usuarios online
-        context['users_online'] = "1,247"
+        context['users_online'] = "1,247"  # Este valor puede ser dinámico en el futuro
         
         return context
 

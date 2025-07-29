@@ -243,9 +243,6 @@ class ReportesUsuarioService:
             usuario_reportador_id=datos['usuario_id']
         ).select_related('usuario_reportador').order_by('-fecha_creacion')
         
-        if not reportes.exists():
-            raise UsuarioSinReportesError("El usuario no tiene reportes")
-        
         datos['reportes_base'] = reportes
         return datos
     
