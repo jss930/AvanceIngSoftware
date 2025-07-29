@@ -6,7 +6,7 @@ urlpatterns = [
     path("loginadmin/", views.custom_login, name="custom_login"),
     path("logout_admin/", views.logout_admin, name="logout_admin"),
     path("panel/reportes/", views.admin_reportes, name="admin_reportes"),
-    path("panel/editar/\u003cint:id\u003e/", views.editar_reporte, name="editar_reporte"),
+    path("panel/editar/\u003cint:id\u003e/", views.editar_reporte, name="editar_reporte_admin"),
     path("panel/cambiar-estado/\u003cint:id\u003e/", views.cambiar_estado_reporte, name="cambiar_estado_reporte"),
     path("usuarios/", views.gestion_usuarios, name="gestion_usuarios"),
     path("admin/", admin.site.urls),
