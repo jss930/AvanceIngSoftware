@@ -303,19 +303,36 @@ class ReporteColaborativo(models.Model):
         }
         return colors.get(self.nivel_peligro, '#6c757d')
     
-    def can_be_edited_by(self, user):
-        """Verifica si un usuario puede editar este incidente"""
+    def can_be_edited_by_user(self, user):
+        """Método helper para templates - verifica si puede ser editado"""
         if not user.is_authenticated:
             return False
         
-        # El usuario que lo creó puede editarlo dentro de las primeras 2 horas
-        if self.usuario_reportador == user:
+        # Solo el dueño puede editar reportes pendientes dentro del tiempo límite
+        if (self.usuario_reportador == user and 
+            self.estado_reporte == 'pendiente'):
             from datetime import timedelta
             cutoff_time = timezone.now() - timedelta(hours=2)
             return self.fecha_creacion >= cutoff_time
         
+        return False
+    
+    def can_be_edited_by(self, user):
+        if not user.is_authenticated:
+            return False
+        
         # Los superusers siempre pueden editar
-        return user.is_superuser
+        if user.is_superuser:
+            return True
+        
+        # El usuario que lo creó puede editarlo solo si está pendiente
+        # y dentro de las primeras 2 horas
+        if self.usuario_reportador == user and self.estado_reporte == 'pendiente':
+            from datetime import timedelta
+            cutoff_time = timezone.now() - timedelta(hours=2)
+            return self.fecha_creacion >= cutoff_time
+        
+        return False
     
     @classmethod
     def get_recent_incidents(cls, hours=24, limit=50):

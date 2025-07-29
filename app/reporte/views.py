@@ -6,6 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
+from django.views.generic import TemplateView
 from django.contrib.auth.decorators import login_required, user_passes_test
 import requests
 
@@ -143,3 +144,7 @@ def report_incident_ajax(request):
             'success': False,
             'message': f'Error del servidor: {str(e)}'
         })
+
+
+class SeeStateView(TemplateView):
+    template_name = 'see_state.html'

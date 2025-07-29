@@ -47,6 +47,9 @@
     </style>
 </head>
 <body class="bg-light">
+
+    {% load reporte_tags %}
+
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm navigation" aria-label="Main navigation">
         <div class="container">
             <a class="navbar-brand fw-bold" href="{% url 'dashboard' %}">
@@ -336,19 +339,26 @@
 
                             <div class="card-footer bg-white border-0 pt-0">
                                 <div class="d-flex justify-content-between">
-                                    <a href="{% url 'detalle_reporte' reporte.id %}" 
-                                       class="btn btn-outline-primary btn-sm flex-fill me-2">
-                                        <i class="bi bi-eye me-1"></i>Ver Detalle
-                                    </a>
-                                    {% if reporte.estado_reporte == 'pendiente' %}
+                                    {% if reporte|can_edit_reporte:request.user %}
+                                        <!-- 3 botones cuando puede editar -->
+                                        <a href="{% url 'detalle_reporte' reporte.id %}" 
+                                        class="btn btn-outline-primary btn-sm flex-fill me-1">
+                                            <i class="bi bi-eye me-1"></i>Ver Detalle
+                                        </a>
                                         <a href="{% url 'editar_reporte' reporte.id %}" 
-                                           class="btn btn-outline-warning btn-sm me-1">
+                                        class="btn btn-outline-warning btn-sm me-1">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <a href="{% url 'eliminar_reporte' reporte.id %}" 
-                                           class="btn btn-outline-danger btn-sm"
-                                           onclick="return confirm('¿Estás seguro de que deseas eliminar este reporte?')">
+                                        class="btn btn-outline-danger btn-sm"
+                                        onclick="return confirm('¿Estás seguro de que deseas eliminar este reporte?')">
                                             <i class="bi bi-trash"></i>
+                                        </a>
+                                    {% else %}
+                                        <!-- Solo Ver Detalle cuando no puede editar -->
+                                        <a href="{% url 'detalle_reporte' reporte.id %}" 
+                                        class="btn btn-outline-primary btn-sm w-100">
+                                            <i class="bi bi-eye me-1"></i>Ver Detalle
                                         </a>
                                     {% endif %}
                                 </div>

@@ -113,7 +113,6 @@ def logout_view(request):
     return redirect('login')
 
 
-@method_decorator(login_required(login_url='/login/'), name='dispatch')
 @method_decorator(never_cache, name='dispatch')
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'dashboard.html'
@@ -223,10 +222,9 @@ class DetalleReporteView(LoginRequiredMixin, TemplateView):
         user = self.request.user
         
         try:
-            # Obtener el reporte específico
             reporte = get_object_or_404(ReporteColaborativo, id=reporte_id)
             
-            # Verificar permisos
+            # Verificar permisos de visualización
             if reporte.usuario_reportador != user and not user.is_superuser:
                 context['error'] = "No tienes permisos para ver este reporte"
             else:
@@ -235,16 +233,12 @@ class DetalleReporteView(LoginRequiredMixin, TemplateView):
                 
                 # Calcular credibilidad
                 total_votos = reporte.votos_positivos + reporte.votos_negativos
-                if total_votos > 0:
-                    credibilidad = round((reporte.votos_positivos * 100) / total_votos)
-                else:
-                    credibilidad = 0
+                credibilidad = round((reporte.votos_positivos * 100) / total_votos) if total_votos > 0 else 0
                 
-                # Verificar si es reciente (usando el método del modelo)
+                # Verificar si es reciente
                 es_reciente = reporte.is_recent(hours=24)
                 
-                # Obtener ubicación usando los campos del modelo
-                ubicacion_texto = ""
+                # Obtener ubicación
                 if reporte.nombre_via and reporte.distrito:
                     ubicacion_texto = f"{reporte.nombre_via}, {reporte.distrito}"
                 elif reporte.nombre_via:
@@ -254,9 +248,12 @@ class DetalleReporteView(LoginRequiredMixin, TemplateView):
                 else:
                     ubicacion_texto = f"Lat: {reporte.latitud}, Lng: {reporte.longitud}"
                 
-                # Verificar si puede editar
-                puede_editar = (reporte.estado_reporte == 'pendiente' and 
-                              reporte.can_be_edited_by(user))
+                # CORRECCIÓN: Verificar si puede editar
+                puede_editar = (
+                    reporte.estado_reporte == 'pendiente' and 
+                    reporte.usuario_reportador == user and
+                    reporte.can_be_edited_by(user)
+                )
                 
                 context.update({
                     'reporte': reporte,
@@ -361,8 +358,19 @@ class EditarReporteView(LoginRequiredMixin, UpdateView):
     login_url = 'login'
 
     def get_queryset(self):
-        # Solo permite editar reportes del usuario actual
-        return ReporteColaborativo.objects.filter(usuario_reportador=self.request.user)
+        """Solo permite editar reportes del usuario actual que estén pendientes"""
+        return ReporteColaborativo.objects.filter(
+            usuario_reportador=self.request.user,
+            estado_reporte='pendiente'
+        )
+
+    def dispatch(self, request, *args, **kwargs):
+        """Verificar permisos antes de procesar la vista"""
+        obj = self.get_object()
+        if not obj.can_be_edited_by(request.user):
+            messages.error(request, 'No tienes permisos para editar este reporte o ya no es editable.')
+            return redirect('mis_reportes')
+        return super().dispatch(request, *args, **kwargs)
 
     def form_invalid(self, form):
         form.add_error(None, "Revisa los datos del formulario.")
@@ -376,8 +384,19 @@ class EliminarReporteView(LoginRequiredMixin, DeleteView):
     login_url = 'login'
 
     def get_queryset(self):
-        return ReporteColaborativo.objects.filter(usuario_reportador=self.request.user)
+        """Solo permite eliminar reportes del usuario actual que estén pendientes"""
+        return ReporteColaborativo.objects.filter(
+            usuario_reportador=self.request.user,
+            estado_reporte='pendiente'
+        )
 
+    def dispatch(self, request, *args, **kwargs):
+        """Verificar permisos antes de procesar la vista"""
+        obj = self.get_object()
+        if not obj.can_be_edited_by(request.user):
+            messages.error(request, 'No tienes permisos para eliminar este reporte.')
+            return redirect('mis_reportes')
+        return super().dispatch(request, *args, **kwargs)
 
 
 class SeeStateView(TemplateView):

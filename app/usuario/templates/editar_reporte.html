@@ -1,26 +1,198 @@
-{% extends 'base.html' %}
-{% block content %}
-<div class="container mt-5">
-  <div class="card shadow-sm">
-    <div class="card-header bg-warning text-white">
-      <h5 class="mb-0">Editar Reporte</h5>
-    </div>
-    <div class="card-body">
-      <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        {% for field in form %}
-          <div class="mb-3">
-            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-            {{ field }}
-            {% if field.errors %}
-              <div class="text-danger small">{{ field.errors }}</div>
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Reporte - Traffic Pulse</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .main-card {
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        .form-control, .form-select {
+            border-radius: 8px;
+            padding: 10px;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-weight: 600;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+        }
+        #map {
+            height: 300px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+        .img-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            margin-top: 10px;
+        }
+        .error-message {
+            color: red;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-custom mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="{% url 'home' %}">
+            <i class="fas fa-map-marked-alt me-2"></i>Traffic Pulse
+        </a>
+        <div class="navbar-nav ms-auto">
+            {% if user.is_authenticated %}
+                <span class="navbar-text me-3">
+                    <i class="fas fa-user-circle"></i> {{ user.username }}
+                </span>
+                <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+                <a class="nav-link" href="{% url 'logout' %}">Cerrar Sesión</a>
+            {% else %}
+                <a class="nav-link" href="{% url 'login' %}">Iniciar Sesión</a>
             {% endif %}
-          </div>
-        {% endfor %}
-        <button type="submit" class="btn btn-warning">Guardar Cambios</button>
-        <a href="{% url 'mis_reportes' %}" class="btn btn-outline-secondary">Cancelar</a>
-      </form>
+        </div>
     </div>
-  </div>
+</nav>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <h1 class="text-center mb-4 text-dark">✏️ Editar Reporte</h1>
+
+            {% if form.errors %}
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                                <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                        {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <form method="POST" enctype="multipart/form-data" class="main-card">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.titulo.id_for_label }}" class="form-label">📝 Título del Incidente</label>
+                        {{ form.titulo }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.tipo_incidente.id_for_label }}" class="form-label">🚨 Tipo de Incidente</label>
+                        {{ form.tipo_incidente }}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.descripcion.id_for_label }}" class="form-label">📄 Descripción</label>
+                    {{ form.descripcion }}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-8 mb-3">
+                        <label for="{{ form.foto.id_for_label }}" class="form-label">📸 Foto del Incidente (opcional)</label>
+                        {{ form.foto }}
+                        {% if object.foto %}
+                            <img src="{{ object.foto.url }}" alt="Foto actual" class="img-preview">
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.nivel_peligro.id_for_label }}" class="form-label">⚠️ Nivel de Peligro</label>
+                        {{ form.nivel_peligro }}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">📍 Ubicación del Incidente</label>
+                    <div id="map"></div>
+                    <div class="form-text mt-2">Haz clic en el mapa para ajustar la ubicación.</div>
+                </div>
+
+                <!-- Campos ocultos -->
+                {{ form.latitud }}
+                {{ form.longitud }}
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'mis_reportes' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
-{% endblock %}
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const latInput = document.getElementById("id_latitud");
+        const lngInput = document.getElementById("id_longitud");
+
+        const initialLat = parseFloat(latInput.value) || -16.4090;
+        const initialLng = parseFloat(lngInput.value) || -71.5375;
+
+        const map = L.map('map').setView([initialLat, initialLng], 15);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        const marker = L.marker([initialLat, initialLng], {
+            draggable: true
+        }).addTo(map);
+
+        marker.on('dragend', function () {
+            const pos = marker.getLatLng();
+            latInput.value = pos.lat.toFixed(6);
+            lngInput.value = pos.lng.toFixed(6);
+        });
+
+        map.on('click', function (e) {
+            const { lat, lng } = e.latlng;
+            marker.setLatLng([lat, lng]);
+            latInput.value = lat.toFixed(6);
+            lngInput.value = lng.toFixed(6);
+        });
+    });
+</script>
+</body>
+</html>
